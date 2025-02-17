@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { DbService } from 'src/db/db.service';
 import { CreateContentDto } from './create-content.dto';
 import { UpdateContentDto } from './update-content.dto';
-import { DbService } from 'src/db/db.service';
 // import { PrismaService } from '../prisma/prisma.service';
 // import { CreateContentDto } from './dto/create-content.dto';
 // import { UpdateContentDto } from './dto/update-content.dto';
@@ -52,9 +52,7 @@ export class ContentService {
 
   async update(id: string, dto: UpdateContentDto) {
     // Check if content exists
-    const contentExists = await this.prisma.content.findUnique({
-      where: { id },
-    });
+    const contentExists = await this.prisma.content.findUnique({ where: { id } });
 
     if (!contentExists) {
       throw new NotFoundException('Content not found');
@@ -68,9 +66,7 @@ export class ContentService {
 
   async remove(id: string) {
     // Check if content exists
-    const contentExists = await this.prisma.content.findUnique({
-      where: { id },
-    });
+    const contentExists = await this.prisma.content.findUnique({ where: { id } });
 
     if (!contentExists) {
       throw new NotFoundException('Content not found');
