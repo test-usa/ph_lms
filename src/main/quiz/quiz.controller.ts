@@ -1,73 +1,36 @@
-import { Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
-import { Request, Response } from 'express';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Put,
+  Delete,
+  Req,
+  Res,
+} from '@nestjs/common';
+import { Request } from 'express';
 import { QuizService } from './quiz.service';
 
 @Controller('quiz')
 export class QuizController {
-  constructor(private quizService: QuizService) {}
+  constructor(private readonly quizService: QuizService) {}
 
-  @Get('getSingle')
-  test(@Req() req: Request, @Res() res: Response): string {
-    return '<h1>Okay</h1>';
-  }
-  @Post('start/:id')
-  startQuizExam(@Param() params: any) {
-    return this.quizService.startQuizExam(params.id);
-  }
-  @Post('submit')
-  submitQuizExam(@Req() req: Request, @Res() res: Response): string {
-    return '<h1>Okay</h1>';
-  }
+  // Create a new quiz (POST request)
   @Post('create')
-  createQuizExam(@Req() req: Request) {
+  createQuiz(@Req() req: Request) {
     const payload = req.body;
-    return this.quizService.createQuizExam(payload);
+    return this.quizService.createQuiz(payload);
   }
-  @Post('create')
-  updateQuizExam(@Req() req: Request, @Res() res: Response): string {
-    return '<h1>Okay</h1>';
+
+  // Update an existing quiz (PUT request)
+  @Put('update/:id')
+  updateQuiz(@Param('id') id: string, @Req() req: Request) {
+    return this.quizService.updateQuiz(id, req.body);
   }
-  @Post('create')
-  deleteQuizExam(@Req() req: Request, @Res() res: Response): string {
-    return '<h1>Okay</h1>';
+
+  // Delete a quiz (DELETE request)
+  @Delete('delete/:id')
+  deleteQuiz(@Param('id') id: string) {
+    return this.quizService.deleteQuiz(id);
   }
 }
-
-// import { QuizService } from './quiz.service';
-// import { Controller, Get, Post, Body } from '@nestjs/common';
-// import { TQuiz } from './quiz.service';
-
-// @Controller('quiz')
-// export class QuizController {
-//   constructor(private readonly quizService: QuizService) {}
-
-//   @Get('getSingle')
-//   test(): string {
-//     return '<h1>Okay</h1>';
-//   }
-
-//   @Get('start')
-//   startQuizExam() {
-//     return this.quizService.startQuizExam();
-//   }
-
-//   @Post('submit')
-//   submitQuizExam(): string {
-//     return '<h1>Okay</h1>';
-//   }
-
-//   @Post('create')
-//   createQuizExam(@Body() quiz: TQuiz) {
-//     return this.quizService.createQuizExam(quiz);
-//   }
-
-//   @Post('update')
-//   updateQuizExam(): string {
-//     return '<h1>Update Quiz</h1>';
-//   }
-
-//   @Post('delete')
-//   deleteQuizExam(): string {
-//     return '<h1>Delete Quiz</h1>';
-//   }
-// }

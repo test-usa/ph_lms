@@ -20,7 +20,7 @@ export type TQuiz = {
 
 @Injectable()
 export class QuizService {
-  async createQuizExam(quiz: TQuiz) {
+  async createQuiz(quiz: TQuiz) {
     const result = await prisma.quiz.create({
       data: {
         question: quiz.question,
@@ -30,8 +30,21 @@ export class QuizService {
     });
     return result;
   }
-  async startQuizExam(id: string) {
-    const result = await prisma.quiz.findUnique({
+  async updateQuiz(id: string, quiz: TQuiz) {
+    const result = await prisma.quiz.update({
+      where: {
+        id,
+      },
+      data: {
+        question: quiz.question,
+        options: quiz.options,
+        correctAnswer: quiz.correctAnswer,
+      },
+    });
+    return result;
+  }
+  async deleteQuiz(id: string) {
+    const result = await prisma.quiz.delete({
       where: {
         id,
       },
