@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { Injectable, HttpException, ConflictException } from '@nestjs/common';
+import { Injectable, HttpException, ConflictException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -32,10 +32,10 @@ export class AuthService {
 
     const payload = { email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_ACCESS_SECRET'),
+      secret: this.configService.getOrThrow('JWT_SECRET'),
     });
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
+      secret: this.configService.getOrThrow('JWT_SECRET'),
     });
 
     return {
@@ -46,7 +46,11 @@ export class AuthService {
 
   // Register
   async registerUser(registerDto: RegisterDto) {
+    
     const { email, password, role } = registerDto;
+
+    if (role === UserRole.ADMIN) throw new ForbiddenException("Creating Admin is not allowed")
+
     const existingUser = await this.db.user.findUnique({
       where: { email },
     });
@@ -70,7 +74,7 @@ export class AuthService {
   }
 
   // Refresh Token
-  async refreshToken(token: string) {
+   async refreshToken(token: string) {
     const payload = this.jwtService.verify(token, {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
     });

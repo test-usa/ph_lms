@@ -13,7 +13,11 @@ export class CourseService {
             data,
         });
 
-        return course;
+        return {
+            course,
+            success: true,
+            message: 'Course created successfully',
+        };
     }
 
 }
