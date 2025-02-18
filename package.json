@@ -30,12 +30,8 @@
     "@prisma/client": "^6.3.1",
     "bcrypt": "^5.1.1",
     "class-validator": "^0.14.1",
-<<<<<<< HEAD
-    "dotenv": "^16.4.7",
-=======
     "cookie-parser": "^1.4.7",
     "nodemailer": "^6.10.0",
->>>>>>> 831a5ea848c9347351b8c30df298d2b3ac9220bd
     "prisma": "^6.3.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
