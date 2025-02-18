@@ -42,8 +42,7 @@ model Course {
   price       Float
   isPublished Boolean  @default(false)
   modules     Module[]
-  payment     Payment? @relation(fields: [paymentId], references: [id])
-  paymentId   String? @unique
+  payment     Payment[]
 }
 
 model Module {
@@ -82,5 +81,5 @@ model Payment {
   status         String
   stripeChargeId String?
   user           User     @relation(fields: [userId], references: [id])
-  course         Course?
+  course         Course[]
 }

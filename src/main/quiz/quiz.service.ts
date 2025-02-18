@@ -26,6 +26,7 @@ export class QuizService {
         question: quiz.question,
         options: quiz.options,
         correctAnswer: quiz.correctAnswer,
+        contentId: quiz.contentId,
       },
     });
     return result;
