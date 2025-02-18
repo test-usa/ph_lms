@@ -4,16 +4,13 @@ import { CreateCourseDto } from './course.dto';
 
 @Injectable()
 export class CourseService {
-    constructor(
-        private readonly db: DbService
-    ) { }
+  constructor(private readonly db: DbService) {}
 
-    public async createCourse(data: CreateCourseDto) {
-        const course = await this.db.course.create({
-            data,
-        });
+  public async createCourse(data: CreateCourseDto) {
+    const course = await this.db.course.create({
+      data,
+    });
 
-        return course;
-    }
-
+    return course;
+  }
 }

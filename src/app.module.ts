@@ -13,7 +13,18 @@ import { QuizService } from './main/quiz/quiz.service';
 
 @Module({
   imports: [MainModule, DbModule],
-  controllers: [AppController, ContentController, ModuleController, QuizController],
-  providers: [AppService, ContentService, DbService, ModuleService, QuizService],
+  controllers: [
+    AppController,
+    ContentController,
+    ModuleController,
+    QuizController,
+  ],
+  providers: [
+    AppService,
+    ContentService,
+    DbService,
+    ModuleService,
+    QuizService,
+  ],
 })
 export class AppModule {}

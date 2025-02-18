@@ -3,5 +3,5 @@ import { CourseService } from './course.service';
 
 @Controller('course')
 export class CourseController {
-    constructor(private courseService: CourseService){}
+  constructor(private courseService: CourseService) {}
 }
