@@ -49,7 +49,9 @@ export class ContentService {
 
   async update(id: string, dto: UpdateContentDto) {
     // Check if content exists
-    const contentExists = await this.prisma.content.findUnique({ where: { id } });
+    const contentExists = await this.prisma.content.findUnique({
+      where: { id },
+    });
 
     if (!contentExists) {
       throw new NotFoundException('Content not found');
@@ -63,7 +65,9 @@ export class ContentService {
 
   async remove(id: string) {
     // Check if content exists
-    const contentExists = await this.prisma.content.findUnique({ where: { id } });
+    const contentExists = await this.prisma.content.findUnique({
+      where: { id },
+    });
 
     if (!contentExists) {
       throw new NotFoundException('Content not found');
