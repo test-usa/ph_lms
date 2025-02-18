@@ -9,8 +9,8 @@ import { QuizModule } from './quiz/quiz.module';
 import { QuizService } from './quiz/quiz.service';
 
 @Module({
-  imports: [AuthModule, ContentModule, ModuleModule,QuizModule],
+  imports: [AuthModule, ContentModule, ModuleModule, QuizModule],
   controllers: [ModuleController],
-  providers: [ModuleService, DbService,QuizService],
+  providers: [ModuleService, DbService, QuizService],
 })
 export class MainModule {}

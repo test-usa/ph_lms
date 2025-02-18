@@ -3,7 +3,6 @@ import { DbService } from 'src/db/db.service';
 import { CreateModuleDto } from './create-module.dto';
 import { UpdateModuleDto } from './update-module.dto';
 
-
 @Injectable()
 export class ModuleService {
   constructor(private readonly prisma: DbService) {}

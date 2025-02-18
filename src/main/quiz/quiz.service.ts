@@ -32,8 +32,7 @@ export class QuizService {
     console.log(result);
     return result;
   }
-  async updateQuiz(id: string, quiz: TQuiz) {
-    console.log(quiz);
+  async updateQuiz(id: string, quiz: any) {
     const result = await prisma.quiz.update({
       where: {
         id,
