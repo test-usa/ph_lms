@@ -5,6 +5,6 @@ import { DbService } from 'src/db/db.service';
 
 @Module({
   providers: [ContentService, DbService],
-  controllers: [ContentController]
+  controllers: [ContentController],
 })
 export class ContentModule {}
