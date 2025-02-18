@@ -5,10 +5,12 @@ import { ModuleController } from './module/module.controller';
 import { ModuleService } from './module/module.service';
 import { ModuleModule } from './module/module.module';
 import { DbService } from 'src/db/db.service';
+import { QuizModule } from './quiz/quiz.module';
+import { QuizService } from './quiz/quiz.service';
 
 @Module({
-  imports: [AuthModule, ContentModule, ModuleModule],
+  imports: [AuthModule, ContentModule, ModuleModule,QuizModule],
   controllers: [ModuleController],
-  providers: [ModuleService, DbService],
+  providers: [ModuleService, DbService,QuizService],
 })
 export class MainModule {}

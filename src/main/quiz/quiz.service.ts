@@ -20,7 +20,7 @@ export type TQuiz = {
 
 @Injectable()
 export class QuizService {
-  async createQuiz(quiz: TQuiz) {
+  async createQuiz(quiz: any) {
     const result = await prisma.quiz.create({
       data: {
         question: quiz.question,
@@ -29,6 +29,7 @@ export class QuizService {
         contentId: quiz.contentId,
       },
     });
+    console.log(result);
     return result;
   }
   async updateQuiz(id: string, quiz: TQuiz) {

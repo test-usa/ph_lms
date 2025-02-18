@@ -8,9 +8,12 @@ import {
   Req,
   Res,
   Patch,
+  Body,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { QuizService } from './quiz.service';
+import { CreateQuizDto } from './quiz.dto';
+import sendResponse from 'src/utils/sendResponse';
 
 @Controller('quiz')
 export class QuizController {
@@ -18,9 +21,14 @@ export class QuizController {
 
   // Create a new quiz (POST request)
   @Post()
-  createQuiz(@Req() req: Request) {
-    const payload = req.body;
-    return this.quizService.createQuiz(payload);
+  async createQuiz(@Body() createQuizDto: CreateQuizDto, @Res() res: Response) {
+    const result = await this.quizService.createQuiz(createQuizDto);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Quiz created successfully',
+      data: result,
+    });
   }
 
   // Update an existing quiz (PUT request)
