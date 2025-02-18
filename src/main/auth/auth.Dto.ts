@@ -39,20 +39,6 @@ export class RefreshTokenDto {
   refreshToken: string;
 }
 
-// Change Password
-export class ChangePasswordDto {
-  @IsString()
-  @MinLength(6, {
-    message: 'Old password is too short. Minimum length is 6 characters.',
-  })
-  oldPassword: string;
-  @IsString()
-  @MinLength(6, {
-    message: 'New password is too short. Minimum length is 6 characters.',
-  })
-  newPassword: string;
-}
-
 // Forgot Password
 export class ForgotPasswordDto {
   @IsEmail()

@@ -50,7 +50,6 @@ export class AuthController {
   @Post('refresh-token')
   async refreshToken(@Req() req: CustomRequest, @Res() res: Response) {
     const refreshToken: string = req.cookies.refreshToken;
-    console.log(refreshToken);
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not provided');
     }
@@ -69,7 +68,6 @@ export class AuthController {
     @Res() res: Response,
   ) {
     await this.authService.forgotPassword(forgotPasswordDto.email);
-
     sendResponse(res, {
       statusCode: 200,
       success: true,
