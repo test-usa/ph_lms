@@ -8,12 +8,12 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('course')
 export class CourseController {
-    constructor(private courseService: CourseService){}
+  constructor(private courseService: CourseService) {}
 
-    @Post('create')
-    @ApiBearerAuth()
-    @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR]))
-    public async createCourse(@Body() data: CreateCourseDto){
-        return await this.courseService.createCourse(data);
-    }
+  @Post('create')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR]))
+  public async createCourse(@Body() data: CreateCourseDto) {
+    return await this.courseService.createCourse(data);
+  }
 }
