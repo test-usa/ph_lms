@@ -1,39 +1,46 @@
 import {
   CanActivate,
   ExecutionContext,
-  HttpException,
   Injectable,
+  UnauthorizedException,
+  HttpException
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Observable } from 'rxjs';
 import { Request } from 'express';
-import { ConfigService } from '@nestjs/config/dist/config.service';
+import { ConfigService } from "@nestjs/config/dist/config.service";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private jwtService: JwtService,
-    private configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
-    const request: Request = context.switchToHttp().getRequest();
-    const token = request.headers['authorization']?.split(' ')[1];
-    // const token = this.extractTokenFromHeader(request);
-
-    if (!token) throw new HttpException('Token Not Provided', 401);
-
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const token = this.extractTokenFromHeader(request);    
+    if (!token) {
+      throw new HttpException("Token Not Provided",401);
+    }
     try {
-      const payload = this.jwtService.verifyAsync(token, {
-        secret: this.configService.getOrThrow('JWT_ACCESS_SECRET'),
-      });
+      const payload = await this.jwtService.verifyAsync(
+        token,
+        {
+          secret: new ConfigService().getOrThrow("JWT_SECRET")
+        }
+      );
       request['user'] = payload;
-      return true;
     } catch (error) {
       console.log(error);
-      return false;
+      
+      throw new UnauthorizedException();
     }
+    return true;
   }
+
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
+  }
+
+  
 }
