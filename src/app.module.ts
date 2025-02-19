@@ -5,14 +5,27 @@ import { MainModule } from './main/main.module';
 import { DbModule } from './db/db.module';
 import { ContentController } from './main/content/content.controller';
 import { ContentService } from './main/content/content.service';
-import { DbService } from './db/db.service';
 import { ModuleController } from './main/module/module.controller';
 import { ModuleService } from './main/module/module.service';
 import { QuizController } from './main/quiz/quiz.controller';
 import { QuizService } from './main/quiz/quiz.service';
+import { LibModule } from './lib/lib.module';
+import { UserSeeder } from './seed/admin.seed';
+import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [MainModule, DbModule],
+  imports: [
+    MainModule,
+    DbModule,
+    LibModule,
+    ConfigModule.forRoot({
+      isGlobal: true, // This makes ConfigService available globally
+    }),
+    JwtModule.register({
+      global: true, // This makes ConfigService available globally
+    }),
+  ],
   controllers: [
     AppController,
     ContentController,
@@ -22,9 +35,9 @@ import { QuizService } from './main/quiz/quiz.service';
   providers: [
     AppService,
     ContentService,
-    DbService,
     ModuleService,
     QuizService,
+    UserSeeder,
   ],
 })
 export class AppModule {}
