@@ -4,7 +4,7 @@ import { ContentController } from './content.controller';
 import { DbService } from 'src/db/db.service';
 
 @Module({
-  providers: [ContentService, DbService],
+  providers: [ContentService],
   controllers: [ContentController],
 })
 export class ContentModule {}

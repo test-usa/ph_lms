@@ -11,6 +11,6 @@ import { MailerService } from 'src/utils/sendMail';
 @Module({
   // imports: [JwtModule.register({})],
   controllers: [AuthController],
-  providers: [AuthService, DbService, JwtService, ConfigService, MailerService],
+  providers: [AuthService, JwtService, ConfigService, MailerService],
 })
 export class AuthModule {}

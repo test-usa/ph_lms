@@ -11,15 +11,26 @@ import {
 
 // login
 export class LoginDto {
+  @ApiProperty({
+    example: 'user@example.com',
+    description: 'User email address',
+    required: true,
+  })
   @IsEmail()
   email: string;
+
+  @ApiProperty({
+    example: 'securePass123',
+    description: 'User password (minimum 6 characters)',
+    minLength: 6,
+    required: true,
+  })
   @IsString()
   @MinLength(6, {
     message: 'Password is too short. Minimum length is 6 characters.',
   })
   password: string;
 }
-
 // Register
 export class RegisterDto {
   @ApiProperty({ description: 'User email address', example: 'user@example.com' })
