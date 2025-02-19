@@ -19,7 +19,7 @@ export class UserSeeder implements OnModuleInit {
   async seedAdmin() {
     const adminExists = await this.db.user.findFirst({
         where:{
-            role: $Enums.UserRole.ADMIN
+        role: $Enums.UserRole.ADMIN,
         }
     })
     

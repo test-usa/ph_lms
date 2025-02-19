@@ -35,12 +35,13 @@ model User {
   Payment  Payment[]
 }
 
+
 model Course {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String
   description String
   price       Float
-  isPublished Boolean  @default(false)
+  isPublished Boolean   @default(false)
   modules     Module[]
   payment     Payment[]
 }
@@ -74,12 +75,11 @@ model Quiz {
 }
 
 model Payment {
-  id             String   @id @default(uuid())
-  userId         String
-  courseId       String
-  amount         Float
-  status         String
-  stripeChargeId String?
-  user           User     @relation(fields: [userId], references: [id])
-  course         Course[]
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  amount        Float
+  success       Boolean  @default(false)
+  transactionId String?
+  user          User     @relation(fields: [userId], references: [id])
+  course        Course[]
 }
