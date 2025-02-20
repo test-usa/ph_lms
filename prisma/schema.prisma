@@ -14,6 +14,7 @@ datasource db {
 }
 
 enum UserRole {
+  SUPER_ADMIN
   ADMIN
   STUDENT
   INSTRUCTOR
@@ -22,7 +23,7 @@ enum UserRole {
 enum Status {
   BLOCKED
   ACTIVE
-  INACTIVE
+  DELETED
 }
 
 enum Gender {
@@ -35,8 +36,11 @@ model User {
   email      String      @unique
   password   String
   role       UserRole    @default(STUDENT)
-  isDelete   Boolean     @default(false)
   status     Status      @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   student    Student?
   instructor Instructor?
   admin      Admin?
