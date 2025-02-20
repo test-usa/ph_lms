@@ -28,9 +28,11 @@ export class AuthService {
   // Login
   public async loginUser(data: { email: string; password: string }) {
     const { email, password } = data;
-    const user = await this.db.user.findUniqueOrThrow({
+    const user = await this.db.user.findUnique({
       where: { email, status: Status.ACTIVE },
     });
+
+    if (!user) throw new HttpException('User not found', 401);
 
     const isCorrectPassword = await bcrypt.compare(password, user.password);
     if (!isCorrectPassword) throw new HttpException('Invalid credentials', 401);

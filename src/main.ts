@@ -21,6 +21,6 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   const seeder = app.get(UserSeeder);
   await seeder.seedAdmin();
-  await app.listen(process.env.PORT ?? 5000);
+  await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
