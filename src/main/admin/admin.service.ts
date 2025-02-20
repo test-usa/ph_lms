@@ -20,7 +20,7 @@ export class AdminService {
       where: {
         isDeleted: false,
         id,
-      },  
+      },
     });
     return result;
   }
