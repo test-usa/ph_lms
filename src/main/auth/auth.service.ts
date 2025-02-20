@@ -15,6 +15,7 @@ import { Status, UserRole } from '@prisma/client';
 import { DbService } from 'src/db/db.service';
 import { RegisterDto } from './auth.Dto';
 import { MailerService } from 'src/utils/sendMail';
+import { TUser } from 'src/interface/token.type';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailerService: MailerService,
-  ) {}
+  ) { }
 
   // Login
   public async loginUser(data: { email: string; password: string }) {
@@ -50,11 +51,17 @@ export class AuthService {
   }
 
   // Register
-  async registerUser(registerDto: RegisterDto) {
+  async registerUser(registerDto: RegisterDto, user: TUser) {
     const { email, password, role } = registerDto;
 
-    if (role === UserRole.ADMIN)
-      throw new ForbiddenException('Creating Admin is not allowed');
+    if (role === UserRole.SUPER_ADMIN)
+      throw new ForbiddenException('Creating Super Admin is not allowed');
+    if ((role === UserRole.ADMIN || role === UserRole.INSTRUCTOR) && !user)
+      throw new ForbiddenException('You are not authorized to register admin / instructor');
+    if (role === UserRole.ADMIN && user && user.role !== 'SUPER_ADMIN')
+      throw new ForbiddenException('Creating Admin is not allowed except for Super Admin');
+    if (role === UserRole.INSTRUCTOR && user && (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN'))
+      throw new ForbiddenException('Creating Admin is not allowed for Student');    
 
     const existingUser = await this.db.user.findUnique({
       where: { email },
