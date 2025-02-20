@@ -9,8 +9,8 @@ export class UserSeeder implements OnModuleInit {
   constructor(
     private readonly config: ConfigService,
     private readonly lib: LibService,
-    private readonly db: DbService
-) {}
+    private readonly db: DbService,
+  ) {}
 
   async onModuleInit() {
     await this.seedAdmin();
@@ -18,11 +18,11 @@ export class UserSeeder implements OnModuleInit {
 
   async seedAdmin() {
     const adminExists = await this.db.user.findFirst({
-        where:{
-            role: $Enums.UserRole.ADMIN
-        }
-    })
-    
+      where: {
+        role: $Enums.UserRole.ADMIN,
+      },
+    });
+
     if (!adminExists) {
       const hashedPassword = await this.lib.hashPassword({
         password: this.config.getOrThrow('ADMIN_PASS') as string,
@@ -34,7 +34,7 @@ export class UserSeeder implements OnModuleInit {
           password: hashedPassword,
           role: $Enums.UserRole.ADMIN,
         },
-      })
+      });
       Logger.log('Admin user created successfully.');
     } else {
       Logger.log('Admin user already exists.');

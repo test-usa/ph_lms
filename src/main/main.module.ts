@@ -7,9 +7,12 @@ import { ModuleModule } from './module/module.module';
 import { DbService } from 'src/db/db.service';
 import { QuizModule } from './quiz/quiz.module';
 import { QuizService } from './quiz/quiz.service';
+import { CourseModule } from './course/course.module';
+import { UserModule } from './user/user.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
-  imports: [AuthModule, ContentModule, ModuleModule, QuizModule],
+  imports: [AuthModule, ContentModule, CourseModule, ModuleModule, UserModule, QuizModule, AdminModule],
   controllers: [ModuleController],
   providers: [ModuleService, DbService, QuizService],
 })

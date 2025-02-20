@@ -15,15 +15,29 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 
 @Module({
-  imports: [MainModule, DbModule, LibModule, 
+  imports: [
+    MainModule,
+    DbModule,
+    LibModule,
     ConfigModule.forRoot({
-    isGlobal: true, // This makes ConfigService available globally
-  }),
-  JwtModule.register({
-    global: true, // This makes ConfigService available globally
-  }),
-],
-  controllers: [AppController, ContentController, ModuleController, QuizController],
-  providers: [AppService, ContentService, ModuleService, QuizService, UserSeeder],
+      isGlobal: true, // This makes ConfigService available globally
+    }),
+    JwtModule.register({
+      global: true, // This makes ConfigService available globally
+    }),
+  ],
+  controllers: [
+    AppController,
+    ContentController,
+    ModuleController,
+    QuizController,
+  ],
+  providers: [
+    AppService,
+    ContentService,
+    ModuleService,
+    QuizService,
+    UserSeeder,
+  ],
 })
 export class AppModule {}

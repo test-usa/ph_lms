@@ -25,24 +25,101 @@ enum Status {
   INACTIVE
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
 model User {
-  id       String    @id @default(uuid())
-  email    String    @unique
-  password String
-  role     UserRole  @default(STUDENT)
-  isDelete Boolean   @default(false)
-  status   Status    @default(ACTIVE)
-  Payment  Payment[]
+  id         String      @id @default(uuid())
+  email      String      @unique
+  password   String
+  role       UserRole    @default(STUDENT)
+  isDelete   Boolean     @default(false)
+  status     Status      @default(ACTIVE)
+  student    Student?
+  instructor Instructor?
+  admin      Admin?
+}
+
+model Student {
+  id           String  @id @unique @default(uuid())
+  email        String  @unique
+  name         String
+  profilePhoto String?
+  contact      String?
+  address      String?
+  gender       Gender
+  Payment   Payment[]
+  classroom Classroom[]
+
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String @unique
+  User   User   @relation(fields: [userId], references: [id])
+
+  Course   Course? @relation(fields: [courseId], references: [id])
+  courseId String?
+}
+
+model Instructor {
+  id           String      @id @unique @default(uuid())
+  email        String      @unique
+  name         String
+  profilePhoto String?
+  contact      String?
+  address      String?
+  gender       Gender
+  classroom    Classroom[]
+
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User   User?   @relation(fields: [userId], references: [id])
+  userId String? @unique
+}
+
+model Admin {
+  id           String  @id @unique @default(uuid())
+  email        String  @unique
+  name         String
+  profilePhoto String?
+  contact      String?
+  address      String?
+  gender       Gender
+
+  isDeleted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    String?  @unique
 }
 
 model Course {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   title       String
   description String
   price       Float
-  isPublished Boolean  @default(false)
+  isPublished Boolean    @default(false)
   modules     Module[]
   payment     Payment[]
+  student     Student[]
+  classroom   Classroom?
+}
+
+model Classroom {
+  Course   Course @relation(fields: [courseId], references: [id])
+  courseId String @unique
+
+  Instructor   Instructor @relation(fields: [instructorId], references: [id])
+  instructorId String
+  Student      Student    @relation(fields: [studentId], references: [id])
+  studentId    String
+
+  @@id([courseId, instructorId, studentId])
 }
 
 model Module {
@@ -75,11 +152,11 @@ model Quiz {
 
 model Payment {
   id             String   @id @default(uuid())
-  userId         String
   courseId       String
   amount         Float
   status         String
   stripeChargeId String?
-  user           User     @relation(fields: [userId], references: [id])
   course         Course[]
+  student        Student  @relation(fields: [studentId], references: [id])
+  studentId      String
 }
