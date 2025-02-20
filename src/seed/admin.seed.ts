@@ -28,7 +28,7 @@ export class UserSeeder implements OnModuleInit {
         password: this.config.getOrThrow('ADMIN_PASS') as string,
         round: 6,
       });
-      const adminUser = await this.db.user.create({
+await this.db.user.create({
         data: {
           email: this.config.getOrThrow('ADMIN_EMAIL') as string,
           password: hashedPassword,
