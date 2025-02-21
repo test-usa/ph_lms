@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, Status, UserRole } from '@prisma/client';
+import { Admin, Instructor, Prisma, Status, Student, UserRole } from '@prisma/client';
 import { DbService } from 'src/db/db.service';
 import { TPaginationOptions } from 'src/interface/pagination.type';
 import { TUser } from 'src/interface/token.type';
@@ -10,18 +10,69 @@ export class UserService {
     constructor(private db: DbService) { }
 
     // Get Me
-    async getMe(user: TUser) {
-        const result = await this.db.user.findUniqueOrThrow({
-            where: { email: user.email }
-        });
+    async getMe(user: TUser): Promise<Student | Instructor | Admin | null> {
+        let result: Student | Instructor | Admin
 
-        const data = {
-            id: result.id,
-            email: result.email,
-            role: result.role,
-            status: result.status,
+        if (user.role == "STUDENT") {
+            result = await this.db.student.findUniqueOrThrow({
+                where: { email: user.email }
+            });
         }
-        return data;
+        else if (user.role == "ADMIN") {
+            result = await this.db.admin.findUniqueOrThrow({
+                where: { email: user.email },
+                include: {
+                    User:{
+                        select :{
+                            email: true,
+                            id: true,
+                            role: true,
+                            status: true,
+                            createdAt: true,
+                            updatedAt: true
+                        }
+                    }
+                    
+                }
+            });
+        }
+        else if (user.role == "SUPER_ADMIN") {
+            result = await this.db.admin.findUniqueOrThrow({
+                where: { email: user.email },
+               include: {
+                    User:{
+                        select :{
+                            email: true,
+                            id: true,
+                            role: true,
+                            status: true,
+                            createdAt: true,
+                            updatedAt: true
+                        }
+                    }
+                    
+                }
+            });
+        }
+        else {
+            result = await this.db.instructor.findUniqueOrThrow({
+                where: { email: user.email },
+               include: {
+                    User:{
+                        select :{
+                            email: true,
+                            id: true,
+                            role: true,
+                            status: true,
+                            createdAt: true,
+                            updatedAt: true
+                        }
+                    }
+                    
+                }
+            });
+        }
+        return result;
     }
 
     // Get All Users
@@ -104,7 +155,7 @@ export class UserService {
             where: {
                 id,
             },
-            data: {status},
+            data: { status },
         });
 
         return updatedUserStatus;
