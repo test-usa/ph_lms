@@ -35,6 +35,12 @@ export class UserSeeder implements OnModuleInit {
           role: $Enums.UserRole.SUPER_ADMIN,
         },
       });
+      await this.db.admin.create({
+        data: {
+          email: this.config.getOrThrow('ADMIN_EMAIL') as string,
+          userId: adminUser.id,
+        },
+      });
       Logger.log('Super Admin user created successfully.');
     } else {
       Logger.log('Super Admin user already exists.');

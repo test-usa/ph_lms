@@ -19,7 +19,6 @@ export class UserService {
             id: result.id,
             email: result.email,
             role: result.role,
-            isDeleted: result.isDeleted,
             status: result.status,
         }
         return data;
