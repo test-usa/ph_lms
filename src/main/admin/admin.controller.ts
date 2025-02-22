@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Req, Res, UseGuards, Param, Body, Put, Delete } from '@nestjs/common';
+import { Controller, Get, HttpCode, Req, Res, UseGuards, Param, Body, Put, Delete, Patch } from '@nestjs/common';
 import { ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import { Response } from 'express';
@@ -6,7 +6,8 @@ import { AuthGuard } from 'src/guard/auth.guard';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import sendResponse from 'src/utils/sendResponse';
 import { AdminService } from './admin.service';
-import { UpdateAdminProfileDto } from './dto/update-admin-profile.dto';
+import { UpdateAdminProfileDto } from './admin.Dto';
+
 
 @Controller('admin')
 export class AdminController {
@@ -56,7 +57,7 @@ export class AdminController {
     });
   }
 
-  @Put('updateAdminProfile/:id')
+  @Patch('updateAdminProfile/:id')
   @HttpCode(200)
   @ApiBearerAuth()
   @ApiParam({ name: 'id', type: String })

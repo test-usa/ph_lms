@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
-import { UpdateAdminProfileDto } from './dto/update-admin-profile.dto';
+import { UpdateAdminProfileDto } from './admin.Dto';
+
 
 const prisma = new PrismaClient();
 

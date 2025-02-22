@@ -5,8 +5,9 @@ import { ModuleModule } from './module/module.module';
 import { UserModule } from './user/user.module';
 import { CourseModule } from './course/course.module';
 import { QuizModule } from './quiz/quiz.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
-  imports: [AuthModule, ContentModule, CourseModule, ModuleModule, UserModule, QuizModule],
+  imports: [AuthModule, ContentModule, CourseModule, ModuleModule, UserModule, QuizModule, AdminModule],
 })
 export class MainModule {}
