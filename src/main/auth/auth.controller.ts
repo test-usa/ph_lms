@@ -19,7 +19,7 @@ interface CustomRequest extends Request {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('login')
   async loginUser(@Body() loginDto: LoginDto, @Res() res: Response) {
@@ -36,8 +36,9 @@ export class AuthController {
   }
 
   @Post('register')
-  async registerUser(@Body() registerDto: RegisterDto, @Res() res: Response) {
-    const result = await this.authService.registerUser(registerDto);
+  async registerUser(@Body() registerDto: RegisterDto, @Res() res: Response, @Req() req: Request) {
+    console.log(req.user)
+    const result = await this.authService.registerUser(registerDto, req.user);
 
     sendResponse(res, {
       statusCode: 201,
