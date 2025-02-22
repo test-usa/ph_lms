@@ -10,7 +10,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
   const config = new DocumentBuilder()
-    .setTitle('PH-Learning Management System')
+    .setTitle('PH - Learning Management System')
     .setDescription('PH_LMS API description')
     .setVersion('1.0')
     .addTag('Content, Module')

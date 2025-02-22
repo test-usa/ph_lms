@@ -1,19 +1,35 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
 import { CourseService } from './course.service';
-import { CreateCourseDto } from './course.dto';
-import { AuthGuard } from 'src/guard/auth.guard';
-import { UserRole } from '@prisma/client';
-import { RoleGuardWith } from 'src/utils/RoleGuardWith';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { CreateCourseDto } from './create-course.dto';
+import { UpdateCourseDto } from './update-course.dto';
 
-@Controller('course')
+
+@Controller('courses')
 export class CourseController {
-  constructor(private courseService: CourseService) {}
+  constructor(private readonly courseService: CourseService) {}
 
-  @Post('create')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR]))
-  public async createCourse(@Body() data: CreateCourseDto) {
-    return await this.courseService.createCourse(data);
+  @Post()
+  async createCourse(@Body() data: CreateCourseDto) {
+    return this.courseService.createCourse(data);
+  }
+
+  @Get()
+  async getAllCourses() {
+    return this.courseService.getAllCourses();
+  }
+
+  @Get(':id')
+  async getCourseById(@Param('id') id: string) {
+    return this.courseService.getCourseById(id);
+  }
+
+  @Put(':id')
+  async updateCourse(@Param('id') id: string, @Body() data: UpdateCourseDto) {
+    return this.courseService.updateCourse(id, data);
+  }
+
+  @Delete(':id')
+  async deleteCourse(@Param('id') id: string) {
+    return this.courseService.deleteCourse(id);
   }
 }
