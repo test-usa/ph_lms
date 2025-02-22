@@ -19,7 +19,7 @@ export class UserSeeder implements OnModuleInit {
   async seedAdmin() {
     const adminExists = await this.db.user.findFirst({
       where: {
-        role: $Enums.UserRole.ADMIN,
+        role: $Enums.UserRole.SUPER_ADMIN,
       },
     });
 
@@ -28,16 +28,16 @@ export class UserSeeder implements OnModuleInit {
         password: this.config.getOrThrow('ADMIN_PASS') as string,
         round: 6,
       });
-      const adminUser = await this.db.user.create({
+await this.db.user.create({
         data: {
           email: this.config.getOrThrow('ADMIN_EMAIL') as string,
           password: hashedPassword,
-          role: $Enums.UserRole.ADMIN,
+          role: $Enums.UserRole.SUPER_ADMIN,
         },
       });
-      Logger.log('Admin user created successfully.');
+      Logger.log('Super Admin user created successfully.');
     } else {
-      Logger.log('Admin user already exists.');
+      Logger.log('Super Admin user already exists.');
     }
   }
 }
