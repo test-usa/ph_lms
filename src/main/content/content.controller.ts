@@ -10,6 +10,7 @@ import {
 import { ContentService } from './content.service';
 import { CreateContentDto } from './create-content.dto';
 import { UpdateContentDto } from './update-content.dto';
+import { IdDto } from 'src/common/id.dto';
 
 @Controller('content')
 export class ContentController {
@@ -26,7 +27,7 @@ export class ContentController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: IdDto) {
     return this.contentService.findOne(id);
   }
 

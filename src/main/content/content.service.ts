@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { CreateContentDto } from './create-content.dto';
 import { UpdateContentDto } from './update-content.dto';
+import { IdDto } from 'src/common/id.dto';
 
 @Injectable()
 export class ContentService {
@@ -34,7 +35,7 @@ export class ContentService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne({ id }:IdDto) {
     const content = await this.prisma.content.findUnique({
       where: { id },
       include: { QuizInstance: true },
