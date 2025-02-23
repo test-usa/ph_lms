@@ -32,11 +32,11 @@ enum Gender {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  email      String      @unique
-  password   String
-  role       UserRole    @default(STUDENT)
-  status     Status      @default(ACTIVE)
+  id       String   @id @default(uuid())
+  email    String   @unique
+  password String
+  role     UserRole @default(STUDENT)
+  status   Status   @default(ACTIVE)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -44,18 +44,19 @@ model User {
   student    Student?
   instructor Instructor?
   admin      Admin?
+  Blog       Blog[]
 }
 
 model Student {
-  id           String  @id @unique @default(uuid())
-  email        String  @unique
+  id           String      @id @unique @default(uuid())
+  email        String      @unique
   name         String
   profilePhoto String?
   contact      String?
   address      String?
   gender       Gender
-  Payment   Payment[]
-  classroom Classroom[]
+  Payment      Payment[]
+  classroom    Classroom[]
 
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -152,6 +153,17 @@ model Quiz {
   correctAnswer Int?
   content       Content? @relation(fields: [contentId], references: [id])
   contentId     String?
+}
+
+model Blog {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  author      User     @relation(fields: [authorId], references: [id])
+  authorId    String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Payment {
