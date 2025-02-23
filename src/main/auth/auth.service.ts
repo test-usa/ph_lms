@@ -54,7 +54,7 @@ export class AuthService {
 
   // Register
   async registerUser(registerDto: RegisterDto, user: TUser) {
-    const { email, password, role } = registerDto;
+    const { email, password, role, phone } = registerDto;
 
     if (role === UserRole.SUPER_ADMIN)
       throw new ForbiddenException('Creating Super Admin is not allowed');
@@ -78,11 +78,13 @@ export class AuthService {
         password: hashedPassword,
         role: role || UserRole.STUDENT,
         status: Status.ACTIVE,
+        phone
       },
     });
     return {
       email: newUser.email,
       role: newUser.role,
+      phone: newUser.phone,
       message: 'Registration successful',
     };
   }
@@ -93,7 +95,7 @@ export class AuthService {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
     });
     const user = await this.db.user.findUniqueOrThrow({
-      where: { email: payload.email, status: Status.ACTIVE },
+      where: { email: payload.email, status: Status.ACTIVE, },
     });
     const accessToken = this.jwtService.sign(
       { email: user.email, role: user.role },

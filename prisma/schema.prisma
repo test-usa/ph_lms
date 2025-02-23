@@ -34,6 +34,8 @@ enum Gender {
 model User {
   id       String   @id @default(uuid())
   email    String   @unique
+  name     String?
+  phone    String?
   password String
   role     UserRole @default(STUDENT)
   status   Status   @default(ACTIVE)
@@ -135,12 +137,12 @@ model Module {
 }
 
 model Content {
-  id           String         @id @default(uuid())
+  id           String        @id @default(uuid())
   title        String
   video        String?
   description  String?
   assignment   String?
-  Module       Module?        @relation(fields: [moduleId], references: [id])
+  Module       Module?       @relation(fields: [moduleId], references: [id])
   moduleId     String?
   QuizInstance QuizInstance?
 }
@@ -151,7 +153,7 @@ model QuizInstance {
   totalMark    Int
   acquiredMark Int
   content      Content @relation(fields: [contentId], references: [id])
-  contentId    String @unique
+  contentId    String  @unique
 }
 
 model Quiz {

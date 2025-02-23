@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsOptional,
   IsString,
+  Matches,
   MinLength,
 } from 'class-validator';
 
@@ -55,7 +56,20 @@ export class RegisterDto {
   @IsOptional()
   @IsEnum(UserRole)
   role: UserRole;
+
+  @ApiProperty({
+    description: 'User phone number',
+    example: '+1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Phone number must be a valid international format',
+  })
+  phone: string;
 }
+
 
 export class RefreshTokenDto {
   @ApiProperty({
