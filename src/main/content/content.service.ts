@@ -30,14 +30,14 @@ export class ContentService {
 
   async findAll() {
     return this.prisma.content.findMany({
-      include: { quiz: true },
+      include: { QuizInstance: true },
     });
   }
 
   async findOne(id: string) {
     const content = await this.prisma.content.findUnique({
       where: { id },
-      include: { quiz: true },
+      include: { QuizInstance: true },
     });
 
     if (!content) {

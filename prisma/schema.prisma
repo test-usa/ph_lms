@@ -32,11 +32,11 @@ enum Gender {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  email      String      @unique
-  password   String
-  role       UserRole    @default(STUDENT)
-  status     Status      @default(ACTIVE)
+  id       String   @id @default(uuid())
+  email    String   @unique
+  password String
+  role     UserRole @default(STUDENT)
+  status   Status   @default(ACTIVE)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -47,15 +47,15 @@ model User {
 }
 
 model Student {
-  id           String  @id @unique @default(uuid())
-  email        String  @unique
+  id           String      @id @unique @default(uuid())
+  email        String      @unique
   name         String
   profilePhoto String?
   contact      String?
   address      String?
   gender       Gender
-  Payment   Payment[]
-  classroom Classroom[]
+  Payment      Payment[]
+  classroom    Classroom[]
 
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -135,23 +135,32 @@ model Module {
 }
 
 model Content {
-  id          String  @id @default(uuid())
-  title       String
-  video       String?
-  description String?
-  assignment  String?
-  quiz        Quiz[]
-  Module      Module? @relation(fields: [moduleId], references: [id])
-  moduleId    String?
+  id           String         @id @default(uuid())
+  title        String
+  video        String?
+  description  String?
+  assignment   String?
+  Module       Module?        @relation(fields: [moduleId], references: [id])
+  moduleId     String?
+  QuizInstance QuizInstance?
+}
+
+model QuizInstance {
+  id           String  @id @default(uuid())
+  quiz         Quiz[]
+  totalMark    Int
+  acquiredMark Int
+  content      Content @relation(fields: [contentId], references: [id])
+  contentId    String @unique
 }
 
 model Quiz {
-  id            String   @id @default(uuid())
-  question      String
-  options       String[]
-  correctAnswer Int?
-  content       Content? @relation(fields: [contentId], references: [id])
-  contentId     String?
+  id             String        @id @default(uuid())
+  question       String
+  options        String[]
+  correctAnswer  Int?
+  QuizInstance   QuizInstance? @relation(fields: [quizInstanceId], references: [id])
+  quizInstanceId String?
 }
 
 model Payment {
