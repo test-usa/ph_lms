@@ -78,11 +78,10 @@ export class UserService {
       data: updatedUser,
       success: true,
       message: 'User updated successfully',
-      statusCode: HttpStatus.OK, // Use HttpStatus.OK for an update
+      statusCode: HttpStatus.OK,
     };
   }
 
-  // Get All Users
   async getAllUsers(params: any, options: TPaginationOptions) {
     const andConditions: Prisma.UserWhereInput[] = [];
     const { searchTerm, ...filteredData } = params;
@@ -133,7 +132,7 @@ export class UserService {
         : {
             createdAt: 'desc',
           },
-      // Excluding password from response
+
       select: {
         id: true,
         email: true,
@@ -158,7 +157,6 @@ export class UserService {
     };
   }
 
-  // Change profile status
   async changeProfileStatus(id: string, status: Status) {
     await this.db.user.findUniqueOrThrow({
       where: {
