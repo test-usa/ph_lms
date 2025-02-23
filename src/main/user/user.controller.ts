@@ -28,7 +28,7 @@ export class UserController {
 
   @Get()
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN]))
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   async getAllUser(@Req() req: Request, @Res() res: Response) {
     const filters = pick(req.query, ["email", "searchTerm", "role", "status"]);
     const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"]);
@@ -43,7 +43,7 @@ export class UserController {
 
   @Patch(':id/status')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN]))
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   async changeProfileStatus(@Body() changeProfileStatusDto: ChangeProfileStatusDto, @Req() req: Request, @Res() res: Response) {
     const { id } = req.params;
     const result = await this.userService.changeProfileStatus(id, changeProfileStatusDto.status);
