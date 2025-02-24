@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import {
   Injectable,
   HttpException,
@@ -81,6 +77,30 @@ export class AuthService {
         phone
       },
     });
+    if(newUser.role == "STUDENT"){
+     ( await this.db.student.create({
+        data: {
+          email,
+          userId: newUser.id,
+        }
+      })) 
+    }
+    else if(newUser.role == "INSTRUCTOR"){
+     ( await this.db.instructor.create({
+        data: {
+          email,
+          userId: newUser.id,
+        }
+      })) 
+    }
+    else if(newUser.role == "ADMIN"){
+     ( await this.db.admin.create({
+        data: {
+          email,
+          userId: newUser.id,
+        }
+      })) 
+    }
     return {
       email: newUser.email,
       role: newUser.role,

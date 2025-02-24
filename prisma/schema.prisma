@@ -73,11 +73,11 @@ model Student {
 model Instructor {
   id           String      @id @unique @default(uuid())
   email        String      @unique
-  name         String
+  name         String?
   profilePhoto String?
   contact      String?
   address      String?
-  gender       Gender
+  gender       Gender?
   classroom    Classroom[]
 
   isDeleted Boolean  @default(false)
@@ -91,11 +91,11 @@ model Instructor {
 model Admin {
   id           String  @id @unique @default(uuid())
   email        String  @unique
-  name         String
+  name         String?
   profilePhoto String?
   contact      String?
   address      String?
-  gender       Gender
+  gender       Gender?
 
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())

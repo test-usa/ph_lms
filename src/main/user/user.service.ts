@@ -164,12 +164,12 @@ export class UserService {
       },
     });
 
-    const updatedUserStatus = await this.db.user.update({
-      where: {
-        id,
-      },
-      data: { status },
-    });
+        const updatedUserStatus = await this.db.user.update({
+            where: {
+                id,
+            },
+            data: { status },
+        });
 
     return updatedUserStatus;
   }

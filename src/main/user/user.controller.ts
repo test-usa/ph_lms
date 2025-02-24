@@ -29,10 +29,7 @@ export class UserController {
 
   @Get('me')
   @ApiBearerAuth()
-  @UseGuards(
-    AuthGuard,
-    RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.STUDENT]),
-  )
+  @UseGuards(AuthGuard)
   async getUser(@Req() req: Request, @Res() res: Response) {
     const result = await this.userService.getMe(req.user);
     sendResponse(res, {
