@@ -13,6 +13,8 @@ import { LibModule } from './lib/lib.module';
 import { UserSeeder } from './seed/admin.seed';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { BlogController } from './main/blog/blog.controller';
+import { BlogService } from './main/blog/blog.service';
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { JwtModule } from '@nestjs/jwt';
     ContentController,
     ModuleController,
     QuizController,
+    BlogController,
   ],
   providers: [
     AppService,
@@ -38,6 +41,7 @@ import { JwtModule } from '@nestjs/jwt';
     ModuleService,
     QuizService,
     UserSeeder,
+    BlogService,
   ],
 })
 export class AppModule {}
