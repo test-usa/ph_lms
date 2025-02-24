@@ -54,7 +54,7 @@ export class AuthService {
 
   // Register
   async registerUser(registerDto: RegisterDto, user: TUser) {
-    const { email, password, role, phone } = registerDto;
+    const { email, password, role, phone, name } = registerDto;
 
     if (role === UserRole.SUPER_ADMIN)
       throw new ForbiddenException('Creating Super Admin is not allowed');
@@ -78,7 +78,8 @@ export class AuthService {
         password: hashedPassword,
         role: role || UserRole.STUDENT,
         status: Status.ACTIVE,
-        phone
+        phone,
+        name
       },
     });
     return {
