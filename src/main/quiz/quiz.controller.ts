@@ -29,43 +29,46 @@ export class QuizController {
   // ✅ Create a new quiz (POST request)
   @Post('create')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-  async createQuiz(
-    @Body() createQuizDto: CreateQuizDto,
-  ) {
-    return this.quizService.createQuiz(createQuizDto)
+  @UseGuards(
+    AuthGuard,
+    RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
+  )
+  async createQuiz(@Body() createQuizDto: CreateQuizDto) {
+    return this.quizService.createQuiz(createQuizDto);
   }
 
   // ✅ Update an existing quiz (PATCH request)
   @Patch('update')
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-  async updateQuiz(
-    @Body() updateQuizDto: UpdateQuizDto,
-  ) {
-    return this.quizService.updateQuiz(updateQuizDto)
+  @UseGuards(
+    AuthGuard,
+    RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
+  )
+  async updateQuiz(@Body() updateQuizDto: UpdateQuizDto) {
+    return this.quizService.updateQuiz(updateQuizDto);
   }
 
   // ✅ Delete a quiz (DELETE request)
   @Delete('delete/:id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  @UseGuards(
+    AuthGuard,
+    RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
+  )
   async deleteQuiz(@Param() id: IdDto) {
-    return this.quizService.deleteQuiz(id)
+    return this.quizService.deleteQuiz(id);
   }
 
   @Get('startQuiz/:id')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([ UserRole.STUDENT]))
-  async getAllQuizzes(@Param() id:IdDto) {
-    return this.quizService.getAllQuizzes(id)
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
+  async getAllQuizzes(@Param() id: IdDto) {
+    return this.quizService.getAllQuizzes(id);
   }
 
   @Post('submitQuiz')
   @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([ UserRole.STUDENT]))
-  async submitQuiz(
-    @Body() answer: SubmitAnswerDto 
-  ) {
-
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
+  async submitQuiz(@Body() answer: SubmitAnswerDto) {
+    return this.quizService.submitQuiz(answer);
   }
 }
