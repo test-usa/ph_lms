@@ -66,6 +66,6 @@ export class QuizController {
   async submitQuiz(
     @Body() answer: SubmitAnswerDto 
   ) {
-
+    return this.quizService.submitQuiz(answer)
   }
 }

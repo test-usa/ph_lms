@@ -21,9 +21,9 @@ export class ContentController {
     return this.contentService.create(createContentDto);
   }
 
-  @Get()
-  findAll() {
-    return this.contentService.findAll();
+  @Get(":id")
+  findAll(@Param() id : IdDto) {
+    return this.contentService.findAll(id);
   }
 
   @Get(':id')

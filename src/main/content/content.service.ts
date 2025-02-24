@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { CreateContentDto } from './create-content.dto';
 import { UpdateContentDto } from './update-content.dto';
 import { IdDto } from 'src/common/id.dto';
+import { ApiResponse } from 'src/utils/sendResponse';
+import { Content, QuizInstance } from '@prisma/client';
 
 @Injectable()
 export class ContentService {
@@ -29,10 +31,18 @@ export class ContentService {
     });
   }
 
-  async findAll() {
-    return this.prisma.content.findMany({
-      include: { QuizInstance: true },
+  async findAll({id}:IdDto):Promise<ApiResponse<Content[]>> {
+    const data = await this.prisma.content.findMany({
+      where: {
+        moduleId: id,
+       },
     });
+    return{
+      success: true,
+      message: 'Contents retrieved successfully',
+      statusCode: HttpStatus.OK,
+      data,
+    }
   }
 
   async findOne({ id }:IdDto) {
