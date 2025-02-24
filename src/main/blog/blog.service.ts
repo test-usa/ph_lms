@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { CreateBlogDto } from './create-blog.dto';
 import { UpdateBlogDto } from './update-blog.dto';
+import { IdDto } from 'src/common/id.dto';
 
 @Injectable()
 export class BlogService {
@@ -32,7 +33,7 @@ export class BlogService {
     return blog;
   }
 
-  async update(id: string, updateBlogDto: UpdateBlogDto) {
+  async update({id}: IdDto, updateBlogDto: UpdateBlogDto) {
     await this.findOne(id); // Ensure the blog exists
 
     return this.prisma.blog.update({
@@ -41,7 +42,7 @@ export class BlogService {
     });
   }
 
-  async remove(id: string) {
+  async remove({id}: IdDto) {
     await this.findOne(id); // Ensure the blog exists
 
     return this.prisma.blog.delete({
