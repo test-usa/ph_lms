@@ -7,6 +7,7 @@ import { CourseModule } from './course/course.module';
 import { QuizModule } from './quiz/quiz.module';
 import { AdminModule } from './admin/admin.module';
 import { BillingModule } from './billing/billing.module';
+import { AssignmentModule } from './assignment/assignment.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { BillingModule } from './billing/billing.module';
     UserModule, 
     QuizModule, 
     AdminModule,
-    BillingModule
+    BillingModule,
+    AssignmentModule
   ],
 })
 export class MainModule {}
