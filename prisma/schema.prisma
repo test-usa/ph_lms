@@ -46,6 +46,7 @@ model User {
   student    Student?
   instructor Instructor?
   admin      Admin?
+  Blog       Blog[]
 }
 
 model Student {
@@ -163,6 +164,17 @@ model Quiz {
   correctAnswer  Int?
   QuizInstance   QuizInstance? @relation(fields: [quizInstanceId], references: [id])
   quizInstanceId String?
+}
+
+model Blog {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  author      User     @relation(fields: [authorId], references: [id])
+  authorId    String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Payment {

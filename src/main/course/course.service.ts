@@ -1,23 +1,57 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { Course, Prisma } from '@prisma/client';
 import { DbService } from 'src/db/db.service';
-import { CreateCourseDto } from './course.dto';
-import { ApiResponse } from 'src/utils/sendResponse';
-import { Course } from '@prisma/client';
 
 @Injectable()
 export class CourseService {
-  constructor(private readonly db: DbService) {}
+  constructor(private prisma: DbService) {}
 
-  public async createCourse(data: CreateCourseDto):Promise<ApiResponse<Course>> {
-    const course = await this.db.course.create({
-      data,
+  async createCourse(data: Prisma.CourseCreateInput): Promise<Course> {
+    return this.prisma.course.create({ data });
+  }
+
+  async getAllCourses(): Promise<Course[]> {
+    return this.prisma.course.findMany({
+      include: { 
+        classroom: { // ✅ Include classroom relation
+          include: { Instructor: true } // ✅ Fetch the instructor from classroom
+        },
+        modules: true, 
+        student: true, // Fixed: 'students' -> 'student' (correct relation name)
+      },
     });
+  }
+  
 
-    return {
-      data:course,
-      success: true,
-      message: 'Course created successfully',
-      statusCode: HttpStatus.CREATED,
-    };
+  async getCourseById(id: string): Promise<Course> {
+    const course = await this.prisma.course.findUnique({
+      where: { id: id },
+      include: { 
+        classroom: {
+          include: { Instructor: true } 
+        }
+      }
+    });
+    if (!course) throw new NotFoundException('Course not found');
+    return course;
+  }
+
+  async updateCourse(id: string, data: Prisma.CourseUpdateInput): Promise<Course> {
+    try {
+      return await this.prisma.course.update({
+        where: { id },
+        data,
+      });
+    } catch (error) {
+      throw new NotFoundException('Course not found');
+    }
+  }
+
+  async deleteCourse(id: string): Promise<Course> {
+    try {
+      return await this.prisma.course.delete({ where: { id } });
+    } catch (error) {
+      throw new NotFoundException('Course not found');
+    }
   }
 }
