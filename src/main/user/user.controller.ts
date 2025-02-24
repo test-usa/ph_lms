@@ -21,6 +21,7 @@ import {
   ChangeProfileStatusDto,
   CreateAnUserDto,
   updateAnUserDto,
+  UpdateAnUserRoleDto,
 } from './user.Dto';
 
 @Controller('user')
@@ -95,4 +96,26 @@ export class UserController {
       data: result,
     });
   }
+
+  @Post('instructor/create')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  async createInstructor(@Body() createAnUserDto: CreateAnUserDto) {
+    return this.userService.createInstructor(createAnUserDto);
+  }
+
+  @Post('admin/create')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN]))
+  async createAdmin(@Body() createAnUserDto: CreateAnUserDto) {
+    return this.userService.createAdmin(createAnUserDto);
+  }
+
+  @Patch('user/role')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN]))
+  async changeRoleBySuperAdmin(
+    @Body() updateAnUserRoleDto: UpdateAnUserRoleDto){
+      return this.userService.changeRoleBySuperAdmin(updateAnUserRoleDto);
+    }
 }

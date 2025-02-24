@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma, Status, User, UserRole } from '@prisma/client';
 import { DbService } from 'src/db/db.service';
 import { TPaginationOptions } from 'src/interface/pagination.type';
@@ -6,13 +6,29 @@ import { TUser } from 'src/interface/token.type';
 import calculatePagination from 'src/utils/calculatePagination';
 import { ApiResponse } from 'src/utils/sendResponse';
 import * as bcrypt from 'bcrypt';
+import { CreateAnUserDto, UpdateAnUserRoleDto } from './user.Dto';
+import { LibService } from 'src/lib/lib.service';
 
 @Injectable()
 export class UserService {
-  constructor(private db: DbService) {}
+  constructor(
+    private readonly db: DbService,
+    private readonly lib: LibService
+  ) { }
 
   // Get Me
-  async getMe(user: TUser) {
+
+  private async isAdminOrInstructor(id: string) {
+    const user = await this.db.user.findUnique({
+      where: { id },
+    });
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.INSTRUCTOR) throw new HttpException('User has to be either admin or instructor', HttpStatus.NOT_FOUND)
+    return (user.role === UserRole.ADMIN || user.role === UserRole.INSTRUCTOR) && user;
+  }
+
+
+  public async getMe(user: TUser) {
     const result = await this.db.user.findUniqueOrThrow({
       where: { email: user.email },
     });
@@ -30,10 +46,12 @@ export class UserService {
     email,
     password,
     role,
-  }): Promise<ApiResponse<User>> {
+    name
+  }: CreateAnUserDto): Promise<ApiResponse<User>> {
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await this.db.user.create({
       data: {
+        name,
         email,
         password: hashedPassword,
         role,
@@ -83,7 +101,7 @@ export class UserService {
   }
 
   // Get All Users
-  async getAllUsers(params: any, options: TPaginationOptions) {
+  public async getAllUsers(params: any, options: TPaginationOptions) {
     const andConditions: Prisma.UserWhereInput[] = [];
     const { searchTerm, ...filteredData } = params;
     const { page, limit, skip } = calculatePagination(options);
@@ -125,14 +143,14 @@ export class UserService {
       orderBy: options.sortBy
         ? options.sortOrder
           ? {
-              [options.sortBy]: options.sortOrder,
-            }
+            [options.sortBy]: options.sortOrder,
+          }
           : {
-              [options.sortBy]: 'asc',
-            }
+            [options.sortBy]: 'asc',
+          }
         : {
-            createdAt: 'desc',
-          },
+          createdAt: 'desc',
+        },
       // Excluding password from response
       select: {
         id: true,
@@ -159,7 +177,7 @@ export class UserService {
   }
 
   // Change profile status
-  async changeProfileStatus(id: string, status: Status) {
+  public async changeProfileStatus(id: string, status: Status) {
     await this.db.user.findUniqueOrThrow({
       where: {
         id,
@@ -175,4 +193,80 @@ export class UserService {
 
     return updatedUserStatus;
   }
+
+  public async createInstructor({
+    name,
+    email,
+    password,
+  }: CreateAnUserDto): Promise<ApiResponse<User>> {
+    const hashedPassword = await this.lib.hashPassword({
+      password,
+      round: 6,
+    });
+    const newUser = await this.db.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: UserRole.INSTRUCTOR,
+      },
+    })
+    return {
+      data: newUser,
+      success: true,
+      message: 'Instructor created successfully',
+      statusCode: HttpStatus.CREATED,
+    }
+
+  }
+  public async createAdmin({
+    name,
+    email,
+    password,
+  }: CreateAnUserDto): Promise<ApiResponse<User>> {
+    const hashedPassword = await this.lib.hashPassword({
+      password,
+      round: 6,
+    });
+    const newUser = await this.db.user.create({
+      data: {
+        name: name,
+        email: email,
+        password: hashedPassword,
+        role: UserRole.ADMIN,
+      },
+    });
+    return {
+      data: newUser,
+      success: true,
+      message: 'Admin created successfully',
+      statusCode: HttpStatus.CREATED,
+    }
+  }
+
+  public async changeRoleBySuperAdmin({ 
+    userId,
+    userRole,
+   }: UpdateAnUserRoleDto): Promise<ApiResponse<User>> {
+
+    const user = await this.isAdminOrInstructor(userId)
+    if (!user) throw new HttpException('Only admin or instructor can change role', HttpStatus.FORBIDDEN)
+    const updatedUser = await this.db.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        role: userRole,
+      },
+    })
+
+    return {
+      data: updatedUser,
+      success: true,
+      message: 'Role updated successfully',
+      statusCode: HttpStatus.OK, // Use HttpStatus.OK for an update
+    }
+  }
+
+
 }
