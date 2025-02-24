@@ -8,7 +8,8 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { PaginationDto } from 'src/common/pagination.dto';
 import { IdDto } from 'src/common/id.dto';
 
-@Controller('course')
+
+@Controller('courses')
 export class CourseController {
   constructor(private courseService: CourseService) { }
 

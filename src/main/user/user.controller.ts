@@ -32,7 +32,7 @@ export class UserController {
   @ApiBearerAuth()
   @UseGuards(
     AuthGuard,
-    RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.STUDENT]),
+    RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.STUDENT, UserRole.SUPER_ADMIN]),
   )
   async getUser(@Req() req: Request, @Res() res: Response) {
     const result = await this.userService.getMe(req.user);

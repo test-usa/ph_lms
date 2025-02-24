@@ -8,13 +8,13 @@ import { IdDto } from 'src/common/id.dto';
 
 @Injectable()
 export class CourseService {
-  constructor(private readonly db: DbService) {}
+  constructor(private db: DbService) {}
 
   public async createCourse(data: CreateCourseDto):Promise<ApiResponse<Course>> {
     const course = await this.db.course.create({
       data,
     });
-
+  
     return {
       data:course,
       success: true,
