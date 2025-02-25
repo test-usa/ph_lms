@@ -10,10 +10,9 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ModuleService } from './module.service';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CreateModuleDto } from './create-module.dto';
 import { UpdateModuleDto } from './update-module.dto';
-import sendResponse from 'src/utils/sendResponse';
 import { IdDto } from 'src/common/id.dto';
 
 @ApiTags('Modules')
