@@ -130,11 +130,12 @@ model Classroom {
 }
 
 model Module {
-  id       String    @id @default(uuid())
-  title    String
-  course   Course?   @relation(fields: [courseId], references: [id])
-  courseId String?
-  content  Content[]
+  id         String       @id @default(uuid())
+  title      String
+  course     Course?      @relation(fields: [courseId], references: [id])
+  courseId   String?
+  content    Content[]
+  assignment Assignment?
 }
 
 model Content {
@@ -164,6 +165,15 @@ model Quiz {
   correctAnswer  Int?
   QuizInstance   QuizInstance? @relation(fields: [quizInstanceId], references: [id])
   quizInstanceId String?
+}
+
+model Assignment {
+  id          String  @id @default(uuid())
+  title       String
+  file        String?
+  isSubmitted Boolean @default(false)
+  Module      Module? @relation(fields: [moduleId], references: [id])
+  moduleId    String @unique
 }
 
 model Blog {

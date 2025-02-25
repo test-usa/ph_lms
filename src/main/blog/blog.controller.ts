@@ -21,22 +21,25 @@ export class BlogController {
     return this.blogService.create(createBlogDto);
   }
 
-  @ApiOperation({ summary: 'Get all blogs' })
   @Get()
+  @ApiOperation({ summary: 'Get all blogs' })
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR, UserRole.STUDENT]))
   findAll() {
     return this.blogService.findAll();
   }
 
-  @ApiOperation({ summary: 'Get a single blog' })
-  @ApiParam({ name: 'id', type: String })
   @Get(':id')
+  @ApiParam({ name: 'id', type: String })
+  @ApiOperation({ summary: 'Get a single blog' })
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR, UserRole.STUDENT]))
   findOne(@Param('id') id: string) {
     return this.blogService.findOne(id);
   }
 
-  @ApiOperation({ summary: 'Update a blog' })
-  @ApiParam({ name: 'id', type: String })
   @Patch(':id')
+  @ApiParam({ name: 'id', type: String })
+  @ApiOperation({ summary: 'Update a blog' })
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR]))
   update(@Param('id') id: IdDto, @Body() updateBlogDto: UpdateBlogDto) {
     return this.blogService.update(id, updateBlogDto);
   }
@@ -44,6 +47,7 @@ export class BlogController {
   @ApiOperation({ summary: 'Delete a blog' })
   @ApiParam({ name: 'id', type: String })
   @Delete(':id')
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.INSTRUCTOR]))
   remove(@Param('id') id: IdDto) {
     return this.blogService.remove(id);
   }
