@@ -13,9 +13,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Status, UserRole } from '@prisma/client';
 import { DbService } from 'src/db/db.service';
-import { RegisterDto } from './auth.Dto';
+import { LoginDto, RegisterDto } from './auth.Dto';
 import { MailerService } from 'src/utils/sendMail';
 import { TUser } from 'src/interface/token.type';
+import { ApiResponse } from 'src/utils/sendResponse';
 
 @Injectable()
 export class AuthService {
@@ -24,10 +25,15 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailerService: MailerService,
-  ) { }
+  ) {}
 
   // Login
-  public async loginUser(data: { email: string; password: string }) {
+  public async loginUser(data: LoginDto): Promise<
+    ApiResponse<{
+      accessToken: string;
+      refreshToken: string;
+    }>
+  > {
     const { email, password } = data;
     const user = await this.db.user.findUnique({
       where: { email, status: Status.ACTIVE },
@@ -47,23 +53,43 @@ export class AuthService {
     });
 
     return {
-      accessToken,
-      refreshToken,
+      statusCode: 200,
+      success: true,
+      message: 'Logged in successfully',
+      data: { accessToken, refreshToken },
     };
   }
 
   // Register
-  async registerUser(registerDto: RegisterDto, user: TUser) {
+  async registerUser(
+    registerDto: RegisterDto,
+    user: TUser,
+  ): Promise<
+    ApiResponse<{
+      email: string;
+      role: string;
+      phone: string | null;
+    }>
+  > {
     const { email, password, role, phone, name } = registerDto;
 
     if (role === UserRole.SUPER_ADMIN)
       throw new ForbiddenException('Creating Super Admin is not allowed');
     if ((role === UserRole.ADMIN || role === UserRole.INSTRUCTOR) && !user)
-      throw new ForbiddenException('You are not authorized to register admin / instructor');
+      throw new ForbiddenException(
+        'You are not authorized to register admin / instructor',
+      );
     if (role === UserRole.ADMIN && user && user.role !== 'SUPER_ADMIN')
-      throw new ForbiddenException('Creating Admin is not allowed except for Super Admin');
-    if (role === UserRole.INSTRUCTOR && user && (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN'))
-      throw new ForbiddenException('Creating Admin is not allowed for Student');    
+      throw new ForbiddenException(
+        'Creating Admin is not allowed except for Super Admin',
+      );
+    if (
+      role === UserRole.INSTRUCTOR &&
+      user &&
+      user.role !== 'ADMIN' &&
+      user.role !== 'SUPER_ADMIN'
+    )
+      throw new ForbiddenException('Creating Admin is not allowed for Student');
 
     const existingUser = await this.db.user.findUnique({
       where: { email },
@@ -79,34 +105,41 @@ export class AuthService {
         role: role || UserRole.STUDENT,
         status: Status.ACTIVE,
         phone,
-        name
+        name,
       },
     });
     return {
-      email: newUser.email,
-      role: newUser.role,
-      phone: newUser.phone,
-      message: 'Registration successful',
+      statusCode: 201,
+      success: true,
+      message: 'User registered successfully',
+      data: { email: newUser.email, role: newUser.role, phone: newUser.phone },
     };
   }
 
   // Refresh Token
-  async refreshToken(token: string) {
+  async refreshToken(token: string):Promise<ApiResponse<{
+    accessToken: string;
+  }>> {
     const payload = this.jwtService.verify(token, {
       secret: this.configService.get('JWT_REFRESH_SECRET'),
     });
     const user = await this.db.user.findUniqueOrThrow({
-      where: { email: payload.email, status: Status.ACTIVE, },
+      where: { email: payload.email, status: Status.ACTIVE },
     });
     const accessToken = this.jwtService.sign(
       { email: user.email, role: user.role },
       { secret: this.configService.get('JWT_ACCESS_SECRET') },
     );
-    return { accessToken };
+    return {
+      statusCode: 200,
+      success: true,
+      message: 'Token refreshed successfully',
+      data: { accessToken },
+    }
   }
 
   // Forgot
-  async forgotPassword(email: string) {
+  async forgotPassword(email: string):Promise<ApiResponse<null>> {
     const user = await this.db.user.findUniqueOrThrow({
       where: { email, status: Status.ACTIVE },
     });
@@ -129,5 +162,12 @@ export class AuthService {
           </p>
       </div>`,
     );
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: 'Reset password link sent successfully',
+      data: null,
+    }
   }
 }
