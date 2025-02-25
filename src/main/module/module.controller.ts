@@ -14,6 +14,7 @@ import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreateModuleDto } from './create-module.dto';
 import { UpdateModuleDto } from './update-module.dto';
 import sendResponse from 'src/utils/sendResponse';
+import { IdDto } from 'src/common/id.dto';
 
 @ApiTags('Modules')
 @Controller('modules')
@@ -22,62 +23,34 @@ export class ModuleController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new module' })
-  async create(@Body() dto: CreateModuleDto, @Res() res: Response) {
-    const result = await this.moduleService.create(dto);
-    sendResponse(res, {
-      statusCode: 201,
-      success: true,
-      message: 'Module created successfully',
-      data: result,
-    });
+  async create(@Body() dto: CreateModuleDto) {
+    return this.moduleService.create(dto);
   }
 
-  @Get()
+  @Get('course/:id')
   @ApiOperation({ summary: 'Get all modules' })
-  async findAll(@Res() res: Response) {
-    const result = await this.moduleService.findAll();
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'Modules retrieved successfully',
-      data: result,
-    });
+  async findAll(@Res() res: Response, @Param() id: IdDto) {
+    return this.moduleService.findAll(id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a module by ID' })
-  async findOne(@Param('id') id: string, @Res() res: Response) {
-    const result = await this.moduleService.findOne(id);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'Module retrieved successfully',
-      data: result,
-    });
+  async findOne(@Param() id: IdDto, @Res() res: Response) {
+    return this.moduleService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a module by ID' })
-
-  async update(@Param('id') id: string, @Body() dto: UpdateModuleDto, @Res() res: Response) {
-    const result = await this.moduleService.update(id, dto);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'Module updated successfully',
-      data: result,
-    });
+  async update(
+    @Param() id: IdDto,
+    @Body() dto: UpdateModuleDto,
+  ) {
+    return this.moduleService.update(id, dto);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a module by ID' })
-  async remove(@Param('id') id: string, @Res() res: Response) {
-    await this.moduleService.remove(id);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'Module deleted successfully',
-      data: null,
-    });
+  async remove(@Param() id: IdDto,) {
+    return this.moduleService.remove(id);
   }
 }
