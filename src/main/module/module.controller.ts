@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ModuleService } from './module.service';
@@ -14,32 +15,40 @@ import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CreateModuleDto } from './create-module.dto';
 import { UpdateModuleDto } from './update-module.dto';
 import { IdDto } from 'src/common/id.dto';
+import { AuthGuard } from 'src/guard/auth.guard';
+import { RoleGuardWith } from 'src/utils/RoleGuardWith';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('Modules')
 @Controller('modules')
+@UseGuards(AuthGuard)
 export class ModuleController {
   constructor(private readonly moduleService: ModuleService) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new module' })
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
   async create(@Body() dto: CreateModuleDto) {
     return this.moduleService.create(dto);
   }
 
   @Get('course/:id')
   @ApiOperation({ summary: 'Get all modules' })
-  async findAll(@Res() res: Response, @Param() id: IdDto) {
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
+  async findAll(@Param() id: IdDto) {
     return this.moduleService.findAll(id);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a module by ID' })
-  async findOne(@Param() id: IdDto, @Res() res: Response) {
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
+  async findOne(@Param() id: IdDto) {
     return this.moduleService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a module by ID' })
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
   async update(
     @Param() id: IdDto,
     @Body() dto: UpdateModuleDto,
@@ -49,6 +58,7 @@ export class ModuleController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a module by ID' })
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
   async remove(@Param() id: IdDto,) {
     return this.moduleService.remove(id);
   }
