@@ -130,9 +130,9 @@ model Classroom {
 }
 
 model Module {
-  id         String       @id @default(uuid())
+  id         String      @id @default(uuid())
   title      String
-  course     Course?      @relation(fields: [courseId], references: [id])
+  course     Course?     @relation(fields: [courseId], references: [id])
   courseId   String?
   content    Content[]
   assignment Assignment?
@@ -156,6 +156,7 @@ model QuizInstance {
   acquiredMark Int
   content      Content @relation(fields: [contentId], references: [id])
   contentId    String  @unique
+  isSubmitted  Boolean @default(false)
 }
 
 model Quiz {
@@ -173,7 +174,7 @@ model Assignment {
   file        String?
   isSubmitted Boolean @default(false)
   Module      Module? @relation(fields: [moduleId], references: [id])
-  moduleId    String @unique
+  moduleId    String  @unique
 }
 
 model Blog {

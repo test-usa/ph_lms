@@ -125,9 +125,9 @@ export class QuizService {
     let acquiredMark = 0
 
     await quizInstance.quiz.forEach(e => {
-      const userAnswerIndex = answerSheet.findIndex(a => a.quizId === e.id);
-      if (userAnswerIndex !== -1) {
-        acquiredMark += e.correctAnswer === e.correctAnswer ? 1 : 0;
+      const userAnswer = answerSheet.find(a => a.quizId === e.id && a.answer === e.correctAnswer);
+      if (userAnswer && userAnswer.answer === e.correctAnswer) {
+        acquiredMark += 1;
       }
     })
 
@@ -136,6 +136,7 @@ export class QuizService {
       data: {
         acquiredMark,
         totalMark: quizInstance.quiz.length,
+        isSubmitted: true
       },
     })
     return {
