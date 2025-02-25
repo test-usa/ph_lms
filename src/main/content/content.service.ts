@@ -31,21 +31,21 @@ export class ContentService {
     });
   }
 
-  async findAll({id}:IdDto):Promise<ApiResponse<Content[]>> {
+  async findAll({ id }: IdDto): Promise<ApiResponse<Content[]>> {
     const data = await this.prisma.content.findMany({
       where: {
         moduleId: id,
-       },
+      },
     });
-    return{
+    return {
       success: true,
       message: 'Contents retrieved successfully',
       statusCode: HttpStatus.OK,
       data,
-    }
+    };
   }
 
-  async findOne({ id }:IdDto) {
+  async findOne({ id }: IdDto) {
     const content = await this.prisma.content.findUnique({
       where: { id },
       include: { QuizInstance: true },

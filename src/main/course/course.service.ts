@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
-import { CreateCourseDto, UpdateCourseDto } from './course.dto';
+import { CreateCourseDto, PublishOrUnpublishCourseDto, UpdateCourseDto } from './course.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
 import { Course } from '@prisma/client';
 import { PaginationDto } from 'src/common/pagination.dto';
@@ -87,5 +87,26 @@ export class CourseService {
       statusCode: HttpStatus.OK,
     };
 
+  }
+
+  public async changePublishStatus({
+    courseId,
+    isPublished
+  }:PublishOrUnpublishCourseDto): Promise<ApiResponse<Course>>{
+    const course = await this.getSingleCourse({ id: courseId });
+
+    if (!course) throw new HttpException('Course not found', HttpStatus.NOT_FOUND);
+
+    const updated =  await this.db.course.update({
+      where: { id: courseId },
+      data: { isPublished },
+    });
+
+    return {
+      data: updated,
+      success: true,
+      message: 'Course status updated successfully',
+      statusCode: HttpStatus.OK,
+    };
   }
 }
