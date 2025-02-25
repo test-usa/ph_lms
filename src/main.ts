@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { UserSeeder } from './seed/admin.seed';
+import { GlobalErrorHandlerFilter } from './error/globalErrorHandeler.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,6 +21,7 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, documentFactory);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors()
+  app.useGlobalFilters(new GlobalErrorHandlerFilter())
   const seeder = app.get(UserSeeder);
   await seeder.seedAdmin();
   await app.listen(process.env.PORT ?? 3000);
