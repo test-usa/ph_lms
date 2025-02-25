@@ -7,9 +7,7 @@ import { Quiz, QuizInstance } from '@prisma/client';
 
 @Injectable()
 export class QuizService {
-  constructor(
-    private readonly db: DbService
-  ) { }
+  constructor(private readonly db: DbService) {}
 
   private async getQuizInstanceOrCreate(contentId: string) {
     const quizInstance = await this.db.quizInstance.findUnique({
@@ -24,8 +22,8 @@ export class QuizService {
           totalMark: 0,
         },
         include: {
-          quiz: true
-        }
+          quiz: true,
+        },
       });
     }
 
@@ -57,9 +55,7 @@ export class QuizService {
     };
   }
 
-  public async deleteQuiz({
-    id
-  }: IdDto) {
+  public async deleteQuiz({ id }: IdDto) {
     return this.db.quiz.delete({
       where: { id },
     });
@@ -84,11 +80,17 @@ export class QuizService {
       success: true,
       message: 'Quiz updated successfully',
       statusCode: HttpStatus.OK,
-    }
+    };
   }
 
-  public async getAllQuizzes({ id: quizInstanceId }: IdDto): Promise<ApiResponse<Partial<Quiz>[]>> {
-    if (quizInstanceId === undefined) throw new HttpException('No quiz instance id found', HttpStatus.BAD_REQUEST)
+  public async getAllQuizzes({
+    id: quizInstanceId,
+  }: IdDto): Promise<ApiResponse<Partial<Quiz>[]>> {
+    if (quizInstanceId === undefined)
+      throw new HttpException(
+        'No quiz instance id found',
+        HttpStatus.BAD_REQUEST,
+      );
 
     const quizInstance = await this.db.quiz.findMany({
       where: { quizInstanceId },
@@ -96,7 +98,7 @@ export class QuizService {
         id: true,
         question: true,
         options: true,
-      }
+      },
     });
 
     return {
@@ -104,46 +106,52 @@ export class QuizService {
       success: true,
       message: 'Quizzes fetched successfully',
       statusCode: HttpStatus.OK,
-    }
+    };
   }
 
   public async submitQuiz({
     answerSheet,
-    quizInstanceId
+    quizInstanceId,
   }: SubmitAnswerDto): Promise<ApiResponse<QuizInstance>> {
-    if (quizInstanceId === undefined) throw new HttpException('No quiz instance id found', HttpStatus.BAD_REQUEST)
+    if (quizInstanceId === undefined)
+      throw new HttpException(
+        'No quiz instance id found',
+        HttpStatus.BAD_REQUEST,
+      );
 
     const quizInstance = await this.db.quizInstance.findUnique({
       where: { id: quizInstanceId },
       include: {
-        quiz: true
+        quiz: true,
       },
     });
 
-    if (!quizInstance) throw new HttpException('Quiz instance not found', HttpStatus.NOT_FOUND)
+    if (!quizInstance)
+      throw new HttpException('Quiz instance not found', HttpStatus.NOT_FOUND);
 
-    let acquiredMark = 0
+    let acquiredMark = 0;
 
-    await quizInstance.quiz.forEach(e => {
-      const userAnswer = answerSheet.find(a => a.quizId === e.id && a.answer === e.correctAnswer);
-      if (userAnswer && userAnswer.answer === e.correctAnswer) {
-        acquiredMark += 1;
-      }
-    })
+    await quizInstance.quiz.forEach((e) => {
+      answerSheet.find((a) =>
+        a.quizId === e.id && a.answer === e.correctAnswer
+          ? acquiredMark++
+          : false,
+      );
+    });
 
     const updated = await this.db.quizInstance.update({
       where: { id: quizInstanceId },
       data: {
         acquiredMark,
         totalMark: quizInstance.quiz.length,
-        isSubmitted: true
+        isSubmitted: true,
       },
-    })
+    });
     return {
       data: updated,
       success: true,
       message: 'Quiz submitted successfully',
       statusCode: HttpStatus.OK,
-    }
+    };
   }
 }
