@@ -7,6 +7,7 @@ import {
   HttpException,
   ConflictException,
   ForbiddenException,
+  HttpStatus,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -74,14 +75,16 @@ export class AuthService {
     const { email, password, role, phone, name } = registerDto;
 
     if (role === UserRole.SUPER_ADMIN)
-      throw new ForbiddenException('Creating Super Admin is not allowed');
+      throw new HttpException('Creating Super Admin is not allowed', HttpStatus.FORBIDDEN);
     if ((role === UserRole.ADMIN || role === UserRole.INSTRUCTOR) && !user)
-      throw new ForbiddenException(
+      throw new HttpException(
         'You are not authorized to register admin / instructor',
+        HttpStatus.FORBIDDEN
       );
     if (role === UserRole.ADMIN && user && user.role !== 'SUPER_ADMIN')
-      throw new ForbiddenException(
+      throw new HttpException(
         'Creating Admin is not allowed except for Super Admin',
+        HttpStatus.FORBIDDEN
       );
     if (
       role === UserRole.INSTRUCTOR &&
@@ -89,7 +92,7 @@ export class AuthService {
       user.role !== 'ADMIN' &&
       user.role !== 'SUPER_ADMIN'
     )
-      throw new ForbiddenException('Creating Admin is not allowed for Student');
+      throw new HttpException('Creating Admin is not allowed for Student', HttpStatus.FORBIDDEN);
 
     const existingUser = await this.db.user.findUnique({
       where: { email },

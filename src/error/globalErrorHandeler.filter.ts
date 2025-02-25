@@ -44,13 +44,15 @@ export class GlobalErrorHandlerFilter<T> implements ExceptionFilter {
 
     // ✅ Send Error Response with Request Info
     response.status(status).json({
-      statusCode: status,
-      message,
-      error: true,
-      path: request?.url || 'unknown',
-      method: request?.method || 'unknown',
-      timestamp: new Date().toISOString(),
-    });
+        statusCode: status,
+        message: typeof message === 'string' 
+          ? message 
+          : (message as any)?.message[0] ?? 'An error occurred',
+        error: true,
+        path: request?.url || 'unknown',
+        method: request?.method || 'unknown',
+        timestamp: new Date().toISOString(),
+      });
 
     // ✅ Log the Exception for Debugging
     console.error('Exception caught:', exception);
