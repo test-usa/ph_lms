@@ -51,8 +51,8 @@ export class BillingService {
             },
           ],
           mode: 'payment',
-          success_url: 'http://localhost:3000/success',
-          cancel_url: 'http://localhost:3000/cancel',
+          success_url: 'http://localhost:3001/success',
+          cancel_url: 'http://localhost:3001/cancel',
         });
     
         return { url: session.url };
