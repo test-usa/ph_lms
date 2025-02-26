@@ -36,10 +36,25 @@ export class ModuleService {
 
   async findAll({
     id,
-  }: IdDto): Promise<ApiResponse<(Module & { content: Content[] })[]>> {
+  }: IdDto): Promise<ApiResponse<any>> {
     const data = await this.prisma.module.findMany({
       where: { courseId: id }, // Filter by course ID
-      include: { content: true }, // Include related content
+      include: {
+        content: {
+          select: {
+            title: true,
+            id: true,
+            video: true,
+            description: true,
+            assignment: true,
+            QuizInstance: {
+            select:{
+              id: true,
+            }
+            },
+          },
+        },
+      }, // Include related content
     });
     return {
       statusCode: 200,
@@ -68,10 +83,10 @@ export class ModuleService {
     };
   }
 
-  async update(id: IdDto, dto: UpdateModuleDto):Promise<ApiResponse<Module>> {
+  async update(id: IdDto, dto: UpdateModuleDto): Promise<ApiResponse<Module>> {
     // Ensure module exists before updating
     const data = await this.prisma.module.update({
-      where:  id ,
+      where: id,
       data: { ...dto },
     });
 
@@ -80,17 +95,17 @@ export class ModuleService {
       success: true,
       message: 'Module updated successfully',
       data,
-    }
+    };
   }
 
-  async remove(id: IdDto):Promise<ApiResponse<Module>> {
+  async remove(id: IdDto): Promise<ApiResponse<Module>> {
     // Ensure module exists before deleting
-    const data = await this.prisma.module.delete({ where: id  });
+    const data = await this.prisma.module.delete({ where: id });
     return {
       statusCode: 200,
       success: true,
       message: 'Module deleted successfully',
       data,
-    }
+    };
   }
 }

@@ -32,7 +32,6 @@ export class StudentService {
         if (params.searchTerm) {
             andConditions.push({
                 OR: [
-                    { email: { contains: params.searchTerm, mode: "insensitive" } },
                     { contact: { contains: params.searchTerm } },
                     { gender: Object.values(Gender).includes(params.searchTerm) ? { equals: params.searchTerm as Gender } : undefined },
                 ]

@@ -32,9 +32,11 @@ export class AdminService {
         isDeleted: false,
         id,
       },
-      data: {
-        ...payload,
-      },
+     data:{
+      User:{
+        update:payload,
+      }
+     }
     });
     return result;
   }
