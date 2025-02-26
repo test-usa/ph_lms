@@ -32,4 +32,29 @@ export class BillingService {
           throw new Error(error.message);
         }
       }
+      async createCheckoutSession({
+        amount,
+        currency,
+      }:CreatePaymentIntentDto) {
+        const session = await this.stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price_data: {
+                currency,
+                product_data: {
+                  name: 'Sample Product',
+                },
+                unit_amount: amount * 100, // Convert to cents
+              },
+              quantity: 1,
+            },
+          ],
+          mode: 'payment',
+          success_url: 'http://localhost:3000/success',
+          cancel_url: 'http://localhost:3000/cancel',
+        });
+    
+        return { url: session.url };
+      }
 }
