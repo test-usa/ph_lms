@@ -8,8 +8,20 @@ import { AdminModule } from './admin/admin.module';
 import { CourseModule } from './course/course.module';
 import { BlogModule } from './blog/blog.module';
 import { StudentModule } from './student/student.module';
+import { BillingModule } from './billing/billing.module';
 
 @Module({
-  imports: [AuthModule, ContentModule, CourseModule, ModuleModule, UserModule, QuizModule, AdminModule, BlogModule, StudentModule],
+  imports: [
+    AuthModule, 
+    ContentModule, 
+    CourseModule, 
+    ModuleModule, 
+    UserModule, 
+    QuizModule, 
+    AdminModule, 
+    BlogModule, 
+    StudentModule, 
+    BillingModule
+  ],
 })
 export class MainModule {}

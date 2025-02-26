@@ -5,18 +5,12 @@ import {
   Delete,
   Param,
   Body,
-  Res,
-  HttpCode,
   UseGuards,
-  Req,
   Get,
-  ValidationPipe,
-  ParseUUIDPipe,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { QuizService } from './quiz.service';
 import { CreateQuizDto, SubmitAnswerDto, UpdateQuizDto } from './quiz.Dto';
-import { ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { ApiBearerAuth } from '@nestjs/swagger';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
