@@ -10,4 +10,9 @@ export class BillingController {
     createPaymentIntent(@Body() createPaymentIntentDto: CreatePaymentIntentDto){
         return this.billingService.createPaymentIntent(createPaymentIntentDto);
     }
+
+    @Post('createCheckoutSession')
+    createCheckoutSession(@Body() createPaymentIntentDto: CreatePaymentIntentDto){
+        return this.billingService.createCheckoutSession(createPaymentIntentDto);
+    }
 }
