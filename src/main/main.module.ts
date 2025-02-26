@@ -9,6 +9,7 @@ import { CourseModule } from './course/course.module';
 import { BlogModule } from './blog/blog.module';
 import { StudentModule } from './student/student.module';
 import { BillingModule } from './billing/billing.module';
+import { ProgressModule } from './progress/progress.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { BillingModule } from './billing/billing.module';
     AdminModule, 
     BlogModule, 
     StudentModule, 
-    BillingModule
+    BillingModule, 
+    ProgressModule
   ],
 })
 export class MainModule {}
