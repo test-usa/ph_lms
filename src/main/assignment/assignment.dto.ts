@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsBoolean, IsNotEmpty, IsUrl, IsUUID } from 'class-validator';
+import { IsString, IsBoolean, IsNotEmpty, IsUrl, IsUUID, IsNumber } from 'class-validator';
 
 export class CreateAssignmentDto {
   @ApiProperty({
@@ -9,6 +9,14 @@ export class CreateAssignmentDto {
   @IsString()
   @IsNotEmpty()
   title: string;
+
+  @IsString()
+  @IsNotEmpty()
+  file:string
+
+  @IsNumber()
+  @IsNotEmpty()
+  assuredMark:number
 
   @ApiProperty({
     description: 'The ID of the module to which the assignment belongs (UUID v4)',

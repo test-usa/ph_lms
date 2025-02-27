@@ -43,4 +43,21 @@ export class AssignmentService {
             statusCode: HttpStatus.CREATED,
         }
     }
+
+    public async createAssignment({
+         title, file, assuredMark, moduleId
+    }:CreateAssignmentDto):Promise<ApiResponse<Assignment>>{
+        const newAssignment = await this.db.assignment.create({
+            data:{
+             title, file, assuredMark,
+             moduleId
+            }
+        })
+        return {
+            data: newAssignment,
+            success: true,
+            message: 'Assignment created successfully',
+            statusCode: HttpStatus.CREATED,
+          };
+    }
 }

@@ -17,6 +17,8 @@ import { BlogController } from './main/blog/blog.controller';
 import { BlogService } from './main/blog/blog.service';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { AssignmentController } from './main/assignment/assignment.controller';
+import { AssignmentService } from './main/assignment/assignment.service';
 
 @Module({
   imports: [
@@ -39,6 +41,7 @@ import { join } from 'path';
     ModuleController,
     QuizController,
     BlogController,
+    AssignmentController
   ],
   providers: [
     AppService,
@@ -47,6 +50,7 @@ import { join } from 'path';
     QuizService,
     UserSeeder,
     BlogService,
+    AssignmentService
   ],
 })
 export class AppModule {}
