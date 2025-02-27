@@ -51,8 +51,6 @@ model User {
 
 model Student {
   id           String      @id @unique @default(uuid())
-  email        String      @unique
-  name         String
   profilePhoto String?
   contact      String?
   address      String?
@@ -73,8 +71,6 @@ model Student {
 
 model Instructor {
   id           String      @id @unique @default(uuid())
-  email        String      @unique
-  name         String
   profilePhoto String?
   contact      String?
   address      String?
@@ -91,8 +87,6 @@ model Instructor {
 
 model Admin {
   id           String  @id @unique @default(uuid())
-  email        String  @unique
-  name         String
   profilePhoto String?
   contact      String?
   address      String?
@@ -175,6 +169,7 @@ model Assignment {
   isSubmitted Boolean @default(false)
   Module      Module? @relation(fields: [moduleId], references: [id])
   moduleId    String  @unique
+  assuredMark Int
 }
 
 model Blog {
