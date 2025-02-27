@@ -11,8 +11,8 @@ import { ApiResponse } from 'src/utils/sendResponse';
 export class StudentService {
     constructor(private db: DbService) { }
 
-    // Get Single Student
-    async getSingleStudent(id: IdDto):Promise<ApiResponse<Student>> {
+    // --------------------------------------------Get Single Student---------------------------------------
+    public async getSingleStudent(id: IdDto):Promise<ApiResponse<Student>> {
         const result = await this.db.student.findUniqueOrThrow({
             where:  id 
         });
@@ -24,8 +24,8 @@ export class StudentService {
         }
     }
 
-    // Get All Students
-    async getAllStudents(params: any, options: TPaginationOptions):Promise<ApiResponse<Student[]>> {
+    // -------------------------------------------------Get All Students------------------------------------------------------------
+    public async getAllStudents(params: any, options: TPaginationOptions):Promise<ApiResponse<Student[]>> {
         const andConditions: Prisma.StudentWhereInput[] = [];
         const { searchTerm, ...filteredData } = params;
         const { page, limit, skip } = calculatePagination(options);
@@ -67,17 +67,6 @@ export class StudentService {
                 : {
                     createdAt: "desc",
                 },
-            // select: {
-            //     id: true,
-            //     name: true,
-            //     profilePhoto: true,
-            //     address: true,
-            //     email: true,
-            //     contact: true,
-            //     gender: true,
-            //     createdAt: true,
-            //     updatedAt: true,
-            // },
         });
         const total = await this.db.student.count({
             where: {

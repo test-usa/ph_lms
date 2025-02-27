@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Req, UseGuards } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
@@ -28,4 +28,17 @@ export class StudentController {
         return this.studentService.getAllStudents(filters, options);
     }
 
+    // @Patch()
+    // @ApiBearerAuth()
+    // @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
+    // async updateStudent(@Body() data: updateStudentDto, @Req() req: Request) {
+    //     return this.studentService.updateStudent(data);
+    // }
+
+    // @Delete()
+    // @ApiBearerAuth()
+    // @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    // async deleteStudent(@Req() req: Request) {
+    //     return this.studentService.deleteStudent(filters, options);
+    // }
 }
