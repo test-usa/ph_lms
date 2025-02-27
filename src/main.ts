@@ -6,10 +6,13 @@ import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { UserSeeder } from './seed/admin.seed';
 import { GlobalErrorHandlerFilter } from './error/globalErrorHandeler.filter';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
+  // app.use('/billing/webhook', bodyParser.raw({ type: 'application/json' }));
+  app.use('/billing/webhook', bodyParser.raw({ type: 'application/json' }));
   const config = new DocumentBuilder()
     .setTitle('PH - Learning Management System')
     .setDescription('PH_LMS API description')

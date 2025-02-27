@@ -188,6 +188,18 @@ model Blog {
   updatedAt   DateTime @updatedAt
 }
 
+// model Payment {
+//   id             String   @id @default(uuid())
+//   courseId       String
+//   amount         Float
+//   status         String
+//   stripeChargeId String?
+//   course         Course[]
+//   student        Student  @relation(fields: [studentId], references: [id])
+//   studentId      String
+// }
+
+
 model Payment {
   id             String   @id @default(uuid())
   courseId       String
