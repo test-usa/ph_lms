@@ -12,11 +12,11 @@ export class AssignmentController {
         private readonly assignmentService: AssignmentService
     ){}
 
-    @Post('create')
+    @Post('submit')
     @ApiBearerAuth()
     @UseGuards(
         AuthGuard,
-        RoleGuardWith([UserRole.INSTRUCTOR,UserRole.ADMIN,UserRole.SUPER_ADMIN])
+        RoleGuardWith([UserRole.STUDENT])
     )
     createAssignment(@Body() createAssignment:CreateAssignmentDto){
         return this.assignmentService.createAssignment(createAssignment)
