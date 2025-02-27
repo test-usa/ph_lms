@@ -9,6 +9,7 @@ import { ApiResponse } from 'src/utils/sendResponse';
 import { Course } from '@prisma/client';
 import { PaginationDto } from 'src/common/pagination.dto';
 import { IdDto } from 'src/common/id.dto';
+import { TUser } from 'src/interface/token.type';
 
 @Injectable()
 export class CourseService {
@@ -69,6 +70,34 @@ export class CourseService {
     };
   }
 
+  public async getAllCoursesByStudent({
+    pagination,
+    user,
+  }: {
+    pagination: PaginationDto;
+    user: TUser;
+  }): Promise<ApiResponse<Course[]>> {
+    const courses = await this.db.course.findMany({
+      take: pagination.take,
+      skip: pagination.skip,
+      orderBy: { id: 'asc' },
+      include: {
+        student: {
+          where: {
+            id: user.id,
+          },
+        },
+      },
+    });
+
+    return {
+      data: courses,
+      success: true,
+      message: 'Courses retrieved successfully',
+      statusCode: HttpStatus.OK,
+    };
+  }
+
   public async getSingleCourse({ id }: IdDto): Promise<ApiResponse<Course>> {
     const course = await this.db.course.findUnique({
       where: { id },
@@ -97,6 +126,53 @@ export class CourseService {
 
     if (!course)
       throw new HttpException('Course not found', HttpStatus.NOT_FOUND);
+
+    return {
+      data: course,
+      success: true,
+      message: 'Course retrieved successfully',
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  public async getSingleCourseByStudent({
+    courseId,
+    user,
+  }: {
+    courseId: IdDto;
+    user: TUser;
+  }): Promise<ApiResponse<Course>> {
+    const course = await this.db.course.findUnique({
+      where: {
+        id: courseId.id,
+        student: {
+          some: {
+            id: user.id,
+          },
+        },
+      },
+      include: {
+        modules: {
+          select: {
+            title: true,
+            id: true,
+            content: {
+              select: {
+                title: true,
+                id: true,
+                QuizInstance: {
+                  include: {
+                    quiz: true,
+                  },
+                },
+                description: true,
+                video: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
     return {
       data: course,
