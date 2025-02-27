@@ -1,23 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import {
   Injectable,
   HttpException,
   ConflictException,
-  ForbiddenException,
-  HttpStatus,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Status, UserRole } from '@prisma/client';
 import { DbService } from 'src/db/db.service';
-import { LoginDto, RegisterDto } from './auth.Dto';
+import { ChangePasswordDto, RegisterDto } from './auth.Dto';
 import { MailerService } from 'src/utils/sendMail';
-import { TUser } from 'src/interface/token.type';
 import { ApiResponse } from 'src/utils/sendResponse';
+import { TUser } from 'src/interface/token.type';
 
 @Injectable()
 export class AuthService {
@@ -26,15 +20,10 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailerService: MailerService,
-  ) {}
+  ) { }
 
   // Login
-  public async loginUser(data: LoginDto): Promise<
-    ApiResponse<{
-      accessToken: string;
-      refreshToken: string;
-    }>
-  > {
+  public async loginUser(data: { email: string; password: string }) {
     const { email, password } = data;
     const user = await this.db.user.findUnique({
       where: { email, status: Status.ACTIVE },
@@ -45,55 +34,27 @@ export class AuthService {
     const isCorrectPassword = await bcrypt.compare(password, user.password);
     if (!isCorrectPassword) throw new HttpException('Invalid credentials', 401);
 
-    const payload =   { email: user.email, role: user.role, id: user.id };
+    const payload = { email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow('JWT_SECRET'),
     });
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.getOrThrow('JWT_SECRET'),
+      secret: this.configService.getOrThrow('REFRESH_SECRET'),
     });
 
     return {
-      statusCode: 200,
-      success: true,
-      message: 'Logged in successfully',
-      data: { accessToken, refreshToken },
+      accessToken,
+      refreshToken,
     };
   }
 
-  // Register
-  async registerUser(
-    registerDto: RegisterDto,
-    user: TUser,
-  ): Promise<
-    ApiResponse<{
+  // ---------------------------------Register----------------------------------------
+  public async registerUser(registerDto: RegisterDto): Promise<ApiResponse<{
+      name: string;
       email: string;
-      role: string;
-      phone: string | null;
-    }>
-  > {
-    const { email, password, role, phone, name } = registerDto;
-
-    if (role === UserRole.SUPER_ADMIN)
-      throw new HttpException('Creating Super Admin is not allowed', HttpStatus.FORBIDDEN);
-    if ((role === UserRole.ADMIN || role === UserRole.INSTRUCTOR) && !user)
-      throw new HttpException(
-        'You are not authorized to register admin / instructor',
-        HttpStatus.FORBIDDEN
-      );
-    if (role === UserRole.ADMIN && user && user.role !== 'SUPER_ADMIN')
-      throw new HttpException(
-        'Creating Admin is not allowed except for Super Admin',
-        HttpStatus.FORBIDDEN
-      );
-    if (
-      role === UserRole.INSTRUCTOR &&
-      user &&
-      user.role !== 'ADMIN' &&
-      user.role !== 'SUPER_ADMIN'
-    )
-      throw new HttpException('Creating Admin is not allowed for Student', HttpStatus.FORBIDDEN);
-
+      role: UserRole;
+    }>> {
+    const { email, password, name } = registerDto;
     const existingUser = await this.db.user.findUnique({
       where: { email },
     });
@@ -105,50 +66,59 @@ export class AuthService {
       data: {
         email,
         password: hashedPassword,
-        role: role || UserRole.STUDENT,
+        role: UserRole.STUDENT,
         status: Status.ACTIVE,
-        phone,
+        name
+      },
+    });
+
+    await this.db.student.create({
+      data: {
+        email,
         name,
+        userId: newUser.id
       },
     });
     return {
       statusCode: 201,
       success: true,
       message: 'User registered successfully',
-      data: { email: newUser.email, role: newUser.role, phone: newUser.phone },
+      data: { name: newUser.name, email: newUser.email, role: newUser.role },
     };
   }
 
-  // Refresh Token
-  async refreshToken(token: string):Promise<ApiResponse<{
-    accessToken: string;
-  }>> {
+  // ------------------------------------------------Refresh Token----------------------------------------------
+  async refreshToken(token: string): Promise<ApiResponse<{accessToken: string}>> {
     const payload = this.jwtService.verify(token, {
-      secret: this.configService.get('JWT_REFRESH_SECRET'),
+      secret: this.configService.get('REFRESH_SECRET'),
     });
-    const user = await this.db.user.findUniqueOrThrow({
+    const user = await this.db.user.findUnique({
       where: { email: payload.email, status: Status.ACTIVE },
     });
+    if (!user) throw new HttpException('User not found', 401);
     const accessToken = this.jwtService.sign(
-      { email: user.email, role: user.role, id: user.id },
-      { secret: this.configService.get('JWT_ACCESS_SECRET') },
+      { email: user.email, role: user.role },
+      { secret: this.configService.get('JWT_SECRET') },
     );
     return {
       statusCode: 200,
       success: true,
-      message: 'Token refreshed successfully',
+      message: 'Please check your mail',
       data: { accessToken },
     }
   }
 
-  // Forgot
-  async forgotPassword(email: string):Promise<ApiResponse<null>> {
-    const user = await this.db.user.findUniqueOrThrow({
+  // ---------------------------------------------------Forgot Password-------------------------------------------------
+  async forgotPassword(email: string): Promise<ApiResponse<null>> {
+    const user = await this.db.user.findUnique({
       where: { email, status: Status.ACTIVE },
     });
+
+    if (!user) throw new HttpException('User not found', 401);
+
     const token = this.jwtService.sign(
       { email: user.email, role: user.role },
-      { secret: this.configService.get('JWT_RESET_SECRET') },
+      { secret: this.configService.get('JWT_SECRET') },
     );
     const resetPassLink = `${this.configService.get('RESET_PASS_LINK')}?userId=${user.id}&token=${token}`;
     await this.mailerService.sendMail(
@@ -169,8 +139,44 @@ export class AuthService {
     return {
       statusCode: 200,
       success: true,
-      message: 'Reset password link sent successfully',
+      message: 'Please check your mail',
       data: null,
     }
   }
+
+  // ----------------------------------------------Change Password-------------------------------------------------
+  public async changePassword (user: TUser, payload: ChangePasswordDto): Promise<ApiResponse<null>> {
+    const userData = await this.db.user.findUniqueOrThrow({
+      where: {
+        email: user?.email,
+        status: Status.ACTIVE,
+      },
+    });
+  
+    const isCorrectPassword: boolean = await bcrypt.compare(
+      payload.oldPassword,
+      userData.password
+    );
+    if (!isCorrectPassword) {
+      throw new Error("Password is incorrect");
+    }
+  
+    const hashedPassword: string = await bcrypt.hash(payload.newPassword, 12);
+  
+    // Update operation
+    await this.db.user.update({
+      where: {
+        email: userData?.email,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+    return {
+      statusCode: 200,
+      success: true,
+      message: 'Password changed successfully!',
+      data: null,
+    }
+  };
 }

@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Param,
   Patch,
   Post,
   Req,
@@ -20,26 +19,21 @@ import pick from 'src/utils/pick';
 import {
   ChangeProfileStatusDto,
   CreateAnUserDto,
-  updateAnUserDto,
-  UpdateAnUserRoleDto,
 } from './user.Dto';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  // Get me
   @Get('me')
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
   async getUser(@Req() req: Request, @Res() res: Response) {
-    const result = await this.userService.getMe(req.user);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'User data fetched Successfully',
-      data: result,
-    });
+    return this.userService.getMe(req.user);
   }
 
+  // Get All users
   @Get()
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
@@ -55,23 +49,7 @@ export class UserController {
     });
   }
 
-  @Post('create')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-  async createAnUser(@Body() createAnUserDto: CreateAnUserDto) {
-    return this.userService.createAnUser(createAnUserDto);
-  }
-
-  @Patch('update/:id')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-  async updateAnUser(
-    @Body() updateAnUserDto: updateAnUserDto,
-    @Param('id') id: string,
-  ) {
-    return this.userService.updateAnUser(id, updateAnUserDto);
-  }
-
+  // Change Profile status
   @Patch(':id/status')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
@@ -81,18 +59,10 @@ export class UserController {
     @Res() res: Response,
   ) {
     const { id } = req.params;
-    const result = await this.userService.changeProfileStatus(
-      id,
-      changeProfileStatusDto.status,
-    );
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'User status changed successfully',
-      data: result,
-    });
+    return await this.userService.changeProfileStatus(id, changeProfileStatusDto.status)
   }
 
+  // Create Instructor
   @Post('instructor/create')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
@@ -100,18 +70,11 @@ export class UserController {
     return this.userService.createInstructor(createAnUserDto);
   }
 
+  // Create Admin
   @Post('admin/create')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN]))
   async createAdmin(@Body() createAnUserDto: CreateAnUserDto) {
     return this.userService.createAdmin(createAnUserDto);
   }
-
-  @Patch('user/role')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN]))
-  async changeRoleBySuperAdmin(
-    @Body() updateAnUserRoleDto: UpdateAnUserRoleDto){
-      return this.userService.changeRoleBySuperAdmin(updateAnUserRoleDto);
-    }
 }
