@@ -26,18 +26,20 @@ export class AdminService {
     return result;
   }
 
-  // async updateAdmin(id: string, payload: UpdateAdminProfileDto) {
-  //   const result = await prisma.admin.update({
-  //     where: {
-  //       isDeleted: false,
-  //       id,
-  //     },
-  //     data: {
-  //       ...payload,
-  //     },
-  //   });
-  //   return result;
-  // }
+  async updateAdmin(id: string, payload: UpdateAdminProfileDto) {
+    const result = await prisma.admin.update({
+      where: {
+        isDeleted: false,
+        id,
+      },
+     data:{
+      User:{
+        update:payload,
+      }
+     }
+    });
+    return result;
+  }
 
   async deleteAdmin(id: string) {
     const result = await prisma.admin.update({

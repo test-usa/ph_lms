@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'ADMIN', 'STUDENT', 'INSTRUCTOR');
+CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'STUDENT', 'INSTRUCTOR', 'SUPER_ADMIN');
 
 -- CreateEnum
 CREATE TYPE "Status" AS ENUM ('BLOCKED', 'ACTIVE', 'DELETED');
@@ -7,12 +7,14 @@ CREATE TYPE "Status" AS ENUM ('BLOCKED', 'ACTIVE', 'DELETED');
 -- CreateEnum
 CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE');
 
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'CANCELLED');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
-    "name" TEXT,
-    "phone" TEXT,
+    "name" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'STUDENT',
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
@@ -25,10 +27,13 @@ CREATE TABLE "User" (
 -- CreateTable
 CREATE TABLE "Student" (
     "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
     "profilePhoto" TEXT,
+    "phone" TEXT,
     "contact" TEXT,
     "address" TEXT,
-    "gender" "Gender" NOT NULL,
+    "gender" "Gender",
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -41,6 +46,8 @@ CREATE TABLE "Student" (
 -- CreateTable
 CREATE TABLE "Instructor" (
     "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
     "profilePhoto" TEXT,
     "contact" TEXT,
     "address" TEXT,
@@ -56,6 +63,8 @@ CREATE TABLE "Instructor" (
 -- CreateTable
 CREATE TABLE "Admin" (
     "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
     "profilePhoto" TEXT,
     "contact" TEXT,
     "address" TEXT,
@@ -103,7 +112,6 @@ CREATE TABLE "Content" (
     "title" TEXT NOT NULL,
     "video" TEXT,
     "description" TEXT,
-    "assignment" TEXT,
     "moduleId" TEXT,
 
     CONSTRAINT "Content_pkey" PRIMARY KEY ("id")
@@ -132,12 +140,23 @@ CREATE TABLE "Quiz" (
 );
 
 -- CreateTable
+CREATE TABLE "AssignmentInstance" (
+    "id" TEXT NOT NULL,
+    "fullMark" INTEGER NOT NULL,
+    "title" TEXT NOT NULL,
+    "moduleId" TEXT,
+
+    CONSTRAINT "AssignmentInstance_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Assignment" (
     "id" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
     "file" TEXT,
     "isSubmitted" BOOLEAN NOT NULL DEFAULT false,
-    "moduleId" TEXT NOT NULL,
+    "accruedMark" INTEGER NOT NULL,
+    "assignmentInstanceId" TEXT,
+    "studentId" TEXT,
 
     CONSTRAINT "Assignment_pkey" PRIMARY KEY ("id")
 );
@@ -158,11 +177,10 @@ CREATE TABLE "Blog" (
 -- CreateTable
 CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
-    "courseId" TEXT NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
-    "status" TEXT NOT NULL,
-    "stripeChargeId" TEXT,
     "studentId" TEXT NOT NULL,
+    "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
+    "intendKey" TEXT NOT NULL,
 
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );
@@ -182,16 +200,25 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Student_id_key" ON "Student"("id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Student_email_key" ON "Student"("email");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Student_userId_key" ON "Student"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Instructor_id_key" ON "Instructor"("id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Instructor_email_key" ON "Instructor"("email");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Instructor_userId_key" ON "Instructor"("userId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Admin_id_key" ON "Admin"("id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Admin_userId_key" ON "Admin"("userId");
@@ -203,7 +230,10 @@ CREATE UNIQUE INDEX "Classroom_courseId_key" ON "Classroom"("courseId");
 CREATE UNIQUE INDEX "QuizInstance_contentId_key" ON "QuizInstance"("contentId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Assignment_moduleId_key" ON "Assignment"("moduleId");
+CREATE UNIQUE INDEX "AssignmentInstance_moduleId_key" ON "AssignmentInstance"("moduleId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Payment_intendKey_key" ON "Payment"("intendKey");
 
 -- CreateIndex
 CREATE INDEX "_CourseToPayment_B_index" ON "_CourseToPayment"("B");
@@ -242,7 +272,13 @@ ALTER TABLE "QuizInstance" ADD CONSTRAINT "QuizInstance_contentId_fkey" FOREIGN 
 ALTER TABLE "Quiz" ADD CONSTRAINT "Quiz_quizInstanceId_fkey" FOREIGN KEY ("quizInstanceId") REFERENCES "QuizInstance"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Assignment" ADD CONSTRAINT "Assignment_moduleId_fkey" FOREIGN KEY ("moduleId") REFERENCES "Module"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "AssignmentInstance" ADD CONSTRAINT "AssignmentInstance_moduleId_fkey" FOREIGN KEY ("moduleId") REFERENCES "Module"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Assignment" ADD CONSTRAINT "Assignment_assignmentInstanceId_fkey" FOREIGN KEY ("assignmentInstanceId") REFERENCES "AssignmentInstance"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Assignment" ADD CONSTRAINT "Assignment_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Blog" ADD CONSTRAINT "Blog_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

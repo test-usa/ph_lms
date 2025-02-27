@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsBoolean, IsNotEmpty, IsUrl, IsUUID } from 'class-validator';
+import { IsString, IsBoolean, IsNotEmpty, IsUrl, IsUUID, IsInt, Min } from 'class-validator';
 
 export class CreateAssignmentDto {
   @ApiProperty({
@@ -17,4 +17,12 @@ export class CreateAssignmentDto {
   @IsUUID('4')
   moduleId: string;
 
+  @ApiProperty({
+    description: 'The full mark of the assignment',
+    example: 100,
+  })
+  @IsInt()
+  @Min(1)
+  fullMark: number;
 }
+

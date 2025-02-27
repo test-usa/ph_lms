@@ -13,6 +13,7 @@ import { Response, Request } from 'express';
 import { LoginDto, ForgotPasswordDto, RegisterDto, ChangePasswordDto } from './auth.Dto';
 import sendResponse from 'src/utils/sendResponse';
 import { AuthGuard } from 'src/guard/auth.guard';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 interface CustomRequest extends Request {
   cookies: {
@@ -58,6 +59,7 @@ export class AuthController {
 
   // Change Password
   @Patch('change-password')
+  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   async changePassword(@Body() changePasswordDto: ChangePasswordDto, @Req() req: Request) {
     console.log(req.user)

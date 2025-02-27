@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,24 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-enum UserRole {
-  SUPER_ADMIN
-  ADMIN
-  STUDENT
-  INSTRUCTOR
-}
-
-enum Status {
-  BLOCKED
-  ACTIVE
-  DELETED
-}
-
-enum Gender {
-  MALE
-  FEMALE
 }
 
 model User {
@@ -67,8 +43,9 @@ model Student {
   userId String @unique
   User   User   @relation(fields: [userId], references: [id])
 
-  Course   Course? @relation(fields: [courseId], references: [id])
-  courseId String?
+  Course     Course?      @relation(fields: [courseId], references: [id])
+  courseId   String?
+  Assignment Assignment[]
 }
 
 model Instructor {
@@ -111,31 +88,30 @@ model Course {
   description String
   price       Float
   isPublished Boolean    @default(false)
-  modules     Module[]
-  payment     Payment[]
-  student     Student[]
   classroom   Classroom?
+  modules     Module[]
+  student     Student[]
+  payment     Payment[]  @relation("CourseToPayment")
 }
 
 model Classroom {
-  Course   Course @relation(fields: [courseId], references: [id])
-  courseId String @unique
-
-  Instructor   Instructor @relation(fields: [instructorId], references: [id])
+  courseId     String     @unique
   instructorId String
-  Student      Student    @relation(fields: [studentId], references: [id])
   studentId    String
+  Course       Course     @relation(fields: [courseId], references: [id])
+  Instructor   Instructor @relation(fields: [instructorId], references: [id])
+  Student      Student    @relation(fields: [studentId], references: [id])
 
   @@id([courseId, instructorId, studentId])
 }
 
 model Module {
-  id         String      @id @default(uuid())
+  id         String              @id @default(uuid())
   title      String
-  course     Course?     @relation(fields: [courseId], references: [id])
   courseId   String?
+  assignment AssignmentInstance?
   content    Content[]
-  assignment Assignment?
+  course     Course?             @relation(fields: [courseId], references: [id])
 }
 
 model Content {
@@ -143,20 +119,19 @@ model Content {
   title        String
   video        String?
   description  String?
-  assignment   String?
-  Module       Module?       @relation(fields: [moduleId], references: [id])
   moduleId     String?
+  Module       Module?       @relation(fields: [moduleId], references: [id])
   QuizInstance QuizInstance?
 }
 
 model QuizInstance {
   id           String  @id @default(uuid())
-  quiz         Quiz[]
   totalMark    Int
   acquiredMark Int
-  content      Content @relation(fields: [contentId], references: [id])
   contentId    String  @unique
   isSubmitted  Boolean @default(false)
+  quiz         Quiz[]
+  content      Content @relation(fields: [contentId], references: [id])
 }
 
 model Quiz {
@@ -164,37 +139,72 @@ model Quiz {
   question       String
   options        String[]
   correctAnswer  Int?
-  QuizInstance   QuizInstance? @relation(fields: [quizInstanceId], references: [id])
   quizInstanceId String?
+  QuizInstance   QuizInstance? @relation(fields: [quizInstanceId], references: [id])
+}
+
+model AssignmentInstance {
+  id         String       @id @default(uuid())
+  fullMark   Int
+  title      String
+  assignment Assignment[]
+  Module     Module?      @relation(fields: [moduleId], references: [id])
+  moduleId   String?      @unique
 }
 
 model Assignment {
-  id          String  @id @default(uuid())
-  title       String
-  file        String?
-  isSubmitted Boolean @default(false)
-  Module      Module? @relation(fields: [moduleId], references: [id])
-  moduleId    String  @unique
+  id                   String              @id @default(uuid())
+  file                 String?
+  isSubmitted          Boolean             @default(false)
+  accruedMark          Int
+  AssignmentInstance   AssignmentInstance? @relation(fields: [assignmentInstanceId], references: [id])
+  assignmentInstanceId String?
+  Student              Student?            @relation(fields: [studentId], references: [id])
+  studentId            String?
 }
 
 model Blog {
   id          String   @id @default(uuid())
   title       String
   content     String
-  author      User     @relation(fields: [authorId], references: [id])
   authorId    String
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  author      User     @relation(fields: [authorId], references: [id])
 }
 
 model Payment {
-  id             String   @id @default(uuid())
-  courseId       String
-  amount         Float
-  status         String
-  stripeChargeId String?
-  course         Course[]
-  student        Student  @relation(fields: [studentId], references: [id])
-  studentId      String
+  id        String        @id @default(uuid())
+  amount    Float
+  studentId String
+  status    PaymentStatus @default(PENDING)
+  intendKey String        @unique
+  student   Student       @relation(fields: [studentId], references: [id])
+  course    Course[]      @relation("CourseToPayment")
+}
+
+enum UserRole {
+  ADMIN
+  STUDENT
+  INSTRUCTOR
+  SUPER_ADMIN
+}
+
+enum Status {
+  BLOCKED
+  ACTIVE
+  DELETED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
 }
