@@ -25,7 +25,6 @@ export class ContentService {
         title: dto.title,
         video: dto.video,
         description: dto.description,
-        assignment: dto.assignment,
         moduleId: dto.moduleId,
       },
     });
