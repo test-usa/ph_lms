@@ -81,7 +81,6 @@ export class CourseService {
               select: {
                 title: true,
                 id: true,
-                assignment: true,
                 QuizInstance: {
                   include: {
                     quiz: true,

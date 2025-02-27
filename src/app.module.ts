@@ -15,6 +15,8 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { BlogController } from './main/blog/blog.controller';
 import { BlogService } from './main/blog/blog.service';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -26,6 +28,9 @@ import { BlogService } from './main/blog/blog.service';
     }),
     JwtModule.register({
       global: true, // This makes ConfigService available globally
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
     }),
   ],
   controllers: [

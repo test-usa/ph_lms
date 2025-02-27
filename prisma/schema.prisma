@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,11 +7,164 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  password   String
+  role       UserRole    @default(STUDENT)
+  status     Status      @default(ACTIVE)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  name       String?
+  phone      String?
+  admin      Admin?
+  Blog       Blog[]
+  instructor Instructor?
+  student    Student?
+}
+
+model Student {
+  id           String      @id @unique @default(uuid())
+  profilePhoto String?
+  contact      String?
+  address      String?
+  gender       Gender
+  isDeleted    Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  userId       String      @unique
+  courseId     String?
+  classroom    Classroom[]
+  Payment      Payment[]
+  Course       Course?     @relation(fields: [courseId], references: [id])
+  User         User        @relation(fields: [userId], references: [id])
+}
+
+model Instructor {
+  id           String      @id @unique @default(uuid())
+  profilePhoto String?
+  contact      String?
+  address      String?
+  gender       Gender
+  isDeleted    Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  userId       String?     @unique
+  classroom    Classroom[]
+  User         User?       @relation(fields: [userId], references: [id])
+}
+
+model Admin {
+  id           String   @id @unique @default(uuid())
+  profilePhoto String?
+  contact      String?
+  address      String?
+  gender       Gender
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  userId       String?  @unique
+  User         User?    @relation(fields: [userId], references: [id])
+}
+
+model Course {
+  id          String     @id @default(uuid())
+  title       String
+  description String
+  price       Float
+  isPublished Boolean    @default(false)
+  classroom   Classroom?
+  modules     Module[]
+  student     Student[]
+  payment     Payment[]  @relation("CourseToPayment")
+}
+
+model Classroom {
+  courseId     String     @unique
+  instructorId String
+  studentId    String
+  Course       Course     @relation(fields: [courseId], references: [id])
+  Instructor   Instructor @relation(fields: [instructorId], references: [id])
+  Student      Student    @relation(fields: [studentId], references: [id])
+
+  @@id([courseId, instructorId, studentId])
+}
+
+model Module {
+  id         String      @id @default(uuid())
+  title      String
+  courseId   String?
+  assignment Assignment?
+  content    Content[]
+  course     Course?     @relation(fields: [courseId], references: [id])
+}
+
+model Content {
+  id           String        @id @default(uuid())
+  title        String
+  video        String?
+  description  String?
+  assignment   String?
+  moduleId     String?
+  Module       Module?       @relation(fields: [moduleId], references: [id])
+  QuizInstance QuizInstance?
+}
+
+model QuizInstance {
+  id           String  @id @default(uuid())
+  totalMark    Int
+  acquiredMark Int
+  contentId    String  @unique
+  isSubmitted  Boolean @default(false)
+  quiz         Quiz[]
+  content      Content @relation(fields: [contentId], references: [id])
+}
+
+model Quiz {
+  id             String        @id @default(uuid())
+  question       String
+  options        String[]
+  correctAnswer  Int?
+  quizInstanceId String?
+  QuizInstance   QuizInstance? @relation(fields: [quizInstanceId], references: [id])
+}
+
+model Assignment {
+  id          String  @id @default(uuid())
+  title       String
+  file        String?
+  isSubmitted Boolean @default(false)
+  moduleId    String  @unique
+  Module      Module  @relation(fields: [moduleId], references: [id])
+  assuredMark Int
+}
+
+model Blog {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  authorId    String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  author      User     @relation(fields: [authorId], references: [id])
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  amount    Float
+  studentId String
+  status    PaymentStatus @default(PENDING)
+  intendKey String        @unique
+  student   Student       @relation(fields: [studentId], references: [id])
+  course    Course[]      @relation("CourseToPayment")
+}
+
 enum UserRole {
-  SUPER_ADMIN
   ADMIN
   STUDENT
   INSTRUCTOR
+  SUPER_ADMIN
 }
 
 enum Status {
@@ -31,165 +178,9 @@ enum Gender {
   FEMALE
 }
 
-model User {
-  id       String   @id @default(uuid())
-  email    String   @unique
-  name     String?
-  phone    String?
-  password String
-  role     UserRole @default(STUDENT)
-  status   Status   @default(ACTIVE)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  student    Student?
-  instructor Instructor?
-  admin      Admin?
-  Blog       Blog[]
-}
-
-model Student {
-  id           String      @id @unique @default(uuid())
-  profilePhoto String?
-  contact      String?
-  address      String?
-  gender       Gender
-  Payment      Payment[]
-  classroom    Classroom[]
-
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  userId String @unique
-  User   User   @relation(fields: [userId], references: [id])
-
-  Course   Course? @relation(fields: [courseId], references: [id])
-  courseId String?
-}
-
-model Instructor {
-  id           String      @id @unique @default(uuid())
-  profilePhoto String?
-  contact      String?
-  address      String?
-  gender       Gender
-  classroom    Classroom[]
-
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  User   User?   @relation(fields: [userId], references: [id])
-  userId String? @unique
-}
-
-model Admin {
-  id           String  @id @unique @default(uuid())
-  profilePhoto String?
-  contact      String?
-  address      String?
-  gender       Gender
-
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  User      User?    @relation(fields: [userId], references: [id])
-  userId    String?  @unique
-}
-
-model Course {
-  id          String     @id @default(uuid())
-  title       String
-  description String
-  price       Float
-  isPublished Boolean    @default(false)
-  modules     Module[]
-  payment     Payment[]
-  student     Student[]
-  classroom   Classroom?
-}
-
-model Classroom {
-  Course   Course @relation(fields: [courseId], references: [id])
-  courseId String @unique
-
-  Instructor   Instructor @relation(fields: [instructorId], references: [id])
-  instructorId String
-  Student      Student    @relation(fields: [studentId], references: [id])
-  studentId    String
-
-  @@id([courseId, instructorId, studentId])
-}
-
-model Module {
-  id         String      @id @default(uuid())
-  title      String
-  course     Course?     @relation(fields: [courseId], references: [id])
-  courseId   String?
-  content    Content[]
-  assignment Assignment?
-}
-
-model Content {
-  id           String        @id @default(uuid())
-  title        String
-  video        String?
-  description  String?
-  assignment   String?
-  Module       Module?       @relation(fields: [moduleId], references: [id])
-  moduleId     String?
-  QuizInstance QuizInstance?
-}
-
-model QuizInstance {
-  id           String  @id @default(uuid())
-  quiz         Quiz[]
-  totalMark    Int
-  acquiredMark Int
-  content      Content @relation(fields: [contentId], references: [id])
-  contentId    String  @unique
-  isSubmitted  Boolean @default(false)
-}
-
-model Quiz {
-  id             String        @id @default(uuid())
-  question       String
-  options        String[]
-  correctAnswer  Int?
-  QuizInstance   QuizInstance? @relation(fields: [quizInstanceId], references: [id])
-  quizInstanceId String?
-}
-
-model Assignment {
-  id          String  @id @default(uuid())
-  title       String
-  file        String?
-  isSubmitted Boolean @default(false)
-  Module      Module? @relation(fields: [moduleId], references: [id])
-  moduleId    String  @unique
-  assuredMark Int
-}
-
-model Blog {
-  id          String   @id @default(uuid())
-  title       String
-  content     String
-  author      User     @relation(fields: [authorId], references: [id])
-  authorId    String
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Payment {
-  id             String   @id @default(uuid())
-  courseId       String
-  amount         Float
-  status         String
-  stripeChargeId String?
-  course         Course[]
-  student        Student  @relation(fields: [studentId], references: [id])
-  studentId      String
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
 }

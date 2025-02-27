@@ -45,7 +45,7 @@ export class AuthService {
     const isCorrectPassword = await bcrypt.compare(password, user.password);
     if (!isCorrectPassword) throw new HttpException('Invalid credentials', 401);
 
-    const payload = { email: user.email, role: user.role };
+    const payload =   { email: user.email, role: user.role, id: user.id };
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow('JWT_SECRET'),
     });
@@ -130,7 +130,7 @@ export class AuthService {
       where: { email: payload.email, status: Status.ACTIVE },
     });
     const accessToken = this.jwtService.sign(
-      { email: user.email, role: user.role },
+      { email: user.email, role: user.role, id: user.id },
       { secret: this.configService.get('JWT_ACCESS_SECRET') },
     );
     return {
