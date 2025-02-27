@@ -46,7 +46,6 @@ export class ModuleService {
             id: true,
             video: true,
             description: true,
-            assignment: true,
             QuizInstance: {
             select:{
               id: true,

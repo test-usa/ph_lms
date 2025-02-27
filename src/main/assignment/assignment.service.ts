@@ -22,35 +22,34 @@ export class AssignmentService {
         return module
     }
 
-    public async addAssignmentToModule({
-        moduleId,
-        title,
-    }: CreateAssignmentDto): Promise<ApiResponse<Assignment>> {
-        const module = await this.isModuleExist(moduleId);
+    // public async addAssignmentToModule({
+    //     moduleId,
+    //     title,
+    // }: CreateAssignmentDto): Promise<ApiResponse<Assignment>> {
+    //     const module = await this.isModuleExist(moduleId);
 
-        const newAssignment = await this.db.assignment.create({
-            data: {
-                title,
-                moduleId: module.id,
-                assuredMark: 0
-            },
-        });
+    //     const newAssignment = await this.db.assignment.create({
+    //         data: {
+    //             title,
+    //             moduleId: module.id,
+    //             assuredMark: 0
+    //         },
+    //     });
 
-        return {
-            data: newAssignment,
-            success: true,
-            message: 'Assignment added successfully',
-            statusCode: HttpStatus.CREATED,
-        }
-    }
+    //     return {
+    //         data: newAssignment,
+    //         success: true,
+    //         message: 'Assignment added successfully',
+    //         statusCode: HttpStatus.CREATED,
+    //     }
+    // }
 
     public async createAssignment({
-         title, file, assuredMark, moduleId
+        file, accruedMark,isSubmitted, studentId
     }:CreateAssignmentDto):Promise<ApiResponse<Assignment>>{
         const newAssignment = await this.db.assignment.create({
             data:{
-             title, file, assuredMark,
-             moduleId
+             file, accruedMark, isSubmitted, studentId
             }
         })
         return {
