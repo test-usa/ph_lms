@@ -32,6 +32,7 @@ export class AssignmentService {
             data: {
                 title,
                 moduleId: module.id,
+                assuredMark: 0
             },
         });
 
