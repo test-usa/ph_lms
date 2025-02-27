@@ -10,7 +10,7 @@ export class UserSeeder implements OnModuleInit {
     private readonly config: ConfigService,
     private readonly lib: LibService,
     private readonly db: DbService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     await this.seedAdmin();
@@ -28,9 +28,10 @@ export class UserSeeder implements OnModuleInit {
         password: this.config.getOrThrow('ADMIN_PASS') as string,
         round: 6,
       });
-await this.db.user.create({
+      await this.db.user.create({
         data: {
           email: this.config.getOrThrow('ADMIN_EMAIL') as string,
+          name: "Super Admin",
           password: hashedPassword,
           role: $Enums.UserRole.SUPER_ADMIN,
         },

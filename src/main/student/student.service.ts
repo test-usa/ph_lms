@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Gender, Prisma, Status, Student, UserRole } from '@prisma/client';
-import { IdDto } from 'src/common/id.dto';
 import { DbService } from 'src/db/db.service';
 import { TPaginationOptions } from 'src/interface/pagination.type';
 import calculatePagination from 'src/utils/calculatePagination';
+import { Gender, Prisma, Status, Student, UserRole } from '@prisma/client';
+import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
+
 
 @Injectable()
 export class StudentService {
