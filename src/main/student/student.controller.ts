@@ -1,12 +1,12 @@
-import { Body, Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
-import sendResponse from 'src/utils/sendResponse';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
 import pick from 'src/utils/pick';
-import { Request, Response } from 'express';
+import { Request } from 'express';
+import { IdDto } from 'src/common/id.dto';
 
 @Controller('student')
 export class StudentController {
@@ -15,30 +15,17 @@ export class StudentController {
     @Get(':id')
     @ApiBearerAuth()
     @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.SUPER_ADMIN]))
-    async getSingleStudent(@Req() req: Request, @Res() res: Response) {
-        const { id } = req.params;
-        const result = await this.studentService.getSingleStudent(id);
-        sendResponse(res, {
-            statusCode: 200,
-            success: true,
-            message: "Student's data retrieved Successfully",
-            data: result,
-        });
+    async getSingleStudent(@Param() id: IdDto) {
+        return this.studentService.getSingleStudent(id);
     }
 
     @Get()
     @ApiBearerAuth()
     @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-    async getAllStudents(@Req() req: Request, @Res() res: Response) {
+    async getAllStudents(@Req() req: Request) {
         const filters = pick(req.query, ["email", "searchTerm", "gender", "contact"]);
         const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"]);
-        const result = await this.studentService.getAllStudents(filters, options);
-        sendResponse(res, {
-            statusCode: 200,
-            success: true,
-            message: "All Students fetched Successfully",
-            data: result,
-        });
+        return this.studentService.getAllStudents(filters, options);
     }
 
 }

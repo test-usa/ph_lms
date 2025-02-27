@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
 import {
   IsEmail,
   IsEnum,
   IsOptional,
   IsString,
+  Matches,
   MinLength,
 } from 'class-validator';
 
@@ -34,6 +35,16 @@ export class LoginDto {
 // Register
 export class RegisterDto {
   @ApiProperty({
+    description: 'User name',
+    example: 'John Doe',
+  })
+  @IsString()
+  @MinLength(3, {
+    message: 'Name is too short. Minimum length is 3 characters.',
+  })
+  name: string;
+
+  @ApiProperty({
     description: 'User email address',
     example: 'user@example.com',
   })
@@ -51,11 +62,25 @@ export class RegisterDto {
   })
   password: string;
 
-  @ApiProperty({ description: 'User role', enum: UserRole, required: false })
+  @ApiPropertyOptional({ description: 'User role', enum: UserRole, required: false })
   @IsOptional()
   @IsEnum(UserRole)
-  role: UserRole;
+  role: UserRole | undefined;
+
+  @ApiProperty({
+    description: 'User phone number',
+    example: '+1234567890',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Phone number must be a valid international format',
+  })
+  phone: string;
 }
+
+
 
 export class RefreshTokenDto {
   @ApiProperty({

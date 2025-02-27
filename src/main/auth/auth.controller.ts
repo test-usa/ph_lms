@@ -22,30 +22,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Post('login')
-  async loginUser(@Body() loginDto: LoginDto, @Res() res: Response) {
-    const result = await this.authService.loginUser(loginDto);
-    const { refreshToken, accessToken } = result;
-
-    res.cookie('refreshToken', refreshToken, { secure: false, httpOnly: true });
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'Logged in successfully',
-      data: { accessToken },
-    });
+  async loginUser(@Body() loginDto: LoginDto) {
+    return this.authService.loginUser(loginDto);
   }
 
   @Post('register')
-  async registerUser(@Body() registerDto: RegisterDto, @Res() res: Response, @Req() req: Request) {
-    console.log(req.user)
-    const result = await this.authService.registerUser(registerDto, req.user);
-
-    sendResponse(res, {
-      statusCode: 201,
-      success: true,
-      message: 'User registered successfully',
-      data: result,
-    });
+  async registerUser(@Body() registerDto: RegisterDto, @Req() req: Request) {
+    return this.authService.registerUser(registerDto, req.user);
   }
 
   @Post('refresh-token')
@@ -54,13 +37,7 @@ export class AuthController {
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not provided');
     }
-    const result = await this.authService.refreshToken(refreshToken);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'New Access Token Has Been Generated',
-      data: result,
-    });
+    return this.authService.refreshToken(refreshToken);
   }
 
   @Post('forgot-password')
@@ -68,12 +45,6 @@ export class AuthController {
     @Body() forgotPasswordDto: ForgotPasswordDto,
     @Res() res: Response,
   ) {
-    await this.authService.forgotPassword(forgotPasswordDto.email);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'Please check your mail',
-      data: null,
-    });
+    return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 }

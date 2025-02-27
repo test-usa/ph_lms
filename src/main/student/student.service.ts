@@ -1,23 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import { Gender, Prisma, Status, UserRole } from '@prisma/client';
 import { DbService } from 'src/db/db.service';
 import { TPaginationOptions } from 'src/interface/pagination.type';
 import calculatePagination from 'src/utils/calculatePagination';
+import { Gender, Prisma, Status, Student, UserRole } from '@prisma/client';
+import { IdDto } from 'src/common/id.dto';
+import { ApiResponse } from 'src/utils/sendResponse';
+
 
 @Injectable()
 export class StudentService {
     constructor(private db: DbService) { }
 
     // Get Single Student
-    async getSingleStudent(id: string) {
+    async getSingleStudent(id: IdDto):Promise<ApiResponse<Student>> {
         const result = await this.db.student.findUniqueOrThrow({
-            where: { id }
+            where:  id 
         });
-        return result;
+        return {
+            statusCode: 200,
+            success: true,
+            message: "Student's data retrieved successfully",
+            data: result,
+        }
     }
 
     // Get All Students
-    async getAllStudents(params: any, options: TPaginationOptions) {
+    async getAllStudents(params: any, options: TPaginationOptions):Promise<ApiResponse<Student[]>> {
         const andConditions: Prisma.StudentWhereInput[] = [];
         const { searchTerm, ...filteredData } = params;
         const { page, limit, skip } = calculatePagination(options);
@@ -77,6 +85,9 @@ export class StudentService {
             },
         });
         return {
+            statusCode: 200,
+            success: true,
+            message: "Students data retrieved successfully",
             meta: {
                 page,
                 limit,
