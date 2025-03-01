@@ -67,10 +67,10 @@ export class ContentService {
       throw new NotFoundException('Content not found');
     }
 
-    return this.prisma.content.update({
-      where: { id },
-      data: { ...dto },
-    });
+    // return this.prisma.content.update({
+    //   where: { id },
+    //   data: { ...dto },
+    // });
   }
 
   async remove(id: string) {

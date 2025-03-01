@@ -139,27 +139,27 @@ export class CourseService {
   public async getSingleCourse({ id }: IdDto): Promise<ApiResponse<Course>> {
     const course = await this.db.course.findUnique({
       where: { id },
-      include: {
-        modules: {
-          select: {
-            title: true,
-            id: true,
-            content: {
-              select: {
-                title: true,
-                id: true,
-                QuizInstance: {
-                  include: {
-                    quiz: true,
-                  },
-                },
-                description: true,
-                video: true,
-              },
-            },
-          },
-        },
-      },
+      // include: {
+      //   modules: {
+      //     select: {
+      //       title: true,
+      //       id: true,
+      //       content: {
+      //         select: {
+      //           title: true,
+      //           id: true,
+      //           QuizInstance: {
+      //             include: {
+      //               quiz: true,
+      //             },
+      //           },
+      //           description: true,
+      //           video: true,
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
     });
 
     if (!course)
@@ -197,27 +197,27 @@ export class CourseService {
           },
         },
       },
-      include: {
-        modules: {
-          select: {
-            title: true,
-            id: true,
-            content: {
-              select: {
-                title: true,
-                id: true,
-                QuizInstance: {
-                  include: {
-                    quiz: true,
-                  },
-                },
-                description: true,
-                video: true,
-              },
-            },
-          },
-        },
-      },
+      // include: {
+      //   modules: {
+      //     select: {
+      //       title: true,
+      //       id: true,
+      //       content: {
+      //         select: {
+      //           title: true,
+      //           id: true,
+      //           QuizInstance: {
+      //             include: {
+      //               quiz: true,
+      //             },
+      //           },
+      //           description: true,
+      //           video: true,
+      //         },
+      //       },
+      //     },
+      //   },
+      // },
     });
 
     return {

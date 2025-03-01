@@ -10,12 +10,7 @@ export class CreateCourseDto {
   @IsString()
   title: string;
 
-  @ApiProperty({
-    description: 'Description of the product',
-    example: 'A high-performance laptop suitable for gaming and work',
-  })
-  @IsString()
-  description: string;
+
 
   @ApiProperty({ description: 'Price of the product', example: 1299.99 })
   @IsNumber()

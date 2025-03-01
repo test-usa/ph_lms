@@ -49,19 +49,19 @@ export class AssignmentService {
         studentId,
         assignmentInstanceId,
       }: CreateAssignmentDto): Promise<ApiResponse<Assignment>> {
-        const newAssignment = await this.db.assignment.create({
-          data: {
-            file,
-            accruedMark:0,
-            isSubmitted:true,
-            studentId,
-            assignmentInstanceId
-        },
-        });
+        // const newAssignment = await this.db.assignment.create({
+        //   data: {
+        //     file,
+        //     accruedMark:0,
+        //     isSubmitted:true,
+        //     studentId,
+        //     assignmentInstanceId
+        // },
+        // });
       
         
         return {
-          data: newAssignment,
+          data: null,
           success: true,
           message: 'Assignment created successfully',
           statusCode: HttpStatus.CREATED,

@@ -34,8 +34,9 @@ export class ModuleController {
   @Post()
   @ApiOperation({ summary: 'Create a new module' })
   @ApiBearerAuth()
-  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
+  @UseGuards(AuthGuard,RoleGuardWith([UserRole.INSTRUCTOR]))
   async create(@Body() dto: CreateModuleDto) {
+    console.log(dto)
     return this.moduleService.create(dto);
   }
 

@@ -43,8 +43,8 @@ model Student {
   userId String @unique
   User   User   @relation(fields: [userId], references: [id])
 
-  courseId String
-  course   Course @relation(fields: [courseId], references: [id])
+  courseId String?
+  course   Course? @relation(fields: [courseId], references: [id])
 }
 
 model Instructor {
@@ -88,8 +88,8 @@ model Course {
   isPublished Boolean @default(false)
 
   module  Module[]
-  student Student[] 
-  payment Payment[] @relation("CourseToPayment") 
+  student Student[]
+  payment Payment[] @relation("CourseToPayment")
 }
 
 model Module {
@@ -157,7 +157,7 @@ model Assignment {
 
   assignmentSubmission AssignmentSubmission[]
 
-  contentId String @unique
+  contentId String  @unique
   Content   Content @relation(fields: [contentId], references: [id])
 }
 
@@ -183,6 +183,7 @@ model Blog {
   id          String   @id @default(uuid())
   title       String
   content     String
+  author      String
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
