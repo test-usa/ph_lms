@@ -21,20 +21,41 @@ model User {
   student    Student?
   instructor Instructor?
   admin      Admin?
-  Blog       Blog[]
 }
 
 model Student {
-  id           String      @id @unique @default(uuid())
-  email        String      @unique
+  id           String   @id @unique @default(uuid())
+  email        String   @unique
   name         String
   profilePhoto String?
   phone        String?
   contact      String?
   address      String?
   gender       Gender?
-  Payment      Payment[]
-  classroom    Classroom[]
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  Payment              Payment[]
+  assignmentSubmission AssignmentSubmission[]
+  quizSubmission       QuizSubmission[]
+
+  userId String @unique
+  User   User   @relation(fields: [userId], references: [id])
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+}
+
+model Instructor {
+  id           String  @id @unique @default(uuid())
+  email        String  @unique
+  name         String
+  profilePhoto String?
+  contact      String?
+  address      String?
+  gender       Gender?
+  Blog         Blog[]
 
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -42,28 +63,6 @@ model Student {
 
   userId String @unique
   User   User   @relation(fields: [userId], references: [id])
-
-  Course     Course?      @relation(fields: [courseId], references: [id])
-  courseId   String?
-  Assignment Assignment[]
-}
-
-model Instructor {
-  id           String      @id @unique @default(uuid())
-  email        String      @unique
-  name         String
-  profilePhoto String?
-  contact      String?
-  address      String?
-  gender       Gender?
-  classroom    Classroom[]
-
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  User   User?   @relation(fields: [userId], references: [id])
-  userId String? @unique
 }
 
 model Admin {
@@ -83,35 +82,23 @@ model Admin {
 }
 
 model Course {
-  id          String     @id @default(uuid())
+  id          String  @id @default(uuid())
   title       String
-  description String
   price       Float
-  isPublished Boolean    @default(false)
-  classroom   Classroom?
-  modules     Module[]
-  student     Student[]
-  payment     Payment[]  @relation("CourseToPayment")
-}
+  isPublished Boolean @default(false)
 
-model Classroom {
-  courseId     String     @unique
-  instructorId String
-  studentId    String
-  Course       Course     @relation(fields: [courseId], references: [id])
-  Instructor   Instructor @relation(fields: [instructorId], references: [id])
-  Student      Student    @relation(fields: [studentId], references: [id])
-
-  @@id([courseId, instructorId, studentId])
+  module  Module[]
+  student Student[] 
+  payment Payment[] @relation("CourseToPayment") 
 }
 
 model Module {
-  id         String              @id @default(uuid())
-  title      String
-  courseId   String?
-  assignment AssignmentInstance?
-  content    Content[]
-  course     Course?             @relation(fields: [courseId], references: [id])
+  id      String    @id @default(uuid())
+  title   String
+  content Content[]
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
 }
 
 model Content {
@@ -119,59 +106,89 @@ model Content {
   title        String
   video        String?
   description  String?
-  moduleId     String?
-  Module       Module?       @relation(fields: [moduleId], references: [id])
   QuizInstance QuizInstance?
-}
+  assignment   Assignment?
 
-model QuizInstance {
-  id           String  @id @default(uuid())
-  totalMark    Int
-  acquiredMark Int
-  contentId    String  @unique
-  isSubmitted  Boolean @default(false)
-  quiz         Quiz[]
-  content      Content @relation(fields: [contentId], references: [id])
+  moduleId String
+  Module   Module @relation(fields: [moduleId], references: [id])
 }
 
 model Quiz {
-  id             String        @id @default(uuid())
-  question       String
-  options        String[]
-  correctAnswer  Int?
-  quizInstanceId String?
-  QuizInstance   QuizInstance? @relation(fields: [quizInstanceId], references: [id])
+  id            String   @id @default(uuid())
+  question      String
+  options       String[]
+  correctAnswer Int
+
+  quizInstanceId String
+  QuizInstance   QuizInstance @relation(fields: [quizInstanceId], references: [id])
 }
 
-model AssignmentInstance {
-  id         String       @id @default(uuid())
-  fullMark   Int
-  title      String
-  assignment Assignment[]
-  Module     Module?      @relation(fields: [moduleId], references: [id])
-  moduleId   String?      @unique
+model QuizInstance {
+  id        String @id @default(uuid())
+  totalMark Int
+
+  quiz           Quiz[] // QuizInstance contains several quizzes
+  quizSubmission QuizSubmission[] // QuizInstance contains several userQuizSubmissions.
+
+  contentId String  @unique
+  content   Content @relation(fields: [contentId], references: [id])
+}
+
+model QuizSubmission {
+  id               String   @id @default(uuid())
+  correctAnswers   Int
+  incorrectAnswers Int
+  isCompleted      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  quizInstanceId String
+  quizInstance   QuizInstance @relation(fields: [quizInstanceId], references: [id])
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+
+  @@unique([quizInstanceId, studentId]) // Ensures a student has only one submission per quiz instance
 }
 
 model Assignment {
-  id                   String              @id @default(uuid())
-  file                 String?
-  isSubmitted          Boolean             @default(false)
-  accruedMark          Int
-  AssignmentInstance   AssignmentInstance? @relation(fields: [assignmentInstanceId], references: [id])
-  assignmentInstanceId String?
-  Student              Student?            @relation(fields: [studentId], references: [id])
-  studentId            String?
+  id        String @id @default(uuid())
+  title     String
+  totalMark Int
+
+  assignmentSubmission AssignmentSubmission[]
+
+  contentId String @unique
+  Content   Content @relation(fields: [contentId], references: [id])
+}
+
+model AssignmentSubmission {
+  id           String   @id @default(uuid())
+  submission   String
+  acquiredMark Int      @default(0)
+  isSubmitted  Boolean  @default(false)
+  isReviewed   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId]) // Ensures a student can submit only once per assignment
 }
 
 model Blog {
   id          String   @id @default(uuid())
   title       String
   content     String
-  authorId    String
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  author      User     @relation(fields: [authorId], references: [id])
+
+  authorId   String
+  Instructor Instructor? @relation(fields: [authorId], references: [id])
 }
 
 model Payment {
