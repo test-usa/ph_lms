@@ -31,15 +31,15 @@ export class StudentController {
 
     @Put('update-student/:id')
     @ApiBearerAuth()
-    @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-    async updateStudent(@Param() id: IdDto, @Body() data: UpdateStudentDto) {
-        return this.studentService.updateStudent(id, data);
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    async updateStudent(@Param() id: IdDto, @Body() data: UpdateStudentDto, @Req() req: Request) {
+        return this.studentService.updateStudent(id, data, req.user);
     }
 
-    // @Delete()
-    // @ApiBearerAuth()
-    // @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-    // async deleteStudent(@Param() id: IdDto) {
-    //     return this.studentService.deleteStudent(id);
-    // }
+    @Delete('delete-student/:id')
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN,]))
+    async deleteStudent(@Param() id: IdDto) {
+        return this.studentService.deleteStudent(id);
+    }
 }

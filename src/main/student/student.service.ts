@@ -5,7 +5,7 @@ import calculatePagination from 'src/utils/calculatePagination';
 import { Gender, Prisma, Status, Student, UserRole } from '@prisma/client';
 import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { UpdateStudentDto } from './student.Dto';
+import { TUser } from 'src/interface/token.type';
 
 
 @Injectable()
@@ -88,22 +88,28 @@ export class StudentService {
 
     //------------------------------------------Update Student------------------------------------------
     public async updateStudent(
-        studentId: IdDto,
-        payload: Partial<Student>
+        id: IdDto,
+        payload: Partial<Student>,
+        token: TUser
     ): Promise<ApiResponse<Student>> {
         const existingStudent = await this.db.student.findUnique({
-            where: studentId,
+            where: id,
         });
 
         if (!existingStudent) throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
         if (existingStudent.isDeleted) throw new HttpException('Student is deactivated', HttpStatus.FORBIDDEN);
-
-        const { id, email, userId, courseId, ...updatableFields } = payload;
+        if (token.role == UserRole.STUDENT && existingStudent.email !== token.email) throw new HttpException('Unauthorized Access!', HttpStatus.FORBIDDEN);
 
         // Perform update
         const updatedStudent = await this.db.student.update({
-            where: studentId,
-            data: updatableFields,
+            where: id,
+            data: {
+                profilePhoto: payload.profilePhoto,
+                phone: payload.phone,
+                contact: payload.contact,
+                address: payload.address,
+                gender: payload.gender,
+            },
         });
 
         return {
@@ -114,4 +120,41 @@ export class StudentService {
         };
     }
 
+    // --------------------------------------------Delete Student-------------------------------------------------
+    public async deleteStudent(id: IdDto): Promise<ApiResponse<void>> {
+        const existingStudent = await this.db.student.findUnique({
+            where: id,
+            include: { user: true }, 
+        });
+    
+        if (!existingStudent) {
+            throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
+        }
+        if (existingStudent.isDeleted) {
+            throw new HttpException('Student is already deleted', HttpStatus.BAD_REQUEST);
+        }
+    
+        await this.db.$transaction(async (tClient) => {
+            // Transaction - 01: Update student: isDeleted: true
+            await tClient.student.update({
+                where: id,
+                data: { isDeleted: true },
+            });
+
+             // Transaction - 02: Update user: status: DELETED
+            if (existingStudent.user) {
+                await tClient.user.update({
+                    where: { id: existingStudent.userId },
+                    data: { status: Status.DELETED },
+                });
+            }
+        })
+    
+        return {
+            data: null,
+            statusCode: 200,
+            success: true,
+            message: 'Student and related User have been marked as deleted.',
+        };
+    }
 }

@@ -1,79 +1,45 @@
-import { Controller, Get, HttpCode, Req, Res, UseGuards, Param, Body, Put, Delete, Patch } from '@nestjs/common';
-import { ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
-import { UserRole } from '@prisma/client';
-import { Response } from 'express';
-import { AuthGuard } from 'src/guard/auth.guard';
-import { RoleGuardWith } from 'src/utils/RoleGuardWith';
-import sendResponse from 'src/utils/sendResponse';
+import { Body, Controller, Delete, Get, Param, Put, Req, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { UpdateAdminProfileDto } from './admin.Dto';
-
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { RoleGuardWith } from 'src/utils/RoleGuardWith';
+import { AuthGuard } from 'src/guard/auth.guard';
+import { UserRole } from '@prisma/client';
+import pick from 'src/utils/pick';
+import { Request } from 'express';
+import { IdDto } from 'src/common/id.dto';
+import { UpdateAdminDto } from './admin.Dto';
 
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+    constructor(private readonly adminService: AdminService) { }
 
-  @Get('allAdmin')
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN]))
-  async getAllAdmin(@Res() res: Response) {
-    const result = await this.adminService.getAllAdmin();
-    sendResponse(res, {
-      success: true,
-      message: 'All admins retrieved successfully',
-      statusCode: 200,
-      data: result,
-    });
-  }
+    @Get(':id')
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN]))
+    async getSingleAdmin(@Param() id: IdDto) {
+        return this.adminService.getSingleAdmin(id);
+    }
 
-  @Get('singleAdmin/:id')
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @ApiParam({ name: 'id', type: String })
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN]))
-  async getSingleAdmin(@Res() res: Response, @Param('id') id: string) {
-    const result = await this.adminService.getSingleAdmin(id);
-    sendResponse(res, {
-      success: true,
-      message: 'Single admin retrieved successfully',
-      statusCode: 200,
-      data: result,
-    });
-  }
+    @Get()
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN]))
+    async getAllAdmins(@Req() req: Request) {
+        const filters = pick(req.query, ["email", "searchTerm", "gender", "contact"]);
+        const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"]);
+        return this.adminService.getAllAdmins(filters, options);
+    }
 
-  @Delete('deleteAdmin/:id')
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @ApiParam({ name: 'id', type: String })
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN]))
-  async deleteAdmin(@Res() res: Response, @Param('id') id: string) {
-    const result = await this.adminService.deleteAdmin(id);
-    sendResponse(res, {
-      success: true,
-      message: 'Admin deleted successfully',
-      statusCode: 200,
-      data: result,
-    });
-  }
+    @Put('update-admin/:id')
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    async updateAdmin(@Param() id: IdDto, @Body() data: UpdateAdminDto, @Req() req:Request) {
+        return this.adminService.updateAdmin(id, data, req.user);
+    }
 
-//   @Patch('updateAdminProfile/:id')
-//   @HttpCode(200)
-//   @ApiBearerAuth()
-//   @ApiParam({ name: 'id', type: String })
-//   @ApiBody({ type: UpdateAdminProfileDto })
-//   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN]))
-//   async updateAdminProfile(
-//     @Res() res: Response,
-//     @Param('id') id: string,
-//     @Body() payload: UpdateAdminProfileDto,
-//   ) {
-//     const result = await this.adminService.updateAdmin(id, payload);
-//     sendResponse(res, {
-//       success: true,
-//       message: 'Admin profile updated successfully',
-//       statusCode: 200,
-//       data: result,
-//     });
-//   }
+    @Delete('delete-admin/:id')
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN]))
+    async deleteAdmin(@Param() id: IdDto) {
+        return this.adminService.deleteAdmin(id);
+    }
 }
