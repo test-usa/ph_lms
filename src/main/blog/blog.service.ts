@@ -8,22 +8,22 @@ import { IdDto } from 'src/common/id.dto';
 export class BlogService {
   constructor(private readonly prisma: DbService) {}
 
-  async create(createBlogDto: CreateBlogDto) {
-    return this.prisma.blog.create({
-      data: createBlogDto,
-    });
-  }
+  // async create(createBlogDto: CreateBlogDto) {
+  //   return this.prisma.blog.create({
+  //     data: createBlogDto,
+  //   });
+  // }
 
   async findAll() {
     return this.prisma.blog.findMany({
-      include: { author: true },
+      // include: { author: true },
     });
   }
 
   async findOne(id: string) {
     const blog = await this.prisma.blog.findUnique({
       where: { id },
-      include: { author: true },
+      // include: { author: true },
     });
 
     if (!blog) {

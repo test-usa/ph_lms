@@ -29,15 +29,15 @@ export class ModuleService {
       }
     }
 
-    const data = await this.prisma.module.create({
-      data: { ...dto },
-    });
+    // const data = await this.prisma.module.create({
+    //   data: { ...dto },
+    // });
 
     return {
       statusCode: 201,
       success: true,
       message: 'Module created successfully',
-      data,
+      data: null,
     };
   }
 

@@ -25,7 +25,6 @@ export class QuizService {
       return this.db.quizInstance.create({
         data: {
           contentId,
-          acquiredMark: 0,
           totalMark: 0,
         },
         include: {
@@ -184,9 +183,7 @@ export class QuizService {
     const updated = await this.db.quizInstance.update({
       where: { id: quizInstanceId },
       data: {
-        acquiredMark,
         totalMark: quizInstance.quiz.length,
-        isSubmitted: true,
       },
     });
     return {
