@@ -62,11 +62,6 @@ export class RegisterDto {
   })
   password: string;
 
-  @ApiPropertyOptional({ description: 'User role', enum: UserRole, required: false })
-  @IsOptional()
-  @IsEnum(UserRole)
-  role: UserRole | undefined;
-
   @ApiProperty({
     description: 'User phone number',
     example: '+1234567890',
@@ -98,4 +93,28 @@ export class ForgotPasswordDto {
   })
   @IsEmail()
   email: string;
+}
+
+export class ChangePasswordDto {
+  @ApiProperty({
+    description: 'User password',
+    example: 'securePassword123',
+    minLength: 6,
+  })
+  @IsString()
+  @MinLength(6, {
+    message: 'Password is too short. Minimum length is 6 characters.',
+  })
+  oldPassword: string;
+
+  @ApiProperty({
+    description: 'User password',
+    example: 'securePassword123',
+    minLength: 6,
+  })
+  @IsString()
+  @MinLength(6, {
+    message: 'Password is too short. Minimum length is 6 characters.',
+  })
+  newPassword: string;
 }

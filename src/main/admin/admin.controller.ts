@@ -57,23 +57,23 @@ export class AdminController {
     });
   }
 
-  @Patch('updateAdminProfile/:id')
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @ApiParam({ name: 'id', type: String })
-  @ApiBody({ type: UpdateAdminProfileDto })
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN]))
-  async updateAdminProfile(
-    @Res() res: Response,
-    @Param('id') id: string,
-    @Body() payload: UpdateAdminProfileDto,
-  ) {
-    const result = await this.adminService.updateAdmin(id, payload);
-    sendResponse(res, {
-      success: true,
-      message: 'Admin profile updated successfully',
-      statusCode: 200,
-      data: result,
-    });
-  }
+//   @Patch('updateAdminProfile/:id')
+//   @HttpCode(200)
+//   @ApiBearerAuth()
+//   @ApiParam({ name: 'id', type: String })
+//   @ApiBody({ type: UpdateAdminProfileDto })
+//   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN]))
+//   async updateAdminProfile(
+//     @Res() res: Response,
+//     @Param('id') id: string,
+//     @Body() payload: UpdateAdminProfileDto,
+//   ) {
+//     const result = await this.adminService.updateAdmin(id, payload);
+//     sendResponse(res, {
+//       success: true,
+//       message: 'Admin profile updated successfully',
+//       statusCode: 200,
+//       data: result,
+//     });
+//   }
 }

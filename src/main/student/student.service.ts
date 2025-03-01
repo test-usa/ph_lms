@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { Gender, Prisma, Status, Student, UserRole } from '@prisma/client';
-import { IdDto } from 'src/common/id.dto';
 import { DbService } from 'src/db/db.service';
 import { TPaginationOptions } from 'src/interface/pagination.type';
 import calculatePagination from 'src/utils/calculatePagination';
+import { Gender, Prisma, Status, Student, UserRole } from '@prisma/client';
+import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
+
 
 @Injectable()
 export class StudentService {
     constructor(private db: DbService) { }
 
-    // Get Single Student
-    async getSingleStudent(id: IdDto):Promise<ApiResponse<Student>> {
+    // --------------------------------------------Get Single Student---------------------------------------
+    public async getSingleStudent(id: IdDto):Promise<ApiResponse<Student>> {
         const result = await this.db.student.findUniqueOrThrow({
             where:  id 
         });
@@ -23,8 +24,8 @@ export class StudentService {
         }
     }
 
-    // Get All Students
-    async getAllStudents(params: any, options: TPaginationOptions):Promise<ApiResponse<Student[]>> {
+    // -------------------------------------------------Get All Students------------------------------------------------------------
+    public async getAllStudents(params: any, options: TPaginationOptions):Promise<ApiResponse<Student[]>> {
         const andConditions: Prisma.StudentWhereInput[] = [];
         const { searchTerm, ...filteredData } = params;
         const { page, limit, skip } = calculatePagination(options);
@@ -65,17 +66,6 @@ export class StudentService {
                 : {
                     createdAt: "desc",
                 },
-            // select: {
-            //     id: true,
-            //     name: true,
-            //     profilePhoto: true,
-            //     address: true,
-            //     email: true,
-            //     contact: true,
-            //     gender: true,
-            //     createdAt: true,
-            //     updatedAt: true,
-            // },
         });
         const total = await this.db.student.count({
             where: {

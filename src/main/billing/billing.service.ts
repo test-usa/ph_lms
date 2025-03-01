@@ -15,19 +15,22 @@ export class BillingService {
     this.stripe = new Stripe(
       this.configService.getOrThrow<string>('STRIPE_SECRET_KEY'),
       {
-        apiVersion: '2025-01-27.acacia',
+        apiVersion: "2025-02-24.acacia",
       },
     );
   }
 
-
+  /**
+   * Retrieves all courses by given course IDs and calculates the total price.
+   * Throws an error if any course is not found.
+   */
   private async allCourse(courseIds: string[]) {
     const courses = await this.db.course.findMany({
       where: { 
         id: { in: courseIds },
       },
-    })
-    if (courses.length!== courseIds.length) {
+    });
+    if (courses.length !== courseIds.length) {
       throw new HttpException('Course not found', HttpStatus.NOT_FOUND);
     }
 
@@ -35,14 +38,17 @@ export class BillingService {
     return {
       courses,
       totalPrice
-    }
+    };
   }
 
-
+  /**
+   * Checks if a user exists by user ID.
+   * Throws an error if the user is not found.
+   */
   private async IsUserExist(userId: string) {
     const user = await this.db.user.findUnique({
       where: { id: userId },
-      include : { student: true}
+      include : { student: true }
     });
     if (!user) {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -50,6 +56,10 @@ export class BillingService {
     return user;
   }
 
+  /**
+   * Creates a Stripe Payment Intent for the given user and courses.
+   * Stores the payment record in the database.
+   */
   async createPaymentIntent({
     payment,
     user,
@@ -80,16 +90,19 @@ export class BillingService {
           course:{
             connect: courseIds.map(id => ({ id })),
           },
-          status:"PENDING",
-
+          status: "PENDING",
         },
       });
       return { clientSecret: paymentIntent.client_secret, id: paymentIntent.id };
     } catch (error) {
-      
       throw new Error(error.message);
     }
   }
+
+  /**
+   * Creates a Stripe Checkout Session for purchasing courses.
+   * Returns the session URL for redirection.
+   */
   async createCheckoutSession({ courseIds, currency }: CreatePaymentIntentDto) {
     const course = await this.allCourse(courseIds);
     const session = await this.stripe.checkout.sessions.create({
@@ -115,9 +128,12 @@ export class BillingService {
     return { url: session.url };
   }
 
+  /**
+   * Retrieves the payment status from Stripe using the intent key.
+   */
   async updatePaymentStatus({
     intendKey
-  }:UpdatePaymentStatusDto) {
+  }: UpdatePaymentStatusDto) {
     const paymentIntent = await this.stripe.paymentIntents.retrieve(intendKey);
     return paymentIntent;
   }
