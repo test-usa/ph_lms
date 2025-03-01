@@ -44,7 +44,8 @@ model Student {
   user   User   @relation(fields: [userId], references: [id])
 
   courseId String?
-  course   Course? @relation(fields: [courseId], references: [id])
+  course   Course?    @relation(fields: [courseId], references: [id])
+  Progress Progress[]
 }
 
 model Instructor {
@@ -62,8 +63,8 @@ model Instructor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId   String @unique
-  user     User   @relation(fields: [userId], references: [id])
+  userId   String  @unique
+  user     User    @relation(fields: [userId], references: [id])
   courseId String? @unique
   Course   Course? @relation(fields: [courseId], references: [id])
 }
@@ -95,6 +96,7 @@ model Course {
   instructor Instructor?
   student    Student[]
   payment    Payment[]   @relation("CourseToPayment")
+  Progress   Progress[]
 }
 
 model Module {
@@ -111,7 +113,7 @@ model Content {
   title        String
   video        String?
   description  String?
-  QuizInstance QuizInstance?
+  quizInstance QuizInstance?
   assignment   Assignment?
 
   moduleId String
@@ -182,6 +184,22 @@ model AssignmentSubmission {
   student   Student @relation(fields: [studentId], references: [id])
 
   @@unique([assignmentId, studentId]) // Ensures a student can submit only once per assignment
+}
+
+model Progress {
+  id         String @id @default(uuid())
+  percentage Int    @default(0) // Progress percentage (0-100)
+
+  studentId  String
+  student Student @relation(fields: [studentId], references: [id])
+  
+  courseId   String
+  course  Course  @relation(fields: [courseId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, courseId]) // Ensures one progress entry per student per course
 }
 
 model Blog {
