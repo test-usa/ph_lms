@@ -29,7 +29,7 @@ export class UserController {
   @Get('me')
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  async getUser(@Req() req: Request, @Res() res: Response) {
+  async getUser(@Req() req: Request) {
     return this.userService.getMe(req.user);
   }
 
