@@ -7,6 +7,7 @@ import { UserRole } from '@prisma/client';
 import pick from 'src/utils/pick';
 import { Request } from 'express';
 import { IdDto } from 'src/common/id.dto';
+import { UpdateStudentDto } from './student.Dto';
 
 @Controller('student')
 export class StudentController {
@@ -28,17 +29,17 @@ export class StudentController {
         return this.studentService.getAllStudents(filters, options);
     }
 
-    // @Patch()
-    // @ApiBearerAuth()
-    // @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-    // async updateStudent(@Body() data: updateStudentDto, @Req() req: Request) {
-    //     return this.studentService.updateStudent(data);
-    // }
+    @Patch()
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
+    async updateStudent(@Body() data: UpdateStudentDto, @Req() req: Request) {
+        return this.studentService.updateStudent(data);
+    }
 
-    // @Delete()
-    // @ApiBearerAuth()
-    // @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-    // async deleteStudent(@Req() req: Request) {
-    //     return this.studentService.deleteStudent(filters, options);
-    // }
+    @Delete()
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+    async deleteStudent(@Param() id: IdDto) {
+        return this.studentService.deleteStudent(id);
+    }
 }
