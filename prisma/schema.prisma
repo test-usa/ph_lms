@@ -41,7 +41,7 @@ model Student {
   quizSubmission       QuizSubmission[]
 
   userId String @unique
-  User   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 
   courseId String?
   course   Course? @relation(fields: [courseId], references: [id])
@@ -52,6 +52,7 @@ model Instructor {
   email        String  @unique
   name         String
   profilePhoto String?
+  phone        String?
   contact      String?
   address      String?
   gender       Gender?
@@ -61,24 +62,27 @@ model Instructor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String @unique
-  User   User   @relation(fields: [userId], references: [id])
+  userId   String @unique
+  user     User   @relation(fields: [userId], references: [id])
+  courseId String? @unique
+  Course   Course? @relation(fields: [courseId], references: [id])
 }
 
 model Admin {
-  id           String  @id @unique @default(uuid())
-  email        String  @unique
+  id           String   @id @unique @default(uuid())
+  email        String   @unique
   name         String
   profilePhoto String?
+  phone        String?
   contact      String?
   address      String?
   gender       Gender?
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  isDeleted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  User      User?    @relation(fields: [userId], references: [id])
-  userId    String?  @unique
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Course {
@@ -87,9 +91,10 @@ model Course {
   price       Float
   isPublished Boolean @default(false)
 
-  module  Module[]
-  student Student[]
-  payment Payment[] @relation("CourseToPayment")
+  module     Module[]
+  instructor Instructor?
+  student    Student[]
+  payment    Payment[]   @relation("CourseToPayment")
 }
 
 model Module {
@@ -110,7 +115,7 @@ model Content {
   assignment   Assignment?
 
   moduleId String
-  Module   Module @relation(fields: [moduleId], references: [id])
+  module   Module @relation(fields: [moduleId], references: [id])
 }
 
 model Quiz {
@@ -120,7 +125,7 @@ model Quiz {
   correctAnswer Int
 
   quizInstanceId String
-  QuizInstance   QuizInstance @relation(fields: [quizInstanceId], references: [id])
+  quizInstance   QuizInstance @relation(fields: [quizInstanceId], references: [id])
 }
 
 model QuizInstance {
@@ -158,7 +163,7 @@ model Assignment {
   assignmentSubmission AssignmentSubmission[]
 
   contentId String  @unique
-  Content   Content @relation(fields: [contentId], references: [id])
+  content   Content @relation(fields: [contentId], references: [id])
 }
 
 model AssignmentSubmission {
@@ -189,7 +194,7 @@ model Blog {
   updatedAt   DateTime @updatedAt
 
   authorId   String
-  Instructor Instructor? @relation(fields: [authorId], references: [id])
+  instructor Instructor? @relation(fields: [authorId], references: [id])
 }
 
 model Payment {

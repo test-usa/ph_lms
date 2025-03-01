@@ -2,31 +2,31 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { TPaginationOptions } from 'src/interface/pagination.type';
 import calculatePagination from 'src/utils/calculatePagination';
-import { Gender, Prisma, Status, Admin, UserRole } from '@prisma/client';
+import { Gender, Prisma, Status, Instructor, UserRole } from '@prisma/client';
 import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
 import { TUser } from 'src/interface/token.type';
 
 @Injectable()
-export class AdminService {
+export class InstructorService {
     constructor(private db: DbService) { }
 
-    // --------------------------------------------Get Single Admin---------------------------------------
-    public async getSingleAdmin(id: IdDto): Promise<ApiResponse<Admin>> {
-        const result = await this.db.admin.findUniqueOrThrow({
+    // --------------------------------------------Get Single Instructor---------------------------------------
+    public async getSingleInstructor(id: IdDto): Promise<ApiResponse<Instructor>> {
+        const result = await this.db.instructor.findUniqueOrThrow({
             where: id
         });
         return {
             statusCode: 200,
             success: true,
-            message: "Admin's data retrieved successfully",
+            message: "Instructor's data retrieved successfully",
             data: result,
         }
     }
 
-    // -------------------------------------------------Get All Admins------------------------------------------------------------
-    public async getAllAdmins(params: any, options: TPaginationOptions): Promise<ApiResponse<Admin[]>> {
-        const andConditions: Prisma.AdminWhereInput[] = [];
+    // -------------------------------------------------Get All Instructors------------------------------------------------------------
+    public async getAllInstructors(params: any, options: TPaginationOptions): Promise<ApiResponse<Instructor[]>> {
+        const andConditions: Prisma.InstructorWhereInput[] = [];
         const { searchTerm, ...filteredData } = params;
         const { page, limit, skip } = calculatePagination(options);
 
@@ -49,7 +49,7 @@ export class AdminService {
             });
         }
 
-        const result = await this.db.admin.findMany({
+        const result = await this.db.instructor.findMany({
             where: {
                 AND: andConditions,
             },
@@ -67,7 +67,7 @@ export class AdminService {
                     createdAt: "desc",
                 },
         });
-        const total = await this.db.admin.count({
+        const total = await this.db.instructor.count({
             where: {
                 AND: andConditions,
             },
@@ -75,7 +75,7 @@ export class AdminService {
         return {
             statusCode: 200,
             success: true,
-            message: "Admins data retrieved successfully",
+            message: "Instructors data retrieved successfully",
             meta: {
                 page,
                 limit,
@@ -85,24 +85,22 @@ export class AdminService {
         };
     };
 
-    //------------------------------------------Update Admin------------------------------------------
-    public async updateAdmin(
+    //------------------------------------------Update Instructor------------------------------------------
+    public async updateInstructor(
         id: IdDto,
-        payload: Partial<Admin>,
+        payload: Partial<Instructor>,
         token: TUser
-    ): Promise<ApiResponse<Admin>> {
-        const existingAdmin = await this.db.admin.findUnique({
+    ): Promise<ApiResponse<Instructor>> {
+        const existingInstructor = await this.db.instructor.findUnique({
             where: id,
         });
 
-        if (!existingAdmin) throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
-        if (existingAdmin.isDeleted) throw new HttpException('Admin is deactivated', HttpStatus.FORBIDDEN);
-        if ((token.role==UserRole.STUDENT || token.role === UserRole.ADMIN) && existingAdmin.email !== token.email) throw new HttpException('Unauthorized Access!', HttpStatus.FORBIDDEN);
- 
-        
-        console.log(payload)
+        if (!existingInstructor) throw new HttpException('Instructor not found', HttpStatus.NOT_FOUND);
+        if (existingInstructor.isDeleted) throw new HttpException('Instructor is deactivated', HttpStatus.FORBIDDEN);
+        if ((token.role === UserRole.STUDENT || token.role === UserRole.INSTRUCTOR) && existingInstructor.email !== token.email) throw new HttpException('Unauthorized Access!', HttpStatus.FORBIDDEN);
+
         // Perform update
-        const updatedAdmin = await this.db.admin.update({
+        const updatedInstructor = await this.db.instructor.update({
             where: id,
             data: {
                 profilePhoto: payload.profilePhoto,
@@ -116,46 +114,46 @@ export class AdminService {
         return {
             statusCode: 200,
             success: true,
-            message: "Admin's data updated successfully",
-            data: updatedAdmin,
+            message: "Instructor's data updated successfully",
+            data: updatedInstructor,
         };
     }
 
-    // --------------------------------------------Delete Admin-------------------------------------------------
-    public async deleteAdmin(id: IdDto): Promise<ApiResponse<void>> {
-        const existingAdmin = await this.db.admin.findUnique({
+    // --------------------------------------------Delete Instructor-------------------------------------------------
+    public async deleteInstructor(id: IdDto): Promise<ApiResponse<void>> {
+        const existingInstructor = await this.db.instructor.findUnique({
             where: id,
             include: { user: true }, 
         });
     
-        if (!existingAdmin) {
-            throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
+        if (!existingInstructor) {
+            throw new HttpException('Instructor not found', HttpStatus.NOT_FOUND);
         }
-        if (existingAdmin.isDeleted) {
-            throw new HttpException('Admin is already deleted', HttpStatus.BAD_REQUEST);
+        if (existingInstructor.isDeleted) {
+            throw new HttpException('Instructor is already deleted', HttpStatus.BAD_REQUEST);
         }
     
         await this.db.$transaction(async (tClient) => {
-            // Transaction - 01: Update admin: isDeleted: true
-            await tClient.admin.update({
+            // Transaction - 01: Update instructor: isDeleted: true
+            await tClient.instructor.update({
                 where: id,
                 data: { isDeleted: true },
             });
 
              // Transaction - 02: Update user: status: DELETED
-            if (existingAdmin.user) {
+            if (existingInstructor.user) {
                 await tClient.user.update({
-                    where: { id: existingAdmin.userId },
+                    where: { id: existingInstructor.userId },
                     data: { status: Status.DELETED },
                 });
             }
-        })
+        });
     
         return {
             data: null,
             statusCode: 200,
             success: true,
-            message: 'Admin and related User have been marked as deleted.',
+            message: 'Instructor and related User have been marked as deleted.',
         };
     }
 }
