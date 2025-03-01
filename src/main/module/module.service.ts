@@ -23,21 +23,26 @@ export class ModuleService {
       const courseExists = await this.prisma.course.findUnique({
         where: { id: dto.courseId },
       });
-
+  
       if (!courseExists) {
         throw new NotFoundException('Course not found');
       }
     }
-
-    // const data = await this.prisma.module.create({
-    //   data: { ...dto },
-    // });
-
+  
+    console.log(dto);
+  
+    const data = await this.prisma.module.create({
+      data: {
+        ...dto,
+        courseId: dto.courseId  as string
+      },
+    });
+  
     return {
       statusCode: 201,
       success: true,
       message: 'Module created successfully',
-      data: null,
+      data: data,
     };
   }
 

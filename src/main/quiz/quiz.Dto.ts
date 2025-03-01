@@ -1,22 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsInt, IsString, MinLength, ArrayMinSize, Min, Max, IsUUID, ValidateNested } from 'class-validator';
+import { IsArray, IsInt, MinLength, ArrayMinSize, Min, Max, IsUUID, ValidateNested, IsNumber, IsString } from 'class-validator';
 import { PartialType } from "@nestjs/mapped-types";
 import { Type } from 'class-transformer';
 
-export class CreateQuizDto {
-  @ApiProperty({
-    description: 'The ID of the module this quiz belongs to',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  @IsUUID('4', { message: 'Module ID must be a valid UUID (version 4).' })
-  contentId: string;
-
+export class SingleQuizDto {
   @ApiProperty({
     description: 'The question text',
     minLength: 4,
     example: 'What is the capital of France?',
   })
-  @IsString()
+  @IsString({ message: 'Question must be a string' })
   @MinLength(4, {
     message: 'Question is too short. Minimum length is 4 characters.',
   })
@@ -28,11 +21,11 @@ export class CreateQuizDto {
     minItems: 4,
     example: ['Paris', 'London', 'Berlin', 'Madrid'],
   })
-  @IsArray()
+  @IsArray({ message: 'Options must be an array' })
   @ArrayMinSize(4, {
-    message: 'Options array is too short. Minimum size is 4 elements.',
+    message: 'Options array must contain at least 4 elements.',
   })
-  @IsString({ each: true })
+  @IsString({ each: true, message: 'Each option must be a string' })
   options: string[];
 
   @ApiProperty({
@@ -45,6 +38,31 @@ export class CreateQuizDto {
   @Min(1, { message: 'Correct answer index must be at least 1.' })
   @Max(4, { message: 'Correct answer index cannot be greater than 4.' })
   correctAnswer: number;
+}
+
+export class CreateQuizDto {
+  @ApiProperty({
+    description: 'The ID of the module this quiz belongs to',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsUUID('4', { message: 'Content ID must be a valid UUID (version 4).' })
+  contentId: string;
+
+  @ApiProperty({
+    description: 'Total marks for the quiz',
+    example: 10,
+  })
+  @IsNumber({}, { message: 'Total mark must be a number' })
+  totalMark: number;
+
+  @ApiProperty({
+    description: 'List of quiz questions',
+    type: [SingleQuizDto],
+  })
+  @IsArray({ message: 'Quizzes must be an array' })
+  @ValidateNested({ each: true })
+  @Type(() => SingleQuizDto) // Required for class-transformer
+  quizesData: SingleQuizDto[];
 }
 
 export class UpdateQuizDto extends PartialType(CreateQuizDto) {
@@ -79,11 +97,11 @@ class AnswerSheetItem {
 export class SubmitAnswerDto {
   @ApiProperty({
     description: 'List of quiz answers',
-    type: [AnswerSheetItem], // Swagger array type
+    type: [AnswerSheetItem], 
   })
   @IsArray({ message: 'Answer sheet must be an array.' })
-  @ValidateNested({ each: true }) // Validate each object in array
-  @Type(() => AnswerSheetItem) // Enable class transformation
+  @ValidateNested({ each: true })
+  @Type(() => AnswerSheetItem) 
   answerSheet: AnswerSheetItem[];
 
   @ApiProperty({
