@@ -6,6 +6,7 @@ import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { UserSeeder } from './seed/admin.seed';
 import { GlobalErrorHandlerFilter } from './error/globalErrorHandeler.filter';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,6 +24,7 @@ async function bootstrap() {
   app.enableCors()
   app.useGlobalFilters(new GlobalErrorHandlerFilter())
   const seeder = app.get(UserSeeder);
+  app.use('/billing/webhook', bodyParser.raw({ type: 'application/json' }));
   await seeder.seedAdmin();
   await app.listen(process.env.PORT ?? 3000);
 }
