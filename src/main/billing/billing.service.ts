@@ -107,10 +107,12 @@ export class BillingService {
       success_url: 'http://localhost:3000/billing/success',
       cancel_url: 'http://localhost:3000/billing/cancel',
     });
+    console.log(session);
+    
     await this.db.payment.create({
         data: {
           amount: course.totalPrice,
-          intendKey: session.id,
+          intendKey: session.id as string,
           course: {
             connect: payment.courseIds.map((id) => ({ id })),
           },
@@ -162,6 +164,7 @@ export class BillingService {
     switch (event.type) {
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        // console.log(paymentIntent);
         
         await this.db.payment.updateMany({
           where: { intendKey: paymentIntent.id },
