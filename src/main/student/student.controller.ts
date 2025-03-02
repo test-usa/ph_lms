@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Put, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { StudentService } from './student.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
@@ -41,5 +41,14 @@ export class StudentController {
     @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN,]))
     async deleteStudent(@Param() id: IdDto) {
         return this.studentService.deleteStudent(id);
+    }
+
+    @Post(':id')
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard)
+    async calculateProgress(@Param() id: string, @Req() req: Request) {
+        const email = req.user.email;
+
+        return this.studentService.calculateProgress(id , email);
     }
 }

@@ -124,16 +124,16 @@ export class StudentService {
     public async deleteStudent(id: IdDto): Promise<ApiResponse<void>> {
         const existingStudent = await this.db.student.findUnique({
             where: id,
-            include: { user: true }, 
+            include: { user: true },
         });
-    
+
         if (!existingStudent) {
             throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
         }
         if (existingStudent.isDeleted) {
             throw new HttpException('Student is already deleted', HttpStatus.BAD_REQUEST);
         }
-    
+
         await this.db.$transaction(async (tClient) => {
             // Transaction - 01: Update student: isDeleted: true
             await tClient.student.update({
@@ -141,7 +141,7 @@ export class StudentService {
                 data: { isDeleted: true },
             });
 
-             // Transaction - 02: Update user: status: DELETED
+            // Transaction - 02: Update user: status: DELETED
             if (existingStudent.user) {
                 await tClient.user.update({
                     where: { id: existingStudent.userId },
@@ -149,7 +149,7 @@ export class StudentService {
                 });
             }
         })
-    
+
         return {
             data: null,
             statusCode: 200,
@@ -157,4 +157,57 @@ export class StudentService {
             message: 'Student and related User have been marked as deleted.',
         };
     }
+
+
+    //----------------------------------------Calculate Progress--------------------------------------------------
+    public async calculateProgress(userId: string, courseId: string): Promise<ApiResponse<number>> {
+
+        const student = await this.db.student.findUnique({
+            where: { userId },
+            include: { course: true },
+        });
+
+        if (!student || !student.course) {
+            return {
+                success: false,
+                message: 'No enrolled courses found for this student.',
+                statusCode: HttpStatus.NOT_FOUND,
+                data: null,
+            };
+        }
+
+        const modules = await this.db.module.findMany({
+            where: { courseId },
+            select: {
+                content: {
+                    select: { id: true },
+                },
+            },
+        });
+        const contentIds = modules.flatMap(module => module.content.map(content => content.id));
+        const index = contentIds.findIndex(course => course === courseId);
+        if (index === -1) {
+            return {
+                success: false,
+                message: 'Course not found in enrolled courses.',
+                statusCode: HttpStatus.NOT_FOUND,
+                data: null,
+            };
+        }
+        const percentage = Math.round((index / contentIds.length) * 100);
+
+        await this.db.progress.upsert({
+            where: { studentId_courseId: { studentId: student.id, courseId } },
+            update: { percentage },
+            create: { studentId: student.id, courseId, percentage },
+        });
+
+        return {
+            success: true,
+            message: 'Progress calculated successfully.',
+            statusCode: HttpStatus.OK,
+            data: percentage,
+        };
+    }
+
 }
