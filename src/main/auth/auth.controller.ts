@@ -28,14 +28,20 @@ export class AuthController {
   @Post('login')
   async loginUser(@Body() loginDto: LoginDto, @Res() res: Response) {
     const result = await this.authService.loginUser(loginDto);
-    const { refreshToken, accessToken } = result;
+    const { refreshToken, accessToken, user } = result;
 
     res.cookie('refreshToken', refreshToken, { secure: false, httpOnly: true });
     sendResponse(res, {
       statusCode: 200,
       success: true,
       message: 'Logged in successfully',
-      data: { accessToken },
+      data: { 
+        accessToken,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        id: user.id
+       },
     });
   }
 
