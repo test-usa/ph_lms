@@ -4,6 +4,8 @@ import { CreatePaymentIntentDto, UpdatePaymentStatusDto } from './billing.dto';
 import { Request } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from 'src/guard/auth.guard';
+import { RoleGuardWith } from 'src/utils/RoleGuardWith';
+import { UserRole } from '@prisma/client';
 
 @Controller('billing')
 export class BillingController {
@@ -35,8 +37,13 @@ export class BillingController {
    * @returns The response containing checkout session information.
    */
   @Post('createCheckoutSession')
-  createCheckoutSession(@Body() createPaymentIntentDto: CreatePaymentIntentDto) {
-    return this.billingService.createCheckoutSession(createPaymentIntentDto);
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
+  createCheckoutSession(@Body() createPaymentIntentDto: CreatePaymentIntentDto, @Req() req: Request) {
+    return this.billingService.createCheckoutSession({
+      payment: createPaymentIntentDto,
+      user: req.user, // Assuming user is passed as a request property
+    });
   }
 
   /**
@@ -71,5 +78,20 @@ export class BillingController {
   @Get('cancel')
   cancelPage() {
     return `<h1>Payment Canceled</h1><p>Your payment was not completed. Please try again or contact support.</p>`;
+  }
+
+  /**
+   * Handles incoming webhook events from Stripe.
+   * 
+   * - This endpoint listens for webhook events sent by Stripe.
+   * - It passes the request to the `handleWebhook` method in the `BillingService`.
+   * - The webhook will process events like `payment_intent.succeeded`, `payment_intent.payment_failed`, and `checkout.session.completed`.
+   * 
+   * @param req - The incoming request from Stripe containing event data.
+   * @returns A response indicating the webhook event was received.
+   */
+  @Post('webhook')
+  async handleWebhook(@Req() req: Request) {
+    return this.billingService.handleWebhook(req);
   }
 }

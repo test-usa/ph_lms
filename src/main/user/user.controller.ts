@@ -29,7 +29,7 @@ export class UserController {
   @Get('me')
   @ApiBearerAuth()
   @UseGuards(AuthGuard)
-  async getUser(@Req() req: Request, @Res() res: Response) {
+  async getUser(@Req() req: Request) {
     return this.userService.getMe(req.user);
   }
 
@@ -56,7 +56,6 @@ export class UserController {
   async changeProfileStatus(
     @Body() changeProfileStatusDto: ChangeProfileStatusDto,
     @Req() req: Request,
-    @Res() res: Response,
   ) {
     const { id } = req.params;
     return await this.userService.changeProfileStatus(id, changeProfileStatusDto.status)
