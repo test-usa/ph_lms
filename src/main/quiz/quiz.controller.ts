@@ -7,6 +7,8 @@ import {
   Body,
   UseGuards,
   Get,
+  Request,
+  Req,
 } from '@nestjs/common';
 import { QuizService } from './quiz.service';
 import { CreateQuizDto, SubmitAnswerDto, UpdateQuizDto } from './quiz.Dto';
@@ -53,18 +55,17 @@ export class QuizController {
   // }
 
 
-  // @Get('startQuiz/:id')
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  // async getAllQuizzes(@Param() id: IdDto) {
-  //   return this.quizService.(id);
-  // }
+  @Get('startQuiz/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
+  async startQuiz(@Param() id: IdDto) {
+    return this.quizService.startQuiz(id);
+  }
 
-
-  // @Post('submitQuiz')
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  // async submitQuiz(@Body() answer: SubmitAnswerDto) {
-  //   return this.quizService.submitQuiz(answer);
-  // }
+  @Post('submitQuiz')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
+  async submitQuiz(@Body() answer: SubmitAnswerDto, @Req() req) {
+    return this.quizService.submitQuiz(answer,req.user.id);
+  }
 }

@@ -74,34 +74,30 @@ export class UpdateQuizDto extends PartialType(CreateQuizDto) {
   id: string;
 }
 
-class AnswerSheetItem {
+export class AnswerSheetItem {
   @ApiProperty({
     description: 'Quiz ID (UUID)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    example: 'e29b5500-41d4-4a71-a716-446655440000',
   })
   @IsUUID('4', { message: 'Quiz ID must be a valid UUID (version 4).' })
   quizId: string;
 
   @ApiProperty({
-    description: 'Selected answer (must be between 1 and 4)',
-    example: 2,
-    minimum: 1,
-    maximum: 4,
+    description: 'Student\'s answer to the quiz',
+    example: 1, // Assuming the answer is an index (e.g., 0 for option A, 1 for option B)
   })
   @IsInt({ message: 'Answer must be an integer.' })
-  @Min(1, { message: 'Answer must be at least 1.' })
-  @Max(4, { message: 'Answer cannot be greater than 4.' })
   answer: number;
 }
 
 export class SubmitAnswerDto {
   @ApiProperty({
     description: 'List of quiz answers',
-    type: [AnswerSheetItem], 
+    type: [AnswerSheetItem],
   })
   @IsArray({ message: 'Answer sheet must be an array.' })
   @ValidateNested({ each: true })
-  @Type(() => AnswerSheetItem) 
+  @Type(() => AnswerSheetItem)
   answerSheet: AnswerSheetItem[];
 
   @ApiProperty({
@@ -110,4 +106,6 @@ export class SubmitAnswerDto {
   })
   @IsUUID('4', { message: 'Quiz Instance ID must be a valid UUID (version 4).' })
   quizInstanceId: string;
+
+
 }
