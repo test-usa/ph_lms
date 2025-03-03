@@ -38,7 +38,7 @@ export class StudentController {
 
     @Delete('delete-student/:id')
     @ApiBearerAuth()
-    @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN,]))
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
     async deleteStudent(@Param() id: IdDto) {
         return this.studentService.deleteStudent(id);
     }
@@ -46,9 +46,8 @@ export class StudentController {
     @Post(':id')
     @ApiBearerAuth()
     @UseGuards(AuthGuard)
-    async calculateProgress(@Param() id: IdDto, @Req() req: Request) {
+    async calculateProgress(@Param() param: IdDto, @Req() req: Request) {
         const email = req.user.email;
-
-        return this.studentService.calculateProgress(id, eamil);
+        return this.studentService.calculateProgress(param.id, email);
     }
 }

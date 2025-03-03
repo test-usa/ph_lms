@@ -160,7 +160,12 @@ export class StudentService {
 
 
     //----------------------------------------Calculate Progress--------------------------------------------------
-    public async calculateProgress(userId: string, courseId: string): Promise<ApiResponse<number>> {
+    public async calculateProgress(email: string, courseId: string): Promise<ApiResponse<number>> {
+        const user = await this.db.user.findUnique({
+            where: { email }
+        });
+
+        const userId = user?.id
 
         const student = await this.db.student.findUnique({
             where: { userId },

@@ -47,7 +47,6 @@ export class ContentService {
   async findOne({ id }: IdDto) {
     const content = await this.prisma.content.findUnique({
       where: { id },
-      include: { QuizInstance: true },
     });
 
     if (!content) {

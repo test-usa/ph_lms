@@ -65,11 +65,11 @@ export class ModuleService {
             id: true,
             video: true,
             description: true,
-            QuizInstance: {
-              select: {
-                id: true,
-              },
-            },
+            // QuizInstance: {
+            //   select: {
+            //     id: true,
+            //   },
+            // },
           },
         },
       }, // Include related content
