@@ -47,7 +47,6 @@ export class ContentService {
   async findOne({ id }: IdDto) {
     const content = await this.prisma.content.findUnique({
       where: { id },
-      include: { QuizInstance: true },
     });
 
     if (!content) {
@@ -67,10 +66,10 @@ export class ContentService {
       throw new NotFoundException('Content not found');
     }
 
-    return this.prisma.content.update({
-      where: { id },
-      data: { ...dto },
-    });
+    // return this.prisma.content.update({
+    //   where: { id },
+    //   data: { ...dto },
+    // });
   }
 
   async remove(id: string) {

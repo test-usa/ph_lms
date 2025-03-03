@@ -2,7 +2,7 @@ import { IsOptional, IsString, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Gender } from '@prisma/client';
 
-export class UpdateAdminDto {
+export class UpdateStudentDto {
   @ApiProperty({ description: 'Profile photo URL', example: 'https://example.com/photo.jpg', required: false })
   @IsOptional()
   @IsString()

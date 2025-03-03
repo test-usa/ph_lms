@@ -18,7 +18,6 @@ export class CreateModuleDto {
     required: false,
     format: 'uuid',
   })
-  @IsOptional()
   @IsUUID()
   courseId?: string;
 }

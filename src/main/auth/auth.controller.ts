@@ -29,7 +29,6 @@ export class AuthController {
   async loginUser(@Body() loginDto: LoginDto, @Res() res: Response) {
     const result = await this.authService.loginUser(loginDto);
     const { refreshToken, accessToken } = result;
-
     res.cookie('refreshToken', refreshToken, { secure: false, httpOnly: true });
     sendResponse(res, {
       statusCode: 200,

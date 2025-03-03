@@ -14,12 +14,12 @@ import { UserRole } from '@prisma/client';
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create a new blog' })
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN ,UserRole.INSTRUCTOR]))
-  create(@Body() createBlogDto: CreateBlogDto) {
-    return this.blogService.create(createBlogDto);
-  }
+  // @Post()
+  // @ApiOperation({ summary: 'Create a new blog' })
+  // @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN ,UserRole.INSTRUCTOR]))
+  // create(@Body() createBlogDto: CreateBlogDto) {
+  //   return this.blogService.create(createBlogDto);
+  // }
 
   @Get()
   @ApiOperation({ summary: 'Get all blogs' })

@@ -56,7 +56,6 @@ export class UserController {
   async changeProfileStatus(
     @Body() changeProfileStatusDto: ChangeProfileStatusDto,
     @Req() req: Request,
-    @Res() res: Response,
   ) {
     const { id } = req.params;
     return await this.userService.changeProfileStatus(id, changeProfileStatusDto.status)
