@@ -9,6 +9,7 @@ import { Quiz, QuizInstance, QuizSubmission } from '@prisma/client';
 export class QuizService {
   constructor(private readonly db: DbService) {}
 
+  //------------------------------Get Quiz instance or Create------------------------------
   private async getQuizInstanceOrCreate(contentId: string, totalMark: number) {
     let quizInstance = await this.db.quizInstance.findUnique({
       where: { contentId },
@@ -26,6 +27,7 @@ export class QuizService {
     return quizInstance;
   }
 
+  // ------------------------------Create A Quiz----------------------------------------
   public async createQuiz({
     contentId,
     totalMark,
@@ -53,6 +55,8 @@ export class QuizService {
       statusCode: HttpStatus.CREATED,
     };
   }
+
+  // ------------------------------Start  Quiz-------------------------------------
   public async startQuiz({ id }: IdDto): Promise<ApiResponse<Partial<Quiz>[]>> {
     const quizzes = await this.db.quiz.findMany({
       where: { quizInstanceId: id },
@@ -75,6 +79,7 @@ export class QuizService {
     };
   }
 
+  //----------------------------------Submit Quiz-------------------------------------------
   public async submitQuiz({
     answerSheet,
     quizInstanceId,

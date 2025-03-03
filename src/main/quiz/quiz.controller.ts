@@ -20,10 +20,10 @@ import { IdDto } from 'src/common/id.dto';
 
 @Controller('quiz')
 export class QuizController {
-  constructor(private readonly quizService: QuizService) {}
+  constructor(private readonly quizService: QuizService) { }
 
 
-  @Post('create')
+  @Post()
   @ApiBearerAuth()
   @UseGuards(
     AuthGuard,
@@ -33,6 +33,19 @@ export class QuizController {
     return this.quizService.createQuiz(createQuizDto);
   }
 
+  @Get('start-quiz/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
+  async startQuiz(@Param() id: IdDto) {
+    return this.quizService.startQuiz(id);
+  }
+
+  @Post('submit-quiz')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
+  async submitQuiz(@Body() answer: SubmitAnswerDto, @Req() req) {
+    return this.quizService.submitQuiz(answer, req.user.id);
+  }
 
   // @Patch('update')
   // @UseGuards(
@@ -53,19 +66,4 @@ export class QuizController {
   // async deleteQuiz(@Param() id: IdDto) {
   //   return this.quizService.deleteQuiz(id);
   // }
-
-
-  @Get('startQuiz/:id')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  async startQuiz(@Param() id: IdDto) {
-    return this.quizService.startQuiz(id);
-  }
-
-  @Post('submitQuiz')
-  @ApiBearerAuth()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  async submitQuiz(@Body() answer: SubmitAnswerDto, @Req() req) {
-    return this.quizService.submitQuiz(answer,req.user.id);
-  }
 }

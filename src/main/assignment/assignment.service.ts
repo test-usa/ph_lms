@@ -8,12 +8,7 @@ import { Assignment, AssignmentSubmission } from '@prisma/client';
 export class AssignmentService {
   constructor(private readonly db: DbService) {}
 
-  /**
-   * Check if content exists.
-   * @param id - Content ID
-   * @returns The content if it exists.
-   * @throws HttpException if the content does not exist.
-   */
+  //----------------------------------------Is Content Exists--------------------------------------------
   private async isContentExist(id: string) {
     const content = await this.db.content.findUnique({
       where: { id },
@@ -26,12 +21,7 @@ export class AssignmentService {
     return content;
   }
 
-  /**
-   * Check if an assignment exists.
-   * @param id - Assignment ID
-   * @returns The assignment if it exists.
-   * @throws HttpException if the assignment does not exist.
-   */
+  //----------------------------------------Is Assignment Exists--------------------------------------------
   private async isAssignmentExist(id: string) {
     const assignment = await this.db.assignment.findUnique({
       where: { id },
@@ -44,12 +34,7 @@ export class AssignmentService {
     return assignment;
   }
 
-  /**
-   * Check if a student exists.
-   * @param id - Student ID
-   * @returns The student if they exist.
-   * @throws HttpException if the student does not exist.
-   */
+  //----------------------------------------Is Student Exists--------------------------------------------
   private async isStudentExist(id: string) {
     const student = await this.db.student.findUnique({
       where: { userId:id },
@@ -62,11 +47,7 @@ export class AssignmentService {
     return student;
   }
 
-  /**
-   * Create a new assignment.
-   * @param createAssignmentDto - Data for creating an assignment.
-   * @returns The created assignment.
-   */
+  //----------------------------------------Create An Assignment--------------------------------------------
   public async createAssignment({
     title,
     totalMark,
@@ -92,11 +73,7 @@ export class AssignmentService {
     };
   }
 
-  /**
-   * Start an assignment (fetch assignment details for a student).
-   * @param assignmentId - ID of the assignment.
-   * @returns Assignment details with associated content.
-   */
+  //----------------------------------------Start Assignment--------------------------------------------
   public async startAssignment(
     assignmentId: string,
   ): Promise<ApiResponse<Assignment>> {
@@ -117,12 +94,7 @@ export class AssignmentService {
     };
   }
 
-  /**
-   * Submit an assignment.
-   * @param submitAssignmentDto - Data for submitting an assignment.
-   * @param studentId - ID of the student submitting the assignment.
-   * @returns The created assignment submission.
-   */
+  //----------------------------------------Submit Assignment--------------------------------------------
   public async submitAssignment(
     { assignmentId, submission }: SubmitAssignmentDto,
     studentId: string,
