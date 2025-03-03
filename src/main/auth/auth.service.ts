@@ -38,13 +38,12 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow('JWT_SECRET'),
     });
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.getOrThrow('REFRESH_SECRET'),
-    });
+    // const refreshToken = this.jwtService.sign(payload, {
+    //   secret: this.configService.getOrThrow('REFRESH_SECRET'),
+    // });
 
     return {
       accessToken,
-      refreshToken,
       user:{
         email: user.email,
         role: user.role,

@@ -28,20 +28,13 @@ export class AuthController {
   @Post('login')
   async loginUser(@Body() loginDto: LoginDto, @Res() res: Response) {
     const result = await this.authService.loginUser(loginDto);
-    const { refreshToken, accessToken, user } = result;
-
-    res.cookie('refreshToken', refreshToken, { secure: false, httpOnly: true });
+    const { accessToken, user } = result;
+    // res.cookie('refreshToken', refreshToken, { secure: false, httpOnly: true });
     sendResponse(res, {
       statusCode: 200,
       success: true,
       message: 'Logged in successfully',
-      data: { 
-        accessToken,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        id: user.id
-       },
+      data: { accessToken, user },
     });
   }
 
@@ -50,14 +43,14 @@ export class AuthController {
     return this.authService.registerUser(registerDto);
   }
 
-  @Post('refresh-token')
-  async refreshToken(@Req() req: CustomRequest, @Res() res: Response) {
-    const refreshToken: string = req.cookies.refreshToken;
-    if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token not provided');
-    }
-    return await this.authService.refreshToken(refreshToken);
-  }
+  // @Post('refresh-token')
+  // async refreshToken(@Req() req: CustomRequest, @Res() res: Response) {
+  //   const refreshToken: string = req.cookies.refreshToken;
+  //   if (!refreshToken) {
+  //     throw new UnauthorizedException('Refresh token not provided');
+  //   }
+  //   return await this.authService.refreshToken(refreshToken);
+  // }
 
   @Post('forgot-password')
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {

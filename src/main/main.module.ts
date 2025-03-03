@@ -10,6 +10,7 @@ import { BlogModule } from './blog/blog.module';
 import { StudentModule } from './student/student.module';
 import { BillingModule } from './billing/billing.module';
 import { ProgressModule } from './progress/progress.module';
+import { InstructorModule } from './instructor/instructor.module';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { ProgressModule } from './progress/progress.module';
     BlogModule, 
     StudentModule, 
     BillingModule, 
-    ProgressModule
+    ProgressModule, InstructorModule
   ],
 })
 export class MainModule {}

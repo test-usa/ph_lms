@@ -49,13 +49,15 @@ CREATE TABLE "Instructor" (
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "profilePhoto" TEXT,
+    "phone" TEXT,
     "contact" TEXT,
     "address" TEXT,
     "gender" "Gender",
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "userId" TEXT,
+    "userId" TEXT NOT NULL,
+    "courseId" TEXT,
 
     CONSTRAINT "Instructor_pkey" PRIMARY KEY ("id")
 );
@@ -66,13 +68,14 @@ CREATE TABLE "Admin" (
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "profilePhoto" TEXT,
+    "phone" TEXT,
     "contact" TEXT,
     "address" TEXT,
     "gender" "Gender",
     "isDeleted" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "userId" TEXT,
+    "userId" TEXT NOT NULL,
 
     CONSTRAINT "Admin_pkey" PRIMARY KEY ("id")
 );
@@ -81,7 +84,6 @@ CREATE TABLE "Admin" (
 CREATE TABLE "Course" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "description" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
     "isPublished" BOOLEAN NOT NULL DEFAULT false,
 
@@ -89,19 +91,10 @@ CREATE TABLE "Course" (
 );
 
 -- CreateTable
-CREATE TABLE "Classroom" (
-    "courseId" TEXT NOT NULL,
-    "instructorId" TEXT NOT NULL,
-    "studentId" TEXT NOT NULL,
-
-    CONSTRAINT "Classroom_pkey" PRIMARY KEY ("courseId","instructorId","studentId")
-);
-
--- CreateTable
 CREATE TABLE "Module" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
-    "courseId" TEXT,
+    "courseId" TEXT NOT NULL,
 
     CONSTRAINT "Module_pkey" PRIMARY KEY ("id")
 );
@@ -112,20 +105,9 @@ CREATE TABLE "Content" (
     "title" TEXT NOT NULL,
     "video" TEXT,
     "description" TEXT,
-    "moduleId" TEXT,
+    "moduleId" TEXT NOT NULL,
 
     CONSTRAINT "Content_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "QuizInstance" (
-    "id" TEXT NOT NULL,
-    "totalMark" INTEGER NOT NULL,
-    "acquiredMark" INTEGER NOT NULL,
-    "contentId" TEXT NOT NULL,
-    "isSubmitted" BOOLEAN NOT NULL DEFAULT false,
-
-    CONSTRAINT "QuizInstance_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -133,32 +115,70 @@ CREATE TABLE "Quiz" (
     "id" TEXT NOT NULL,
     "question" TEXT NOT NULL,
     "options" TEXT[],
-    "correctAnswer" INTEGER,
-    "quizInstanceId" TEXT,
+    "correctAnswer" INTEGER NOT NULL,
+    "quizInstanceId" TEXT NOT NULL,
 
     CONSTRAINT "Quiz_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "AssignmentInstance" (
+CREATE TABLE "QuizInstance" (
     "id" TEXT NOT NULL,
-    "fullMark" INTEGER NOT NULL,
-    "title" TEXT NOT NULL,
-    "moduleId" TEXT,
+    "totalMark" INTEGER NOT NULL,
+    "contentId" TEXT NOT NULL,
 
-    CONSTRAINT "AssignmentInstance_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "QuizInstance_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "QuizSubmission" (
+    "id" TEXT NOT NULL,
+    "correctAnswers" INTEGER NOT NULL,
+    "incorrectAnswers" INTEGER NOT NULL,
+    "isCompleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "quizInstanceId" TEXT NOT NULL,
+    "studentId" TEXT NOT NULL,
+
+    CONSTRAINT "QuizSubmission_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Assignment" (
     "id" TEXT NOT NULL,
-    "file" TEXT,
-    "isSubmitted" BOOLEAN NOT NULL DEFAULT false,
-    "accruedMark" INTEGER NOT NULL,
-    "assignmentInstanceId" TEXT,
-    "studentId" TEXT,
+    "title" TEXT NOT NULL,
+    "totalMark" INTEGER NOT NULL,
+    "contentId" TEXT NOT NULL,
 
     CONSTRAINT "Assignment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AssignmentSubmission" (
+    "id" TEXT NOT NULL,
+    "submission" TEXT NOT NULL,
+    "acquiredMark" INTEGER NOT NULL DEFAULT 0,
+    "isSubmitted" BOOLEAN NOT NULL DEFAULT false,
+    "isReviewed" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "assignmentId" TEXT NOT NULL,
+    "studentId" TEXT NOT NULL,
+
+    CONSTRAINT "AssignmentSubmission_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Progress" (
+    "id" TEXT NOT NULL,
+    "percentage" INTEGER NOT NULL DEFAULT 0,
+    "studentId" TEXT NOT NULL,
+    "courseId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Progress_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -166,10 +186,11 @@ CREATE TABLE "Blog" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
-    "authorId" TEXT NOT NULL,
+    "author" TEXT NOT NULL,
     "isPublished" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "authorId" TEXT NOT NULL,
 
     CONSTRAINT "Blog_pkey" PRIMARY KEY ("id")
 );
@@ -215,6 +236,9 @@ CREATE UNIQUE INDEX "Instructor_email_key" ON "Instructor"("email");
 CREATE UNIQUE INDEX "Instructor_userId_key" ON "Instructor"("userId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Instructor_courseId_key" ON "Instructor"("courseId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Admin_id_key" ON "Admin"("id");
 
 -- CreateIndex
@@ -224,13 +248,19 @@ CREATE UNIQUE INDEX "Admin_email_key" ON "Admin"("email");
 CREATE UNIQUE INDEX "Admin_userId_key" ON "Admin"("userId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Classroom_courseId_key" ON "Classroom"("courseId");
-
--- CreateIndex
 CREATE UNIQUE INDEX "QuizInstance_contentId_key" ON "QuizInstance"("contentId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AssignmentInstance_moduleId_key" ON "AssignmentInstance"("moduleId");
+CREATE UNIQUE INDEX "QuizSubmission_quizInstanceId_studentId_key" ON "QuizSubmission"("quizInstanceId", "studentId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Assignment_contentId_key" ON "Assignment"("contentId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AssignmentSubmission_assignmentId_studentId_key" ON "AssignmentSubmission"("assignmentId", "studentId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Progress_studentId_courseId_key" ON "Progress"("studentId", "courseId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_intendKey_key" ON "Payment"("intendKey");
@@ -245,43 +275,49 @@ ALTER TABLE "Student" ADD CONSTRAINT "Student_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "Student" ADD CONSTRAINT "Student_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Instructor" ADD CONSTRAINT "Instructor_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Instructor" ADD CONSTRAINT "Instructor_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Admin" ADD CONSTRAINT "Admin_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Instructor" ADD CONSTRAINT "Instructor_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Classroom" ADD CONSTRAINT "Classroom_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Admin" ADD CONSTRAINT "Admin_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Classroom" ADD CONSTRAINT "Classroom_instructorId_fkey" FOREIGN KEY ("instructorId") REFERENCES "Instructor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Module" ADD CONSTRAINT "Module_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Classroom" ADD CONSTRAINT "Classroom_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Content" ADD CONSTRAINT "Content_moduleId_fkey" FOREIGN KEY ("moduleId") REFERENCES "Module"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Module" ADD CONSTRAINT "Module_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Content" ADD CONSTRAINT "Content_moduleId_fkey" FOREIGN KEY ("moduleId") REFERENCES "Module"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Quiz" ADD CONSTRAINT "Quiz_quizInstanceId_fkey" FOREIGN KEY ("quizInstanceId") REFERENCES "QuizInstance"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "QuizInstance" ADD CONSTRAINT "QuizInstance_contentId_fkey" FOREIGN KEY ("contentId") REFERENCES "Content"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Quiz" ADD CONSTRAINT "Quiz_quizInstanceId_fkey" FOREIGN KEY ("quizInstanceId") REFERENCES "QuizInstance"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "QuizSubmission" ADD CONSTRAINT "QuizSubmission_quizInstanceId_fkey" FOREIGN KEY ("quizInstanceId") REFERENCES "QuizInstance"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AssignmentInstance" ADD CONSTRAINT "AssignmentInstance_moduleId_fkey" FOREIGN KEY ("moduleId") REFERENCES "Module"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "QuizSubmission" ADD CONSTRAINT "QuizSubmission_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Assignment" ADD CONSTRAINT "Assignment_assignmentInstanceId_fkey" FOREIGN KEY ("assignmentInstanceId") REFERENCES "AssignmentInstance"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Assignment" ADD CONSTRAINT "Assignment_contentId_fkey" FOREIGN KEY ("contentId") REFERENCES "Content"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Assignment" ADD CONSTRAINT "Assignment_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "AssignmentSubmission" ADD CONSTRAINT "AssignmentSubmission_assignmentId_fkey" FOREIGN KEY ("assignmentId") REFERENCES "Assignment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Blog" ADD CONSTRAINT "Blog_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "AssignmentSubmission" ADD CONSTRAINT "AssignmentSubmission_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Progress" ADD CONSTRAINT "Progress_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Progress" ADD CONSTRAINT "Progress_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Blog" ADD CONSTRAINT "Blog_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "Instructor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "Student"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

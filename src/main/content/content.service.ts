@@ -10,7 +10,8 @@ import { Content, QuizInstance } from '@prisma/client';
 export class ContentService {
   constructor(private prisma: DbService) {}
 
-  async create(dto: CreateContentDto) {
+  //----------------------------------------Create Content--------------------------------------------
+  async createContent(dto: CreateContentDto) {
     // Check if module exists
     const moduleExists = await this.prisma.module.findUnique({
       where: { id: dto.moduleId },
@@ -30,59 +31,58 @@ export class ContentService {
     });
   }
 
-  async findAll({ id }: IdDto): Promise<ApiResponse<Content[]>> {
-    const data = await this.prisma.content.findMany({
-      where: {
-        moduleId: id,
-      },
-    });
-    return {
-      success: true,
-      message: 'Contents retrieved successfully',
-      statusCode: HttpStatus.OK,
-      data,
-    };
-  }
+  // async findAll({ id }: IdDto): Promise<ApiResponse<Content[]>> {
+  //   const data = await this.prisma.content.findMany({
+  //     where: {
+  //       moduleId: id,
+  //     },
+  //   });
+  //   return {
+  //     success: true,
+  //     message: 'Contents retrieved successfully',
+  //     statusCode: HttpStatus.OK,
+  //     data,
+  //   };
+  // }
 
-  async findOne({ id }: IdDto) {
-    const content = await this.prisma.content.findUnique({
-      where: { id },
-      include: { QuizInstance: true },
-    });
+  // async findOne({ id }: IdDto) {
+  //   const content = await this.prisma.content.findUnique({
+  //     where: { id },
+  //   });
 
-    if (!content) {
-      throw new NotFoundException('Content not found');
-    }
+  //   if (!content) {
+  //     throw new NotFoundException('Content not found');
+  //   }
 
-    return content;
-  }
+  //   return content;
+  // }
 
-  async update(id: string, dto: UpdateContentDto) {
-    // Check if content exists
-    const contentExists = await this.prisma.content.findUnique({
-      where: { id },
-    });
+  // async update(id: string, dto: UpdateContentDto) {
+  //   // Check if content exists
+  //   const contentExists = await this.prisma.content.findUnique({
+  //     where: { id },
+  //   });
 
-    if (!contentExists) {
-      throw new NotFoundException('Content not found');
-    }
+  //   if (!contentExists) {
+  //     throw new NotFoundException('Content not found');
+  //   }
 
-    return this.prisma.content.update({
-      where: { id },
-      data: { ...dto },
-    });
-  }
+  //   // return this.prisma.content.update({
+  //   //   where: { id },
+  //   //   data: { ...dto },
+  //   // });
+  // }
 
-  async remove(id: string) {
-    // Check if content exists
-    const contentExists = await this.prisma.content.findUnique({
-      where: { id },
-    });
+  // async remove(id: string) {
+  //   // Check if content exists
+  //   const contentExists = await this.prisma.content.findUnique({
+  //     where: { id },
+  //   });
 
-    if (!contentExists) {
-      throw new NotFoundException('Content not found');
-    }
+  //   if (!contentExists) {
+  //     throw new NotFoundException('Content not found');
+  //   }
 
-    return this.prisma.content.delete({ where: { id } });
-  }
+  //   return this.prisma.content.delete({ where: { id } });
+  // }
 }

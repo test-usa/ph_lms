@@ -28,7 +28,7 @@ export class UserService {
       result = await this.db.admin.findUniqueOrThrow({
         where: { email: user.email },
         include: {
-          User: {
+          user: {
             select: {
               email: true,
               id: true,
@@ -46,7 +46,7 @@ export class UserService {
       result = await this.db.admin.findUniqueOrThrow({
         where: { email: user.email },
         include: {
-          User: {
+          user: {
             select: {
               email: true,
               id: true,
@@ -64,7 +64,7 @@ export class UserService {
       result = await this.db.instructor.findUniqueOrThrow({
         where: { email: user.email },
         include: {
-          User: {
+          user: {
             select: {
               email: true,
               id: true,

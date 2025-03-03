@@ -1,40 +1,24 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsEnum } from 'class-validator';
+import { Gender } from '@prisma/client';
 
-export class UpdateAdminProfileDto {
-  @ApiProperty({
-    description: 'The first name of the admin',
-    example: 'John',
-    required: false,
-  })
-  @IsString()
+export class UpdateAdminDto {
   @IsOptional()
-  firstName?: string;
+  @IsString()
+  profilePhoto?: string;
 
-  @ApiProperty({
-    description: 'The last name of the admin',
-    example: 'Doe',
-    required: false,
-  })
-  @IsString()
   @IsOptional()
-  lastName?: string;
+  @IsString()
+  phone?: string;
 
-  @ApiProperty({
-    description: 'The email of the admin',
-    example: 'admin@example.com',
-    required: false,
-  })
-  @IsString()
   @IsOptional()
-  email?: string;
+  @IsString()
+  contact?: string;
 
-  @ApiProperty({
-    description: 'The password of the admin',
-    example: 'newpassword123',
-    required: false,
-  })
-  @IsString()
   @IsOptional()
-  password?: string;
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsEnum(Gender, { message: 'Gender must be MALE, FEMALE' })
+  gender?: Gender;
 }
