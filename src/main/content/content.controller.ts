@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ContentService } from './content.service';
@@ -14,16 +15,22 @@ import { CreateContentDto } from './create-content.dto';
 import { UpdateContentDto } from './update-content.dto';
 import { IdDto } from 'src/common/id.dto';
 import sendResponse from 'src/utils/sendResponse';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { AuthGuard } from 'src/guard/auth.guard';
+import { RoleGuardWith } from 'src/utils/RoleGuardWith';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('Content')
 @Controller('content')
 export class ContentController {
   constructor(private readonly contentService: ContentService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Create new content' })
-  //@ApiResponse({ status: 201, description: 'Content created successfully' })
+  @Post('create-content')
+   @ApiBearerAuth()
+   @UseGuards(
+     AuthGuard,
+     RoleGuardWith([UserRole.INSTRUCTOR]),
+   )
   async create(@Body() createContentDto: CreateContentDto, @Res() res: Response) {
     const result = await this.contentService.create(createContentDto);
     sendResponse(res, {

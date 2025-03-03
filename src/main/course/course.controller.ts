@@ -31,7 +31,7 @@ export class CourseController {
   @ApiBearerAuth()
   @UseGuards(
     AuthGuard,
-    RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.SUPER_ADMIN]),
+    RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]),
   )
   public async createCourse(@Body() data: CreateCourseDto) {
     return await this.courseService.createCourse(data);
