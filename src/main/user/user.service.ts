@@ -42,7 +42,6 @@ export class UserService {
               id: true,
               title: true,
               price: true,
-              isPublished: true,
               createdAt: true,
               updatedAt: true,
             },
