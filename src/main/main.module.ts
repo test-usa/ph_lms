@@ -9,7 +9,6 @@ import { CourseModule } from './course/course.module';
 import { BlogModule } from './blog/blog.module';
 import { StudentModule } from './student/student.module';
 import { BillingModule } from './billing/billing.module';
-import { ProgressModule } from './progress/progress.module';
 import { InstructorModule } from './instructor/instructor.module';
 
 @Module({
@@ -23,8 +22,8 @@ import { InstructorModule } from './instructor/instructor.module';
     AdminModule, 
     BlogModule, 
     StudentModule, 
+    InstructorModule,
     BillingModule, 
-    ProgressModule, InstructorModule
   ],
 })
 export class MainModule {}

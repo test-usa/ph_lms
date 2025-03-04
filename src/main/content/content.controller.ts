@@ -28,9 +28,6 @@ export class ContentController {
   @Post('create-content')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
-  @ApiOperation({ summary: 'Create new content' })
-  @ApiResponse({ status: 201, description: 'Content created successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
   async create(@Body() createContentDto: CreateContentDto, @Res() res: Response) {
     const result = await this.contentService.createContent(createContentDto);
     sendResponse(res, {
@@ -44,9 +41,6 @@ export class ContentController {
   @Get('moduleId/:id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-  @ApiOperation({ summary: 'Get all content for a module' })
-  @ApiResponse({ status: 200, description: 'Content retrieved successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
   async findAll(@Param() id: IdDto, @Res() res: Response) {
     const result = await this.contentService.findAll(id);
     sendResponse(res, {
@@ -60,9 +54,6 @@ export class ContentController {
   @Get(':id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-  @ApiOperation({ summary: 'Get content by ID' })
-  @ApiResponse({ status: 200, description: 'Content retrieved successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
   async findOne(@Param() id: IdDto, @Res() res: Response) {
     const result = await this.contentService.findOne(id);
     sendResponse(res, {
@@ -92,9 +83,6 @@ export class ContentController {
   @Delete('delete-content/:id')
   @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
-  @ApiOperation({ summary: 'Delete content by ID' })
-  @ApiResponse({ status: 200, description: 'Content and associated data deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
   async remove(@Param('id') id: string, @Res() res: Response) {
     const result = await this.contentService.remove(id);
     sendResponse(res, {

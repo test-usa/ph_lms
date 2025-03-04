@@ -14,7 +14,6 @@ model User {
   password String
   role     UserRole @default(STUDENT)
   status   Status   @default(ACTIVE)
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -39,13 +38,12 @@ model Student {
   Payment              Payment[]
   assignmentSubmission AssignmentSubmission[]
   quizSubmission       QuizSubmission[]
+  Progress Progress[]
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id])
-
   courseId String?
   course   Course?    @relation(fields: [courseId], references: [id])
-  Progress Progress[]
 }
 
 model Instructor {
@@ -57,11 +55,11 @@ model Instructor {
   contact      String?
   address      String?
   gender       Gender?
-  Blog         Blog[]
-
   isDeleted Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  Blog         Blog[]
 
   userId   String  @unique
   user     User    @relation(fields: [userId], references: [id])
@@ -87,10 +85,12 @@ model Admin {
 }
 
 model Course {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String
+  thumbnail   String
   price       Float
-  isPublished Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   module     Module[]
   instructor Instructor?
@@ -100,21 +100,29 @@ model Course {
 }
 
 model Module {
-  id      String    @id @default(uuid())
-  title   String
-  content Content[]
+  id        String    @id @default(uuid())
+  title     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  content   Content[]
 
   courseId String
   course   Course @relation(fields: [courseId], references: [id])
 }
 
 model Content {
-  id           String        @id @default(uuid())
-  title        String
-  video        String?
-  description  String?
-  quizInstance QuizInstance?
-  assignment   Assignment?
+  id          String        @id @default(uuid())
+  title       String
+  contentType ContentType
+  video       String?
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quiz        QuizInstance?
+  assignment  Assignment?
+  Progress    Progress?
 
   moduleId String
   module   Module @relation(fields: [moduleId], references: [id])
@@ -125,14 +133,18 @@ model Quiz {
   question      String
   options       String[]
   correctAnswer Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   quizInstanceId String
   quizInstance   QuizInstance @relation(fields: [quizInstanceId], references: [id])
 }
 
 model QuizInstance {
-  id        String @id @default(uuid())
+  id        String   @id @default(uuid())
   totalMark Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   quiz           Quiz[] // QuizInstance contains several quizzes
   quizSubmission QuizSubmission[] // QuizInstance contains several userQuizSubmissions.
@@ -158,9 +170,11 @@ model QuizSubmission {
 }
 
 model Assignment {
-  id        String @id @default(uuid())
+  id        String   @id @default(uuid())
   title     String
   totalMark Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   assignmentSubmission AssignmentSubmission[]
 
@@ -179,7 +193,6 @@ model AssignmentSubmission {
 
   assignmentId String
   assignment   Assignment @relation(fields: [assignmentId], references: [id])
-
   studentId String
   student   Student @relation(fields: [studentId], references: [id])
 
@@ -190,14 +203,12 @@ model Progress {
   id         String @id @default(uuid())
   percentage Int    @default(0) // Progress percentage (0-100)
 
-  studentId  String
-  student Student @relation(fields: [studentId], references: [id])
-  
-  courseId   String
-  course  Course  @relation(fields: [courseId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id])
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+  contentId String  @unique
+  content   Content @relation(fields: [contentId], references: [id])
 
   @@unique([studentId, courseId]) // Ensures one progress entry per student per course
 }
@@ -218,11 +229,13 @@ model Blog {
 model Payment {
   id        String        @id @default(uuid())
   amount    Float
-  studentId String
   status    PaymentStatus @default(PENDING)
   intendKey String        @unique
-  student   Student       @relation(fields: [studentId], references: [id])
+  
   course    Course[]      @relation("CourseToPayment")
+
+  studentId String
+  student   Student       @relation(fields: [studentId], references: [id])
 }
 
 enum UserRole {
@@ -248,4 +261,11 @@ enum PaymentStatus {
   SUCCESS
   FAILED
   CANCELLED
+}
+
+enum ContentType {
+  VIDEO
+  DESCRIPTION
+  QUIZ
+  ASSIGNMENT
 }

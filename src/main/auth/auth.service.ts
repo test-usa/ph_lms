@@ -1,7 +1,7 @@
 import {
   Injectable,
   HttpException,
-  ConflictException,
+  HttpStatus,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -64,7 +64,7 @@ export class AuthService {
       where: { email },
     });
     if (existingUser) {
-      throw new ConflictException('Email already in use');
+      throw new HttpException('Email already in use', HttpStatus.BAD_REQUEST);
     }
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await this.db.user.create({

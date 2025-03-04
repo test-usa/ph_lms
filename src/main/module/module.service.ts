@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { CreateModuleDto } from './create-module.dto';
 import { UpdateModuleDto } from './update-module.dto';
@@ -18,7 +18,7 @@ export class ModuleService {
       });
 
       if (!courseExists) {
-        throw new NotFoundException('Course not found');
+        throw new HttpException('Course not found', 404);
       }
     }
 
@@ -69,7 +69,7 @@ export class ModuleService {
     });
 
     if (!module) {
-      throw new NotFoundException('Module not found');
+      throw new HttpException('Module not found',404);
     }
 
     return {
@@ -103,7 +103,7 @@ export class ModuleService {
         include: {
           content: {
             include: {
-              quizInstance: {
+              quiz: {
                 include: {
                   quiz: true,
                   quizSubmission: true,
@@ -120,19 +120,19 @@ export class ModuleService {
       });
 
       if (!module) {
-        throw new NotFoundException('Module not found');
+        throw new HttpException('Module not found',404);
       }
 
       for (const content of module.content) {
-        if (content.quizInstance) {
+        if (content.quiz) {
           await tx.quizSubmission.deleteMany({
-            where: { quizInstanceId: content.quizInstance.id },
+            where: { quizInstanceId: content.quiz.id },
           });
           await tx.quiz.deleteMany({
-            where: { quizInstanceId: content.quizInstance.id },
+            where: { quizInstanceId: content.quiz.id },
           });
           await tx.quizInstance.delete({
-            where: { id: content.quizInstance.id },
+            where: { id: content.quiz.id },
           });
         }
 

@@ -28,12 +28,20 @@ export class UserSeeder implements OnModuleInit {
         password: this.config.getOrThrow('ADMIN_PASS') as string,
         round: 6,
       });
-      await this.db.user.create({
+      const user = await this.db.user.create({
         data: {
           email: this.config.getOrThrow('ADMIN_EMAIL') as string,
           name: "Super Admin",
           password: hashedPassword,
           role: $Enums.UserRole.SUPER_ADMIN,
+        },
+      });
+
+      await this.db.admin.create({
+        data: {
+          email: this.config.getOrThrow('ADMIN_EMAIL') as string,
+          name: "Super Admin",
+          userId: user.id
         },
       });
       Logger.log('Super Admin user created successfully.');

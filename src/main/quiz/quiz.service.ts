@@ -7,10 +7,18 @@ import { Quiz, QuizInstance, QuizSubmission } from '@prisma/client';
 
 @Injectable()
 export class QuizService {
-  constructor(private readonly db: DbService) {}
+  constructor(private readonly db: DbService) { }
 
   //------------------------------Get Quiz instance or Create------------------------------
   private async getQuizInstanceOrCreate(contentId: string, totalMark: number) {
+    let content = await this.db.content.findUnique({
+      where: { id: contentId }
+    });
+
+    if (!content) {
+      throw new HttpException('Content not found', 404);
+    }
+
     let quizInstance = await this.db.quizInstance.findUnique({
       where: { contentId },
     });
@@ -23,7 +31,6 @@ export class QuizService {
         },
       });
     }
-
     return quizInstance;
   }
 

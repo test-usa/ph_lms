@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { CreateContentDto } from './create-content.dto';
 import { UpdateContentDto } from './update-content.dto';
@@ -19,7 +19,7 @@ export class ContentService {
       });
 
       if (!moduleExists) {
-        throw new NotFoundException('Module not found');
+        throw new HttpException('Module not found',404);
       }
 
       return await this.prisma.content.create({
@@ -28,6 +28,7 @@ export class ContentService {
           video: dto.video,
           description: dto.description,
           moduleId: dto.moduleId,
+          contentType:dto.contentType
         },
       });
     } catch (error) {
@@ -59,7 +60,7 @@ export class ContentService {
       });
 
       if (!content) {
-        throw new NotFoundException('Content not found');
+        throw new HttpException('Content not found',404);
       }
 
       return content;
@@ -96,7 +97,7 @@ export class ContentService {
       const content = await this.prisma.content.findUnique({
         where: { id },
         include: {
-          quizInstance: {
+          quiz: {
             include: {
               quiz: true,
               quizSubmission: true,
@@ -111,23 +112,23 @@ export class ContentService {
       });
 
       if (!content) {
-        throw new NotFoundException('Content not found');
+        throw new HttpException('Content not found',404);
       }
 
       // Delete Quiz Submissions
-      if (content.quizInstance) {
+      if (content.quiz) {
         await this.prisma.quizSubmission.deleteMany({
-          where: { quizInstanceId: content.quizInstance.id },
+          where: { quizInstanceId: content.quiz.id },
         });
 
         // Delete Quizzes
         await this.prisma.quiz.deleteMany({
-          where: { quizInstanceId: content.quizInstance.id },
+          where: { quizInstanceId: content.quiz.id },
         });
 
         // Delete QuizInstance
         await this.prisma.quizInstance.delete({
-          where: { id: content.quizInstance.id },
+          where: { id: content.quiz.id },
         });
       }
 

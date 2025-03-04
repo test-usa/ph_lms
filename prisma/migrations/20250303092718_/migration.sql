@@ -10,6 +10,9 @@ CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE');
 -- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'CANCELLED');
 
+-- CreateEnum
+CREATE TYPE "ContentType" AS ENUM ('VIDEO', 'DESCRIPTION', 'QUIZ', 'ASSIGNMENT');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
@@ -94,6 +97,8 @@ CREATE TABLE "Course" (
 CREATE TABLE "Module" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "courseId" TEXT NOT NULL,
 
     CONSTRAINT "Module_pkey" PRIMARY KEY ("id")
@@ -103,8 +108,11 @@ CREATE TABLE "Module" (
 CREATE TABLE "Content" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "contentType" "ContentType" NOT NULL,
     "video" TEXT,
     "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "moduleId" TEXT NOT NULL,
 
     CONSTRAINT "Content_pkey" PRIMARY KEY ("id")
@@ -116,6 +124,8 @@ CREATE TABLE "Quiz" (
     "question" TEXT NOT NULL,
     "options" TEXT[],
     "correctAnswer" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "quizInstanceId" TEXT NOT NULL,
 
     CONSTRAINT "Quiz_pkey" PRIMARY KEY ("id")
@@ -125,6 +135,8 @@ CREATE TABLE "Quiz" (
 CREATE TABLE "QuizInstance" (
     "id" TEXT NOT NULL,
     "totalMark" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "contentId" TEXT NOT NULL,
 
     CONSTRAINT "QuizInstance_pkey" PRIMARY KEY ("id")
@@ -149,6 +161,8 @@ CREATE TABLE "Assignment" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "totalMark" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "contentId" TEXT NOT NULL,
 
     CONSTRAINT "Assignment_pkey" PRIMARY KEY ("id")
@@ -175,8 +189,6 @@ CREATE TABLE "Progress" (
     "percentage" INTEGER NOT NULL DEFAULT 0,
     "studentId" TEXT NOT NULL,
     "courseId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Progress_pkey" PRIMARY KEY ("id")
 );
