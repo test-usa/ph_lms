@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { CourseService } from './course.service';
 import {
+  AddInstructorToCourseDto,
   CreateCourseDto,
   UpdateCourseDto,
 } from './course.dto';
@@ -44,6 +45,7 @@ export class CourseController {
   public async getSingleCourse(@Param() id: IdDto) {
     return await this.courseService.getSingleCourse(id);
   }
+
   // Get all Courses
   @Get()
   async getAllCourses(@Req() req: Request) {
@@ -64,6 +66,13 @@ export class CourseController {
    @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]),)
    public async deleteCourse(@Param() param: IdDto) {
      return await this.courseService.deleteCourse(param.id);
+   }
+
+   // Add Instructor to Course
+   @Patch('add-instructor/:id')
+   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]),)
+   public async addInstructorToCourse(@Param() param: IdDto, @Body() body: AddInstructorToCourseDto) {
+     return await this.courseService.addInstructorToCourse(param, body);
    }
 
 }

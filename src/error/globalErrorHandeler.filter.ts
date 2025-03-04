@@ -24,7 +24,6 @@ export class GlobalErrorHandlerFilter<T> implements ExceptionFilter {
         success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Unknown error occurred',
-        timestamp: new Date().toISOString(),
         path: request?.url || 'unknown',
         method: request?.method || 'unknown',
       });
@@ -77,8 +76,8 @@ export class GlobalErrorHandlerFilter<T> implements ExceptionFilter {
 
     response.status(status).json({
       success: false,
-      statusCode: status,
       message,
+      statusCode: status,
       errorDetails,
       path: request?.url || 'unknown',
       method: request?.method || 'unknown',

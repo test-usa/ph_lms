@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import {
+  AddInstructorToCourseDto,
   CreateCourseDto,
   UpdateCourseDto,
 } from './course.dto';
@@ -52,6 +53,8 @@ export class CourseService {
             },
           },
         },
+        instructor: true,
+        student: true
       },
     });
 
@@ -305,5 +308,28 @@ export class CourseService {
       };
     });
   }
+
+  //------------------------------------Add Instructor To Course----------------------------------------------
+  public async addInstructorToCourse(id: IdDto, payload: AddInstructorToCourseDto) {
+    const course = await this.db.course.findUnique({
+      where: id,
+    });
+    if (!course) throw new HttpException('Course Not Found', 404);
+  
+    const instructor = await this.db.instructor.update({
+      where: { id: payload.instructorId },
+      data: {
+        courseId: id.id,
+      },
+    });
+  
+    return {
+      success: true,
+      message: 'Instructor added to course successfully',
+      statusCode: HttpStatus.OK,
+      data: instructor,
+    };
+  }
+  
 
 }
