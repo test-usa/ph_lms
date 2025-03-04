@@ -48,7 +48,7 @@ export class GlobalErrorHandlerFilter implements ExceptionFilter {
         if (typeof res === 'string') {
           message = res;
         } else if (Array.isArray(res.message)) {
-          // Extract validation errors nicely
+          // Extract validation errors from class validator
           message = res.message.map((msg) => `${msg}`)[0];
         } else {
           message = res.error || 'Bad Request';
