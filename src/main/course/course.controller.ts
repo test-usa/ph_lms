@@ -12,6 +12,7 @@ import {
 import { CourseService } from './course.service';
 import {
   CreateCourseDto,
+  UpdateCourseDto,
 } from './course.dto';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
@@ -30,7 +31,7 @@ export class CourseController {
   @Post()
   @UseGuards(
     AuthGuard,
-    RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.SUPER_ADMIN]),
+    RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]),
   )
   public async createCourse(@Body() data: CreateCourseDto) {
     return await this.courseService.createCourse(data);
@@ -50,6 +51,19 @@ export class CourseController {
     return this.courseService.getAllCourses(filters, options);
   }
 
+   // Update Course
+   @Patch(':id')
+   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.SUPER_ADMIN]),)
+   public async updateCourse(@Param() id: IdDto, @Body() data: UpdateCourseDto) {
+     return await this.courseService.updateCourse(id, data);
+   }
+
+   // Delete Course
+   @Patch(':id')
+   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]),)
+   public async deleteCourse(@Param() param: IdDto) {
+     return await this.courseService.deleteCourse(param.id);
+   }
 
   // @Patch('update')
   // @ApiBearerAuth()
@@ -60,7 +74,6 @@ export class CourseController {
   // public async updateCourse(@Body() data: UpdateCourseDto) {
   //   return await this.courseService.updateCourse(data);
   // }
-
 
   // @Get('getAllByStudent')
   // @ApiBearerAuth()
@@ -75,44 +88,10 @@ export class CourseController {
   //   });
   // }
 
-
-  // @Get('getSingle/:id')
-  // @ApiBearerAuth()
-  // @UseGuards(
-  //   AuthGuard,
-  //   RoleGuardWith([UserRole.INSTRUCTOR, UserRole.SUPER_ADMIN, UserRole.ADMIN]),
-  // )
-  // public async getSingleCourse(@Param() id: IdDto) {
-  //   return await this.courseService.getSingleCourse(id);
-  // }
-
-
-  // @Get('getSingleByStudent/:id')
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  // public async getSingleCourseByStudent(
-  //   @Param() id: IdDto,
-  //   @Req() req: Request,
-  // ) {
-  //   return await this.courseService.getSingleCourseByStudent({
-  //     courseId: id,
-  //     user: req.user,
-  //   });
-  // }
-
-
   // @Post('publish_or_unpublish')
   // @ApiBearerAuth()
   // @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   // public async changePublishStatus(@Body() data: PublishOrUnpublishCourseDto) {
   //   return await this.courseService.changePublishStatus(data);
-  // }
-
-
-  // @Get('allContents/:id')
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard)
-  // public async allContents(@Param() param: IdDto) {
-  //   return await this.courseService.allContents(param.id);
   // }
 }

@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsUUID, IsBoolean } from 'class-validator';
+import { IsString, IsNumber, IsUUID, IsBoolean, IsOptional } from 'class-validator';
 
 export class CreateCourseDto {
   @IsString()
@@ -7,15 +7,13 @@ export class CreateCourseDto {
   @IsNumber()
   price: number;
 }
+export class UpdateCourseDto {
+  @IsOptional() @IsString()
+  title?: string;
 
-// export class UpdateCourseDto extends PartialType(CreateCourseDto) {
-//    @ApiProperty({
-//       description: 'Unique identifier (UUID)',
-//       example: '550e8400-e29b-41d4-a716-446655440000',
-//     })
-//     @IsUUID('4', { message: 'ID must be a valid UUID (version 4).' })
-//     id: string;
-// }
+  @IsOptional() @IsNumber()
+  price?: number;
+}
 
 // export class PublishOrUnpublishCourseDto {
 //   @ApiProperty({
