@@ -19,3 +19,18 @@ export class CreateContentDto {
   @IsUUID()
   moduleId: string;
 }
+
+
+export class UpdateContentDto {
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  video?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+}

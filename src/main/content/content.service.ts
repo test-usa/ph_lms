@@ -1,25 +1,24 @@
+// content.service.ts
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
-import { CreateContentDto } from './create-content.dto';
-import { UpdateContentDto } from './update-content.dto';
+import { CreateContentDto, UpdateContentDto } from './create-content.dto';
 import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Content, QuizInstance, Assignment, Prisma } from '@prisma/client';
+import { Content, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ContentService {
   constructor(private prisma: DbService) {}
 
-  //----------------------------------------Create Content--------------------------------------------
+  // Create Content
   async createContent(dto: CreateContentDto): Promise<Content> {
     try {
-      // Check if module exists
       const moduleExists = await this.prisma.module.findUnique({
         where: { id: dto.moduleId },
       });
 
       if (!moduleExists) {
-        throw new HttpException('Module not found',404);
+        throw new HttpException('Module not found', HttpStatus.NOT_FOUND);
       }
 
       return await this.prisma.content.create({
@@ -28,7 +27,7 @@ export class ContentService {
           video: dto.video,
           description: dto.description,
           moduleId: dto.moduleId,
-          contentType:dto.contentType
+          contentType: dto.contentType,
         },
       });
     } catch (error) {
@@ -36,6 +35,7 @@ export class ContentService {
     }
   }
 
+  // Find all Content
   async findAll({ id }: IdDto): Promise<ApiResponse<Content[]>> {
     try {
       const data = await this.prisma.content.findMany({
@@ -53,6 +53,7 @@ export class ContentService {
     }
   }
 
+  // Find one Content
   async findOne({ id }: IdDto): Promise<Content> {
     try {
       const content = await this.prisma.content.findUnique({
@@ -60,7 +61,7 @@ export class ContentService {
       });
 
       if (!content) {
-        throw new HttpException('Content not found',404);
+        throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
       }
 
       return content;
@@ -69,30 +70,33 @@ export class ContentService {
     }
   }
 
-  // async update(id: string, dto: Partial<UpdateContentDto>): Promise<Content> {
-  //   try {
-  //     // Check if content exists
-  //     const contentExists = await this.prisma.content.findUnique({
-  //       where: { id },
-  //     });
+  // Update Content
+  async updateContent(id: string, dto: UpdateContentDto): Promise<Content> {
+    try {
+      // Check if content exists
+      const contentExists = await this.prisma.content.findUnique({
+        where: { id },
+      });
 
-  //     if (!contentExists) {
-  //       throw new NotFoundException('Content not found');
-  //     }
+      if (!contentExists) {
+        throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
+      }
 
-  //     return await this.prisma.content.update({
-  //       where: { id },
-  //       data: { ...dto },
-  //     });
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
+      return await this.prisma.content.update({
+        where: { id },
+        data: {
+          title: dto.title,
+          video: dto.video,
+          description: dto.description,
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 
-  //----------------------------------------Delete Content--------------------------------------------
+  // Remove Content
   async remove(id: string): Promise<ApiResponse<null>> {
-    console.log(`Deleting content: ${id}`);
-
     try {
       const content = await this.prisma.content.findUnique({
         where: { id },
@@ -112,39 +116,33 @@ export class ContentService {
       });
 
       if (!content) {
-        throw new HttpException('Content not found',404);
+        throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
       }
 
-      // Delete Quiz Submissions
       if (content.quiz) {
         await this.prisma.quizSubmission.deleteMany({
           where: { quizInstanceId: content.quiz.id },
         });
 
-        // Delete Quizzes
         await this.prisma.quiz.deleteMany({
           where: { quizInstanceId: content.quiz.id },
         });
 
-        // Delete QuizInstance
         await this.prisma.quizInstance.delete({
           where: { id: content.quiz.id },
         });
       }
 
-      // Delete Assignment Submissions
       if (content.assignment) {
         await this.prisma.assignmentSubmission.deleteMany({
           where: { assignmentId: content.assignment.id },
         });
 
-        // Delete Assignment
         await this.prisma.assignment.delete({
           where: { id: content.assignment.id },
         });
       }
 
-      // Finally, delete the Content
       await this.prisma.content.delete({
         where: { id },
       });
@@ -156,9 +154,6 @@ export class ContentService {
         data: null,
       };
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        console.error('Prisma error:', error);
-      }
       throw error;
     }
   }

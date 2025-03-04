@@ -41,8 +41,8 @@ export class ModuleController {
 
   @Patch(':id')
   @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN]))
-  async update(@Param() params: IdDto, @Body() dto: UpdateModuleDto) {
-    return this.moduleService.update(params, dto);
+  async updateModuleTitle(@Param() params: IdDto, @Body('title') title: string) {
+    return this.moduleService.updateModuleTitle(params, title);
   }
 
   @Delete(':id')

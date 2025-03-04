@@ -1,26 +1,26 @@
+// content.controller.ts
 import {
   Controller,
   Get,
   Post,
-  Body,
   Patch,
   Param,
+  Body,
   Delete,
   Res,
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ContentService } from './content.service';
-import { CreateContentDto } from './create-content.dto';
-import { UpdateContentDto } from './update-content.dto';
+import { CreateContentDto, UpdateContentDto } from './create-content.dto';
 import { IdDto } from 'src/common/id.dto';
 import sendResponse from 'src/utils/sendResponse';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { UserRole } from '@prisma/client';
 
-@ApiTags('Content') // Group all content-related endpoints under the "Content" tag in Swagger
+@ApiTags('Content')
 @Controller('content')
 export class ContentController {
   constructor(private readonly contentService: ContentService) {}
@@ -64,21 +64,23 @@ export class ContentController {
     });
   }
 
-  // @Patch(':id')
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
-  // @ApiOperation({ summary: 'Update content by ID' })
-  // @ApiResponse({ status: 200, description: 'Content updated successfully' })
-  // @ApiResponse({ status: 403, description: 'Forbidden' })
-  // async update(@Param('id') id: string, @Body() updateContentDto: UpdateContentDto, @Res() res: Response) {
-  //   const result = await this.contentService.update(id, updateContentDto);
-  //   sendResponse(res, {
-  //     statusCode: 200,
-  //     success: true,
-  //     message: 'Content updated successfully',
-  //     data: result,
-  //   });
-  // }
+  @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  @ApiOperation({ summary: 'Update content by ID' })
+  async update(
+    @Param('id') id: string,
+    @Body() updateContentDto: UpdateContentDto,
+    @Res() res: Response
+  ) {
+    const result = await this.contentService.updateContent(id, updateContentDto);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Content updated successfully',
+      data: result,
+    });
+  }
 
   @Delete('delete-content/:id')
   @ApiBearerAuth()

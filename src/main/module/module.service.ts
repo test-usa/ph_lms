@@ -80,20 +80,20 @@ export class ModuleService {
     };
   }
 
-  //----------------------------------------Update Module----------------------------------------------
-  async update(params: IdDto, dto: UpdateModuleDto): Promise<ApiResponse<Module>> {
-    const data = await this.prisma.module.update({
-      where: { id: params.id },
-      data: { ...dto },
-    });
+//----------------------------------------Update Module Title----------------------------------------------
+async updateModuleTitle(params: IdDto, title: string): Promise<ApiResponse<Module>> {
+  const module = await this.prisma.module.update({
+    where: { id: params.id },
+    data: { title }, // Only update the title field
+  });
 
-    return {
-      statusCode: 200,
-      success: true,
-      message: 'Module updated successfully',
-      data,
-    };
-  }
+  return {
+    statusCode: 200,
+    success: true,
+    message: 'Module title updated successfully',
+    data: module,
+  };
+}
 
   //----------------------------------------Delete Module with Rollback---------------------------------
   async remove(params: IdDto): Promise<ApiResponse<null>> {
