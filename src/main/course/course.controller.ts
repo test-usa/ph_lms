@@ -20,10 +20,11 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 import { PaginationDto } from 'src/common/pagination.dto';
 import { IdDto } from 'src/common/id.dto';
 import { Request } from 'express';
+import pick from 'src/utils/pick';
 
 @Controller('course')
 export class CourseController {
-  constructor(private courseService: CourseService) {}
+  constructor(private courseService: CourseService) { }
 
   // Create Course
   @Post()
@@ -35,12 +36,20 @@ export class CourseController {
     return await this.courseService.createCourse(data);
   }
 
+  // Get single Course
+  @Get(':id')
+  @UseGuards(AuthGuard)
+  public async getSingleCourse(@Param() id: IdDto) {
+    return await this.courseService.getSingleCourse(id);
+  }
   // Get all Courses
   @Get()
-  @UseGuards(AuthGuard)
-  public async getAllCourses(@Query() pagination: PaginationDto) {
-    return await this.courseService.getAllCourses(pagination);
+  async getAllCourses(@Req() req: Request) {
+    const filters = pick(req.query, ['title', 'searchTerm', 'isPublished']);
+    const options = pick(req.query, ['page', 'limit', 'sortBy', 'sortOrder']);
+    return this.courseService.getAllCourses(filters, options);
   }
+
 
   // @Patch('update')
   // @ApiBearerAuth()
@@ -99,7 +108,7 @@ export class CourseController {
   //   return await this.courseService.changePublishStatus(data);
   // }
 
-  
+
   // @Get('allContents/:id')
   // @ApiBearerAuth()
   // @UseGuards(AuthGuard)

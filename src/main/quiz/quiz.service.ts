@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateQuizDto, SubmitAnswerDto, UpdateQuizDto } from './quiz.Dto';
 import { DbService } from 'src/db/db.service';
 import { IdDto } from 'src/common/id.dto';
@@ -7,10 +7,18 @@ import { Quiz, QuizInstance, QuizSubmission } from '@prisma/client';
 
 @Injectable()
 export class QuizService {
-  constructor(private readonly db: DbService) {}
+  constructor(private readonly db: DbService) { }
 
   //------------------------------Get Quiz instance or Create------------------------------
   private async getQuizInstanceOrCreate(contentId: string, totalMark: number) {
+    let content = await this.db.content.findUnique({
+      where: { id: contentId }
+    });
+
+    if (!content) {
+      throw new NotFoundException('Content not found');
+    }
+
     let quizInstance = await this.db.quizInstance.findUnique({
       where: { contentId },
     });
@@ -23,7 +31,6 @@ export class QuizService {
         },
       });
     }
-
     return quizInstance;
   }
 
@@ -66,11 +73,11 @@ export class QuizService {
         options: true,
       },
     });
-  
+
     if (!quizzes.length) {
       throw new HttpException('No quizzes found for this instance', HttpStatus.NOT_FOUND);
     }
-  
+
     return {
       data: quizzes,
       success: true,
@@ -83,34 +90,34 @@ export class QuizService {
   public async submitQuiz({
     answerSheet,
     quizInstanceId,
-  }: SubmitAnswerDto,uid:string): Promise<ApiResponse<QuizSubmission>> {
+  }: SubmitAnswerDto, uid: string): Promise<ApiResponse<QuizSubmission>> {
     const studentExists = await this.db.student.findUnique({
       where: { userId: uid },
     });
 
-  
+
     if (!studentExists) {
       throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
     }
     const quizInstance = await this.db.quizInstance.findUnique({
       where: { id: quizInstanceId },
-      include: { quiz: true }, 
+      include: { quiz: true },
     });
-  
+
     if (!quizInstance) {
       throw new HttpException('Quiz instance not found', HttpStatus.NOT_FOUND);
     }
     const existingSubmission = await this.db.quizSubmission.findFirst({
-      where: { quizInstanceId, studentId:studentExists.id },
+      where: { quizInstanceId, studentId: studentExists.id },
     });
-  
+
     if (existingSubmission) {
       throw new HttpException('Quiz already submitted', HttpStatus.BAD_REQUEST);
     }
 
     let correctAnswers = 0;
     let incorrectAnswers = 0;
-  
+
     for (const quiz of quizInstance.quiz) {
       const userAnswer = answerSheet.find((ans) => ans.quizId === quiz.id);
       if (userAnswer) {
@@ -131,7 +138,7 @@ export class QuizService {
         isCompleted: true,
       },
     });
-  
+
     return {
       data: quizSubmission,
       success: true,

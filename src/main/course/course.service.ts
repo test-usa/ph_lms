@@ -4,10 +4,12 @@ import {
   CreateCourseDto,
 } from './course.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Course } from '@prisma/client';
+import { Course, Prisma } from '@prisma/client';
 import { PaginationDto } from 'src/common/pagination.dto';
 import { IdDto } from 'src/common/id.dto';
 import { TUser } from 'src/interface/token.type';
+import { TPaginationOptions } from 'src/interface/pagination.type';
+import calculatePagination from 'src/utils/calculatePagination';
 
 @Injectable()
 export class CourseService {
@@ -29,24 +31,108 @@ export class CourseService {
     };
   }
 
-  // ------------------------------Get All Courses-------------------------------------
-  public async getAllCourses({
-    take = 10,
-    skip = 0,
-  }: PaginationDto): Promise<ApiResponse<Course[]>> {
-    const courses = await this.db.course.findMany({
-      take,
-      skip,
-      orderBy: { id: 'asc' },
+  // ------------------------------Get Single Course-------------------------------------
+  public async getSingleCourse(id: IdDto): Promise<ApiResponse<Course>> {
+    const courses = await this.db.course.findUnique({
+      where: id,
+      include: {
+        module: {
+          include: {
+            content: {
+              include: {
+                quiz: {
+                  include: {
+                    quiz: true
+                  }
+                },
+                assignment: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     return {
-      data: courses,
       success: true,
       message: 'Courses retrieved successfully',
       statusCode: HttpStatus.OK,
+      data: courses,
     };
   }
+
+  //--------------------------------------Get All Courses------------------------------------------
+  public async getAllCourses(
+    params: any,
+    options: TPaginationOptions,
+  ): Promise<ApiResponse<Course[]>> {
+    const andConditions: Prisma.CourseWhereInput[] = [];
+    const { searchTerm, ...filteredData } = params;
+    const { page, limit, skip } = calculatePagination(options);
+
+    if (searchTerm) {
+      andConditions.push({
+        OR: [
+          { title: { contains: searchTerm, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (Object.keys(filteredData).length > 0) {
+      andConditions.push({
+        AND: Object.keys(filteredData).map((key) => ({
+          [key]: {
+            equals: filteredData[key],
+          },
+        })),
+      });
+    }
+
+    const result = await this.db.course.findMany({
+      where: {
+        AND: andConditions,
+      },
+      skip: skip,
+      take: limit,
+      orderBy: options.sortBy
+        ? options.sortOrder
+          ? {
+            [options.sortBy]: options.sortOrder,
+          }
+          : {
+            [options.sortBy]: 'asc',
+          }
+        : {
+          createdAt: 'desc',
+        },
+      include: {
+        module: {
+          select: {
+            title: true,
+          },
+        },
+      },
+    });
+
+    const total = await this.db.course.count({
+      where: {
+        AND: andConditions,
+      },
+    });
+
+    return {
+      statusCode: 200,
+      success: true,
+      message: 'Courses retrieved successfully',
+      meta: {
+        page,
+        limit,
+        total,
+      },
+      data: result,
+    };
+  }
+
 
   // public async updateCourse({ id, ...data }: UpdateCourseDto) {
   //   const updated = await this.db.course.update({
