@@ -6,63 +6,48 @@ import {
   Patch,
   Param,
   Delete,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import { ModuleService } from './module.service';
 import { CreateModuleDto } from './create-module.dto';
+import { UpdateModuleDto } from './update-module.dto';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { UserRole } from '@prisma/client';
+import { IdDto } from 'src/common/id.dto';
 
 @Controller('module')
 @UseGuards(AuthGuard)
 export class ModuleController {
-  constructor(private readonly moduleService: ModuleService) { }
+  constructor(private readonly moduleService: ModuleService) {}
 
   @Post()
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR]))
   async createModule(@Body() dto: CreateModuleDto) {
-    console.log(dto)
     return this.moduleService.createModule(dto);
   }
 
+  @Get(':courseId')
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
+  async findAll(@Param() params: any) {
+    return this.moduleService.findAll(params);
+  }
 
-  // @Get('course/:id')
-  // @ApiOperation({ summary: 'Get all modules' })
-  // @ApiBearerAuth()
-  // @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
-  // async findAll(@Param() id: IdDto) {
-  //   return this.moduleService.findAll(id);
-  // }
+  @Get('single/:id')
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
+  async findOne(@Param() params: IdDto) {
+    return this.moduleService.findOne(params);
+  }
 
+  @Patch(':id')
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN]))
+  async updateModuleTitle(@Param() params: IdDto, @Body('title') title: string) {
+    return this.moduleService.updateModuleTitle(params, title);
+  }
 
-  // @Get(':id')
-  // @ApiOperation({ summary: 'Get a module by ID' })
-  // @ApiBearerAuth()
-  // @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
-  // async findOne(@Param() id: IdDto) {
-  //   return this.moduleService.findOne(id);
-  // }
-
-
-  // @Patch(':id')
-  // @ApiOperation({ summary: 'Update a module by ID' })
-  // @ApiBearerAuth()
-  // @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
-  // async update(
-  //   @Param() id: IdDto,
-  //   @Body() dto: UpdateModuleDto,
-  // ) {
-  //   return this.moduleService.update(id, dto);
-  // }
-
-
-  // @Delete(':id')
-  // @ApiOperation({ summary: 'Delete a module by ID' })
-  // @ApiBearerAuth()
-  // @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
-  // async remove(@Param() id: IdDto) {
-  //   return this.moduleService.remove(id);
-  // }
+  @Delete(':id')
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN]))
+  async remove(@Param() params: IdDto) {
+    return this.moduleService.remove(params);
+  }
 }

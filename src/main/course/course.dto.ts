@@ -1,3 +1,4 @@
+
 import { IsString, IsNumber, IsUUID, IsOptional } from 'class-validator';
 
 export class CreateCourseDto {
@@ -6,6 +7,9 @@ export class CreateCourseDto {
 
   @IsNumber()
   price: number;
+
+  @IsString()
+  thumbnail: string
 }
 
 export class UpdateCourseDto {
@@ -14,6 +18,10 @@ export class UpdateCourseDto {
 
   @IsOptional() @IsNumber()
   price?: number;
+
+  @IsString()
+  @IsOptional()
+  thumbnail?: string
 }
 
 export class AddInstructorToCourseDto {
