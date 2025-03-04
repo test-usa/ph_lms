@@ -21,7 +21,33 @@ export class UserService {
 
     if (user.role == "STUDENT") {
       result = await this.db.student.findUniqueOrThrow({
-        where: { email: user.email }
+        where: { email: user.email },
+        include: {
+          user: {
+            select: {
+              email: true,
+              id: true,
+              role: true,
+              status: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          },
+          Payment: true, // Include all related payments
+          assignmentSubmission: true, // Include all assignment submissions
+          quizSubmission: true, // Include all quiz submissions
+          Progress: true, // Include all progress records
+          course: { // Include the related course, if any
+            select: {
+              id: true,
+              title: true,
+              price: true,
+              isPublished: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+        }
       });
     }
     else if (user.role == "ADMIN") {
@@ -38,7 +64,6 @@ export class UserService {
               updatedAt: true
             }
           }
-
         }
       });
     }
@@ -56,7 +81,6 @@ export class UserService {
               updatedAt: true
             }
           }
-
         }
       });
     }
@@ -74,7 +98,6 @@ export class UserService {
               updatedAt: true
             }
           }
-
         }
       });
     }

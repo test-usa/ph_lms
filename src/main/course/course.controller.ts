@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -59,39 +60,10 @@ export class CourseController {
    }
 
    // Delete Course
-   @Patch(':id')
+   @Delete(':id')
    @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]),)
    public async deleteCourse(@Param() param: IdDto) {
      return await this.courseService.deleteCourse(param.id);
    }
 
-  // @Patch('update')
-  // @ApiBearerAuth()
-  // @UseGuards(
-  //   AuthGuard,
-  //   RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
-  // )
-  // public async updateCourse(@Body() data: UpdateCourseDto) {
-  //   return await this.courseService.updateCourse(data);
-  // }
-
-  // @Get('getAllByStudent')
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  // public async getAllCoursesByStudent(
-  //   @Query() pagination: PaginationDto,
-  //   @Req() req: Request,
-  // ) {
-  //   return await this.courseService.getAllCoursesByStudent({
-  //     pagination,
-  //     user: req.user,
-  //   });
-  // }
-
-  // @Post('publish_or_unpublish')
-  // @ApiBearerAuth()
-  // @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-  // public async changePublishStatus(@Body() data: PublishOrUnpublishCourseDto) {
-  //   return await this.courseService.changePublishStatus(data);
-  // }
 }
