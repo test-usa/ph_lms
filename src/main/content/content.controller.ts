@@ -20,16 +20,17 @@ import { AuthGuard } from 'src/guard/auth.guard';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { UserRole } from '@prisma/client';
 
+@ApiTags('Content') // Group all content-related endpoints under the "Content" tag in Swagger
 @Controller('content')
 export class ContentController {
-  constructor(private readonly contentService: ContentService) { }
+  constructor(private readonly contentService: ContentService) {}
 
   @Post('create-content')
-   @ApiBearerAuth()
-   @UseGuards(
-     AuthGuard,
-     RoleGuardWith([UserRole.INSTRUCTOR]),
-   )
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  @ApiOperation({ summary: 'Create new content' })
+  @ApiResponse({ status: 201, description: 'Content created successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   async create(@Body() createContentDto: CreateContentDto, @Res() res: Response) {
     const result = await this.contentService.createContent(createContentDto);
     sendResponse(res, {
@@ -41,7 +42,12 @@ export class ContentController {
   }
 
   @Get('moduleId/:id')
-  async findAll(@Param() id: IdDto, @Res() res:Response) {
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  @ApiOperation({ summary: 'Get all content for a module' })
+  @ApiResponse({ status: 200, description: 'Content retrieved successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async findAll(@Param() id: IdDto, @Res() res: Response) {
     const result = await this.contentService.findAll(id);
     sendResponse(res, {
       statusCode: 200,
@@ -52,8 +58,11 @@ export class ContentController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   @ApiOperation({ summary: 'Get content by ID' })
   @ApiResponse({ status: 200, description: 'Content retrieved successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   async findOne(@Param() id: IdDto, @Res() res: Response) {
     const result = await this.contentService.findOne(id);
     sendResponse(res, {
@@ -64,27 +73,35 @@ export class ContentController {
     });
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update content by ID' })
-  async update(@Param('id') id: string, @Body() updateContentDto: UpdateContentDto, @Res() res: Response) {
-    const result = await this.contentService.update(id, updateContentDto);
-    sendResponse(res, {
-      statusCode: 200,
-      success: true,
-      message: 'Content updated successfully',
-      data: result,
-    });
-  }
+  // @Patch(':id')
+  // @ApiBearerAuth()
+  // @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  // @ApiOperation({ summary: 'Update content by ID' })
+  // @ApiResponse({ status: 200, description: 'Content updated successfully' })
+  // @ApiResponse({ status: 403, description: 'Forbidden' })
+  // async update(@Param('id') id: string, @Body() updateContentDto: UpdateContentDto, @Res() res: Response) {
+  //   const result = await this.contentService.update(id, updateContentDto);
+  //   sendResponse(res, {
+  //     statusCode: 200,
+  //     success: true,
+  //     message: 'Content updated successfully',
+  //     data: result,
+  //   });
+  // }
 
-  @Delete(':id')
+  @Delete('delete-content/:id')
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
   @ApiOperation({ summary: 'Delete content by ID' })
+  @ApiResponse({ status: 200, description: 'Content and associated data deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   async remove(@Param('id') id: string, @Res() res: Response) {
-    await this.contentService.remove(id);
+    const result = await this.contentService.remove(id);
     sendResponse(res, {
       statusCode: 200,
       success: true,
-      message: 'Content deleted successfully',
-      data: null,
+      message: 'Content and associated data deleted successfully',
+      data: result,
     });
   }
 }

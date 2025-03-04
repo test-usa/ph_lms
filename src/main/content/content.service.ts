@@ -4,85 +4,161 @@ import { CreateContentDto } from './create-content.dto';
 import { UpdateContentDto } from './update-content.dto';
 import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Content, QuizInstance } from '@prisma/client';
+import { Content, QuizInstance, Assignment, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ContentService {
   constructor(private prisma: DbService) {}
 
   //----------------------------------------Create Content--------------------------------------------
-  async createContent(dto: CreateContentDto) {
-    // Check if module exists
-    const moduleExists = await this.prisma.module.findUnique({
-      where: { id: dto.moduleId },
-    });
+  async createContent(dto: CreateContentDto): Promise<Content> {
+    try {
+      // Check if module exists
+      const moduleExists = await this.prisma.module.findUnique({
+        where: { id: dto.moduleId },
+      });
 
-    if (!moduleExists) {
-      throw new NotFoundException('Module not found');
+      if (!moduleExists) {
+        throw new NotFoundException('Module not found');
+      }
+
+      return await this.prisma.content.create({
+        data: {
+          title: dto.title,
+          video: dto.video,
+          description: dto.description,
+          moduleId: dto.moduleId,
+        },
+      });
+    } catch (error) {
+      throw error;
     }
-
-    return this.prisma.content.create({
-      data: {
-        title: dto.title,
-        video: dto.video,
-        description: dto.description,
-        moduleId: dto.moduleId,
-      },
-    });
   }
 
   async findAll({ id }: IdDto): Promise<ApiResponse<Content[]>> {
-    const data = await this.prisma.content.findMany({
-      where: {
-        moduleId: id,
-      },
-    });
-    return {
-      success: true,
-      message: 'Contents retrieved successfully',
-      statusCode: HttpStatus.OK,
-      data,
-    };
+    try {
+      const data = await this.prisma.content.findMany({
+        where: { moduleId: id },
+      });
+
+      return {
+        success: true,
+        message: 'Contents retrieved successfully',
+        statusCode: HttpStatus.OK,
+        data,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async findOne({ id }: IdDto) {
-    const content = await this.prisma.content.findUnique({
-      where: { id },
-    });
+  async findOne({ id }: IdDto): Promise<Content> {
+    try {
+      const content = await this.prisma.content.findUnique({
+        where: { id },
+      });
 
-    if (!content) {
-      throw new NotFoundException('Content not found');
+      if (!content) {
+        throw new NotFoundException('Content not found');
+      }
+
+      return content;
+    } catch (error) {
+      throw error;
     }
-
-    return content;
   }
 
-  async update(id: string, dto: UpdateContentDto) {
-    // Check if content exists
-    const contentExists = await this.prisma.content.findUnique({
-      where: { id },
-    });
+  // async update(id: string, dto: Partial<UpdateContentDto>): Promise<Content> {
+  //   try {
+  //     // Check if content exists
+  //     const contentExists = await this.prisma.content.findUnique({
+  //       where: { id },
+  //     });
 
-    if (!contentExists) {
-      throw new NotFoundException('Content not found');
+  //     if (!contentExists) {
+  //       throw new NotFoundException('Content not found');
+  //     }
+
+  //     return await this.prisma.content.update({
+  //       where: { id },
+  //       data: { ...dto },
+  //     });
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
+
+  //----------------------------------------Delete Content--------------------------------------------
+  async remove(id: string): Promise<ApiResponse<null>> {
+    console.log(`Deleting content: ${id}`);
+
+    try {
+      const content = await this.prisma.content.findUnique({
+        where: { id },
+        include: {
+          quizInstance: {
+            include: {
+              quiz: true,
+              quizSubmission: true,
+            },
+          },
+          assignment: {
+            include: {
+              assignmentSubmission: true,
+            },
+          },
+        },
+      });
+
+      if (!content) {
+        throw new NotFoundException('Content not found');
+      }
+
+      // Delete Quiz Submissions
+      if (content.quizInstance) {
+        await this.prisma.quizSubmission.deleteMany({
+          where: { quizInstanceId: content.quizInstance.id },
+        });
+
+        // Delete Quizzes
+        await this.prisma.quiz.deleteMany({
+          where: { quizInstanceId: content.quizInstance.id },
+        });
+
+        // Delete QuizInstance
+        await this.prisma.quizInstance.delete({
+          where: { id: content.quizInstance.id },
+        });
+      }
+
+      // Delete Assignment Submissions
+      if (content.assignment) {
+        await this.prisma.assignmentSubmission.deleteMany({
+          where: { assignmentId: content.assignment.id },
+        });
+
+        // Delete Assignment
+        await this.prisma.assignment.delete({
+          where: { id: content.assignment.id },
+        });
+      }
+
+      // Finally, delete the Content
+      await this.prisma.content.delete({
+        where: { id },
+      });
+
+      return {
+        success: true,
+        message: 'Content and associated data deleted successfully',
+        statusCode: HttpStatus.OK,
+        data: null,
+      };
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error('Prisma error:', error);
+      }
+      throw error;
     }
-
-    // return this.prisma.content.update({
-    //   where: { id },
-    //   data: { ...dto },
-    // });
-  }
-
-  async remove(id: string) {
-    // Check if content exists
-    const contentExists = await this.prisma.content.findUnique({
-      where: { id },
-    });
-
-    if (!contentExists) {
-      throw new NotFoundException('Content not found');
-    }
-
-    return this.prisma.content.delete({ where: { id } });
   }
 }
