@@ -1,5 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateQuizDto, SubmitAnswerDto, UpdateQuizDto } from './quiz.Dto';
+import { CreateQuizDto, SubmitAnswerDto } from './quiz.Dto';
 import { DbService } from 'src/db/db.service';
 import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
@@ -56,7 +56,7 @@ export class QuizService {
     };
   }
 
-  // ------------------------------Start  Quiz-------------------------------------
+  // ------------------------------Start Quiz-------------------------------------
   public async startQuiz({ id }: IdDto): Promise<ApiResponse<Partial<Quiz>[]>> {
     const quizzes = await this.db.quiz.findMany({
       where: { quizInstanceId: id },
@@ -141,37 +141,26 @@ export class QuizService {
     };
   }
 
-  // ------------------------------Delete Quiz-------------------------------------
+  // ------------------------------Delete Single Quiz-------------------------------------
   public async deleteQuiz({ id }: IdDto): Promise<ApiResponse<null>> {
-    // Check if the quiz instance exists
-    const quizInstance = await this.db.quizInstance.findUnique({
+    // Check if the quiz exists
+    const quiz = await this.db.quiz.findUnique({
       where: { id },
-      include: { quiz: true, submissions: true },
     });
 
-    if (!quizInstance) {
-      throw new HttpException('Quiz instance not found', HttpStatus.NOT_FOUND);
+    if (!quiz) {
+      throw new HttpException('Quiz not found', HttpStatus.NOT_FOUND);
     }
 
-    // Delete all associated quizzes
-    await this.db.quiz.deleteMany({
-      where: { quizInstanceId: id },
-    });
-
-    // Delete all associated submissions
-    await this.db.quizSubmission.deleteMany({
-      where: { quizInstanceId: id },
-    });
-
-    // Finally, delete the quiz instance
-    await this.db.quizInstance.delete({
+    // Delete the quiz
+    await this.db.quiz.delete({
       where: { id },
     });
 
     return {
       data: null,
       success: true,
-      message: 'Quiz instance and associated data deleted successfully',
+      message: 'Quiz deleted successfully',
       statusCode: HttpStatus.OK,
     };
   }
