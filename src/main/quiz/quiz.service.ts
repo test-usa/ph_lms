@@ -66,11 +66,11 @@ export class QuizService {
         options: true,
       },
     });
-  
+
     if (!quizzes.length) {
       throw new HttpException('No quizzes found for this instance', HttpStatus.NOT_FOUND);
     }
-  
+
     return {
       data: quizzes,
       success: true,
@@ -80,37 +80,38 @@ export class QuizService {
   }
 
   //----------------------------------Submit Quiz-------------------------------------------
-  public async submitQuiz({
-    answerSheet,
-    quizInstanceId,
-  }: SubmitAnswerDto,uid:string): Promise<ApiResponse<QuizSubmission>> {
+  public async submitQuiz(
+    { answerSheet, quizInstanceId }: SubmitAnswerDto,
+    uid: string,
+  ): Promise<ApiResponse<QuizSubmission>> {
     const studentExists = await this.db.student.findUnique({
       where: { userId: uid },
     });
 
-  
     if (!studentExists) {
       throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
     }
+
     const quizInstance = await this.db.quizInstance.findUnique({
       where: { id: quizInstanceId },
-      include: { quiz: true }, 
+      include: { quiz: true },
     });
-  
+
     if (!quizInstance) {
       throw new HttpException('Quiz instance not found', HttpStatus.NOT_FOUND);
     }
+
     const existingSubmission = await this.db.quizSubmission.findFirst({
-      where: { quizInstanceId, studentId:studentExists.id },
+      where: { quizInstanceId, studentId: studentExists.id },
     });
-  
+
     if (existingSubmission) {
       throw new HttpException('Quiz already submitted', HttpStatus.BAD_REQUEST);
     }
 
     let correctAnswers = 0;
     let incorrectAnswers = 0;
-  
+
     for (const quiz of quizInstance.quiz) {
       const userAnswer = answerSheet.find((ans) => ans.quizId === quiz.id);
       if (userAnswer) {
@@ -131,11 +132,46 @@ export class QuizService {
         isCompleted: true,
       },
     });
-  
+
     return {
       data: quizSubmission,
       success: true,
       message: `Quiz submitted successfully. Score: ${correctAnswers}/${quizInstance.quiz.length}`,
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  // ------------------------------Delete Quiz-------------------------------------
+  public async deleteQuiz({ id }: IdDto): Promise<ApiResponse<null>> {
+    // Check if the quiz instance exists
+    const quizInstance = await this.db.quizInstance.findUnique({
+      where: { id },
+      include: { quiz: true, submissions: true },
+    });
+
+    if (!quizInstance) {
+      throw new HttpException('Quiz instance not found', HttpStatus.NOT_FOUND);
+    }
+
+    // Delete all associated quizzes
+    await this.db.quiz.deleteMany({
+      where: { quizInstanceId: id },
+    });
+
+    // Delete all associated submissions
+    await this.db.quizSubmission.deleteMany({
+      where: { quizInstanceId: id },
+    });
+
+    // Finally, delete the quiz instance
+    await this.db.quizInstance.delete({
+      where: { id },
+    });
+
+    return {
+      data: null,
+      success: true,
+      message: 'Quiz instance and associated data deleted successfully',
       statusCode: HttpStatus.OK,
     };
   }

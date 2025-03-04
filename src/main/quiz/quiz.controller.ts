@@ -57,13 +57,13 @@ export class QuizController {
   // }
 
 
-  // @Delete('delete/:id')
-  // @ApiBearerAuth()
-  // @UseGuards(
-  //   AuthGuard,
-  //   RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
-  // )
-  // async deleteQuiz(@Param() id: IdDto) {
-  //   return this.quizService.deleteQuiz(id);
-  // }
+  @Delete('delete/:id')
+  @ApiBearerAuth()
+  @UseGuards(
+    AuthGuard,
+    RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
+  )
+  async deleteQuiz(@Param() id: IdDto) {
+    return this.quizService.deleteQuiz(id);
+  }
 }
