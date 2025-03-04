@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import {
   CreateCourseDto,
@@ -140,7 +140,7 @@ export class CourseService {
     const course = await this.db.course.findUnique({
       where: id
     })
-    if (!course) throw new NotFoundException("Course Not Found")
+    if (!course) throw new HttpException("Course Not Found", 404)
 
     const updated = await this.db.course.update({
       where: id,

@@ -1,4 +1,4 @@
-import { ForbiddenException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { TPaginationOptions } from 'src/interface/pagination.type';
 import calculatePagination from 'src/utils/calculatePagination';
@@ -229,7 +229,7 @@ export class StudentService {
             select: { id: true },
         });
         if (!student) {
-            throw new NotFoundException('Student not found');
+            throw new HttpException('Student not found', 404);
         }
 
         // Check if the student is enrolled in the course
@@ -244,7 +244,7 @@ export class StudentService {
             },
         });
         if (!isEnrolled) {
-            throw new ForbiddenException('You are not enrolled in this course');
+            throw new HttpException('You are not enrolled in this course', HttpStatus.FORBIDDEN);
         }
 
         // Get the progress of the course for the student

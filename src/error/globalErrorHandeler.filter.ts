@@ -5,8 +5,11 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
+import { Prisma } from '@prisma/client';
 
 @Catch()
 export class GlobalErrorHandlerFilter<T> implements ExceptionFilter {
@@ -15,46 +18,72 @@ export class GlobalErrorHandlerFilter<T> implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    // ✅ Check if exception or response is undefined
     if (!exception) {
       Logger.error('Caught undefined exception!');
       response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
         statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
         message: 'Unknown error occurred',
         timestamp: new Date().toISOString(),
-      });
-      return;
-    }
-
-    if (!response) {
-      Logger.error('Response object is undefined!');
-      return;
-    }
-
-    // ✅ Handle Known Exceptions
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
-
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : (exception as Error)?.message || 'Internal server error';
-
-    // ✅ Send Error Response with Request Info
-    response.status(status).json({
-        statusCode: status,
-        message: typeof message === 'string' 
-          ? message 
-          : (message as any)?.message[0] ?? 'An error occurred',
-        error: true,
         path: request?.url || 'unknown',
         method: request?.method || 'unknown',
-        timestamp: new Date().toISOString(),
       });
+      return;
+    }
 
-    // ✅ Log the Exception for Debugging
-    console.error('Exception caught:', exception);
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message: string | string[] = 'Internal server error';
+    let errorDetails: string | Record<string, unknown> | undefined = undefined;
+
+    // ✅ Handle NestJS HTTP Exceptions
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const exceptionResponse = exception.getResponse();
+
+      if (exception instanceof NotFoundException) {
+        message = 'API Not Found';
+      } else if (exception instanceof BadRequestException) {
+        const res = exceptionResponse as
+          | { message: string[]; error: string }
+          | string;
+        if (typeof res === 'string') {
+          message = res;
+        } else if (Array.isArray(res.message)) {
+          // Extract validation errors nicely
+          message = res.message.map((msg) => `⚠️ ${msg}`);
+        } else {
+          message = res.error || 'Bad Request';
+        }
+      } else {
+        message =
+          typeof exceptionResponse === 'string'
+            ? exceptionResponse
+            : (exceptionResponse as any)?.message || 'Http Exception occurred';
+      }
+    }
+
+    // ✅ Handle Prisma Errors
+    if (exception instanceof Prisma.PrismaClientValidationError) {
+      message = 'Validation Error';
+      errorDetails = exception.message;
+      status = HttpStatus.BAD_REQUEST;
+    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      if (exception.code === 'P2002') {
+        message = 'Duplicate Key Error';
+        errorDetails = exception.meta ?? undefined;
+        status = HttpStatus.BAD_REQUEST;
+      }
+    }
+
+    response.status(status).json({
+      success: false,
+      statusCode: status,
+      message,
+      errorDetails,
+      path: request?.url || 'unknown',
+      method: request?.method || 'unknown',
+    });
+
+    Logger.error(`Exception caught at ${request.method} ${request.url}`, exception);
   }
 }

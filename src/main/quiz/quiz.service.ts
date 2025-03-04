@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateQuizDto, SubmitAnswerDto, UpdateQuizDto } from './quiz.Dto';
 import { DbService } from 'src/db/db.service';
 import { IdDto } from 'src/common/id.dto';
@@ -16,7 +16,7 @@ export class QuizService {
     });
 
     if (!content) {
-      throw new NotFoundException('Content not found');
+      throw new HttpException('Content not found', 404);
     }
 
     let quizInstance = await this.db.quizInstance.findUnique({

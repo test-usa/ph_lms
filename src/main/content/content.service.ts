@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { CreateContentDto } from './create-content.dto';
 import { UpdateContentDto } from './update-content.dto';
@@ -18,7 +18,7 @@ export class ContentService {
     });
 
     if (!moduleExists) {
-      throw new NotFoundException('Module not found');
+      throw new HttpException('Module not found', 404);
     }
 
     return this.prisma.content.create({

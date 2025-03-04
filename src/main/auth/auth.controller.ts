@@ -4,7 +4,6 @@ import {
   Body,
   Res,
   Req,
-  UnauthorizedException,
   Patch,
   UseGuards,
 } from '@nestjs/common';

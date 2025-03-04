@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { CreateModuleDto } from './create-module.dto';
 import { UpdateModuleDto } from './update-module.dto';
@@ -18,7 +18,7 @@ export class ModuleService {
       });
 
       if (!courseExists) {
-        throw new NotFoundException('Course not found');
+        throw new HttpException('Course not found', 404);
       }
     }
 
