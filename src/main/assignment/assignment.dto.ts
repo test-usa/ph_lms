@@ -151,3 +151,29 @@ export class AssignmentSubmissionResponseDto {
   })
   updatedAt: string;
 }
+
+export class MarkAssignmentDto {
+  @ApiProperty({
+    description: 'Assignment ID (UUID) to which the submission belongs',
+    example: 'd3ace945-41b9-4e2a-807f-34c4f58e200f',
+  })
+  @IsString({ message: 'Assignment ID must be a string.' })
+  @IsNotEmpty({ message: 'Assignment ID is required.' })
+  assignmentId: string;
+
+  @ApiProperty({
+    description: 'Student ID (UUID) who submitted the assignment',
+    example: 'bedf7ad7-17e4-499f-aac2-c0e9d4148361',
+  })
+  @IsString({ message: 'Student ID must be a string.' })
+  @IsNotEmpty({ message: 'Student ID is required.' })
+  studentId: string;
+
+  @ApiProperty({
+    description: 'Marks acquired by the student',
+    example: 85,
+  })
+  @IsInt({ message: 'Acquired mark must be an integer.' })
+  @IsNotEmpty({ message: 'Acquired mark is required.' })
+  acquiredMark: number;
+}
