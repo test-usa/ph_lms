@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
-import { CreateAssignmentDto, SubmitAssignmentDto } from './assignment.dto';
+import { CreateAssignmentDto, MarkAssignmentDto, SubmitAssignmentDto } from './assignment.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
 import { Assignment, AssignmentSubmission } from '@prisma/client';
 
@@ -35,10 +35,33 @@ export class AssignmentService {
   }
 
   //----------------------------------------Is Student Exists--------------------------------------------
-  private async isStudentExist(id: string) {
-    const student = await this.db.student.findUnique({
-      where: { userId:id },
-    });
+  private async isStudentExist({
+    userId,
+    studentId,
+  }: {
+    userId?: string;
+    studentId?: string;
+  }) {
+    if (!userId && !studentId) {
+      throw new HttpException(
+        'Either userId or studentId must be provided',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    let student;
+
+    if (userId) {
+      // Find student by userId
+      student = await this.db.student.findUnique({
+        where: { userId },
+      });
+    } else if (studentId) {
+      // Find student by studentId
+      student = await this.db.student.findUnique({
+        where: { id: studentId },
+      });
+    }
 
     if (!student) {
       throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
@@ -76,16 +99,47 @@ export class AssignmentService {
   //----------------------------------------Start Assignment--------------------------------------------
   public async startAssignment(
     assignmentId: string,
-  ): Promise<ApiResponse<Assignment>> {
+    userId: string
+  ): Promise<ApiResponse<Assignment | AssignmentSubmission>> {
+    // Find the student ID associated with the user
+    const student = await this.db.student.findUnique({
+      where: { userId },
+      select: { id: true }, // Only get the student ID
+    });
+  
+    if (!student) {
+      throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
+    }
+  
+    // Find the assignment
     const assignment = await this.db.assignment.findUnique({
       where: { id: assignmentId },
-      include: { content: true }, // Include associated content
+      include: { content: true }, // Include related content
     });
-
+  
     if (!assignment) {
       throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
     }
+  
+    // Find the student's submission (if any)
+    const submission = await this.db.assignmentSubmission.findFirst({
+      where: { assignmentId, studentId: student.id },
+      include: {
+        assignment: true,
+        student: true, // Include student details if needed
+      },
+    });
 
+  
+    if (submission) {
+      return {
+        data: submission,
+        success: true,
+        message: 'Assignment submission details retrieved successfully',
+        statusCode: HttpStatus.OK,
+      };
+    }
+  
     return {
       data: assignment,
       success: true,
@@ -103,12 +157,12 @@ export class AssignmentService {
     await this.isAssignmentExist(assignmentId);
 
     // Check if the student exists
-   const student = await this.isStudentExist(studentId);
-   console.log(student.id)
+    const student = await this.isStudentExist({ userId: studentId }); // Pass an object
+
 
     // Check if the student has already submitted this assignment
     const existingSubmission = await this.db.assignmentSubmission.findFirst({
-      where: { assignmentId, studentId:student.id },
+      where: { assignmentId, studentId: student.id },
     });
 
     if (existingSubmission) {
@@ -126,7 +180,7 @@ export class AssignmentService {
         isSubmitted: true,
         isReviewed: false, // Default value
         assignmentId,
-        studentId:student.id,
+        studentId: student.id,
       },
     });
 
@@ -135,6 +189,93 @@ export class AssignmentService {
       success: true,
       message: 'Assignment submitted successfully',
       statusCode: HttpStatus.CREATED,
+    };
+  }
+
+  //----------------------------------------Mark Assignment--------------------------------------------
+  public async markAssignment({
+    assignmentId,
+    studentId,
+    acquiredMark,
+  }: MarkAssignmentDto): Promise<ApiResponse<AssignmentSubmission>> {
+    // Check if the assignment exists
+
+    const assignment = await this.isAssignmentExist(assignmentId);
+
+    // Check if the student exists
+    const student = await this.isStudentExist({ studentId }); // Pass an object
+
+    // Check if the student has submitted the assignment
+    const submission = await this.db.assignmentSubmission.findFirst({
+      where: { assignmentId, studentId: student.id },
+    });
+
+    if (!submission) {
+      throw new HttpException(
+        'Assignment submission not found for this student',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    // Ensure the acquired mark does not exceed the total mark
+    if (acquiredMark > assignment.totalMark) {
+      throw new HttpException(
+        'Acquired mark cannot exceed the total mark of the assignment',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Update the assignment submission
+    const updatedSubmission = await this.db.assignmentSubmission.update({
+      where: { id: submission.id },
+      data: {
+        acquiredMark,
+        isReviewed: true, // Mark as reviewed
+      },
+    });
+
+    return {
+      data: updatedSubmission,
+      success: true,
+      message: 'Assignment marked successfully',
+      statusCode: HttpStatus.OK,
+    };
+  }
+
+  //----------------------------------------Get All Submissions--------------------------------------------
+  public async getAllSubmissions(
+    assignmentId?: string,
+  ): Promise<ApiResponse<AssignmentSubmission[]>> {
+    let submissions;
+
+    if (assignmentId) {
+      // Fetch submissions for a specific assignment
+      submissions = await this.db.assignmentSubmission.findMany({
+        where: { assignmentId },
+        include: {
+          assignment: true, // Include assignment details
+          student: true, // Include student details
+        },
+      });
+    } else {
+      // Fetch all submissions
+      submissions = await this.db.assignmentSubmission.findMany({
+        include: {
+          assignment: true, // Include assignment details
+          student: true, // Include student details
+        },
+      });
+    }
+
+    if (!submissions || submissions.length === 0) {
+      throw new HttpException('No submissions found', HttpStatus.NOT_FOUND);
+    }
+
+    return {
+      data: submissions,
+      success: true,
+      message: 'Submissions retrieved successfully',
+      statusCode: HttpStatus.OK,
     };
   }
 }

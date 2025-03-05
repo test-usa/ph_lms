@@ -6,10 +6,12 @@ import {
   Body,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { AssignmentService } from './assignment.service';
 import {
   CreateAssignmentDto,
+  MarkAssignmentDto,
   SubmitAssignmentDto,
 } from './assignment.dto';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
@@ -35,8 +37,9 @@ export class AssignmentController {
   // Start Assignment
   @Get('start-assignment/:id')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  async startAssignment(@Param() id: IdDto) {
-    return this.assignmentService.startAssignment(id.id);
+  async startAssignment(@Param() id: IdDto, @Req() req) {
+    const studentId = req.user.id; // Extract student ID from the authenticated user
+    return this.assignmentService.startAssignment(id.id, studentId);
   }
 
   // Submit assignment
@@ -46,4 +49,16 @@ export class AssignmentController {
     const studentId = req.user.id;
     return this.assignmentService.submitAssignment(submitAssignmentDto, studentId);
   }
+  // Mark Assignment
+  @Post('mark-assignment')
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  async markAssignment(@Body() markAssignmentDto: MarkAssignmentDto) {
+    return this.assignmentService.markAssignment(markAssignmentDto);
+  }
+    // Get All Assignment Submissions (for instructors)
+    @Get('submissions')
+    @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+    async getAllSubmissions(@Query('assignmentId') assignmentId?: string) {
+      return this.assignmentService.getAllSubmissions(assignmentId);
+    }
 }

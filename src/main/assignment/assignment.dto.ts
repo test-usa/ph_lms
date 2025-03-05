@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsNotEmpty, IsBoolean, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsInt, IsNotEmpty } from 'class-validator';
 
 export class CreateAssignmentDto {
   @IsString({ message: 'Title must be a string.' })
@@ -14,27 +14,6 @@ export class CreateAssignmentDto {
   contentId: string;
 }
 
-export class StartAssignmentResponseDto {
-  @IsString({ message: 'ID must be a string.' })
-  id: string;
-
-  @IsString({ message: 'Title must be a string.' })
-  title: string;
-
-  @IsInt({ message: 'Total mark must be an integer.' })
-  totalMark: number;
-
-  @IsString({ message: 'Content ID must be a string.' })
-  contentId: string;
-
-  @IsString({ message: 'Content description must be a string.' })
-  contentDescription: string;
-
-  @IsOptional()
-  @IsString({ message: 'Video must be a string.' })
-  video?: string;
-}
-
 export class SubmitAssignmentDto {
   @IsString({ message: 'Assignment ID must be a string.' })
   @IsNotEmpty({ message: 'Assignment ID is required.' })
@@ -45,25 +24,16 @@ export class SubmitAssignmentDto {
   submission: string;
 }
 
-export class AssignmentSubmissionResponseDto {
-  @IsString({ message: 'ID must be a string.' })
-  id: string;
-
-  @IsString({ message: 'Submission must be a string.' })
-  submission: string;
-
-  @IsInt({ message: 'Acquired mark must be an integer.' })
-  acquiredMark: number;
-
-  @IsBoolean({ message: 'Is submitted must be a boolean.' })
-  isSubmitted: boolean;
-
-  @IsBoolean({ message: 'Is reviewed must be a boolean.' })
-  isReviewed: boolean;
-
+export class MarkAssignmentDto {
   @IsString({ message: 'Assignment ID must be a string.' })
+  @IsNotEmpty({ message: 'Assignment ID is required.' })
   assignmentId: string;
 
   @IsString({ message: 'Student ID must be a string.' })
+  @IsNotEmpty({ message: 'Student ID is required.' })
   studentId: string;
+
+  @IsInt({ message: 'Acquired mark must be an integer.' })
+  @IsNotEmpty({ message: 'Acquired mark is required.' })
+  acquiredMark: number;
 }
