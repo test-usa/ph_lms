@@ -318,6 +318,14 @@ export class CourseService {
     if (!course) throw new HttpException('Course Not Found', 404);
     if (course?.instructor) throw new HttpException('An Instructor already assigned to this course', 404);
 
+    const requestedInstructor = await this.db.instructor.findUniqueOrThrow({
+      where: {
+        id: payload.instructorId,
+        isDeleted: false
+      }
+    });
+    if (!requestedInstructor) throw new HttpException('Instructor not found', HttpStatus.NOT_FOUND);
+    
     const instructor = await this.db.instructor.update({
       where: { id: payload.instructorId },
       data: {

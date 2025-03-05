@@ -21,7 +21,7 @@ export class UserService {
 
     if (user.role == "STUDENT") {
       result = await this.db.student.findUniqueOrThrow({
-        where: { email: user.email },
+        where: { email: user.email, isDeleted: false },
         include: {
           user: {
             select: {
@@ -51,7 +51,7 @@ export class UserService {
     }
     else if (user.role == "ADMIN") {
       result = await this.db.admin.findUniqueOrThrow({
-        where: { email: user.email },
+        where: { email: user.email, isDeleted: false },
         include: {
           user: {
             select: {
@@ -68,7 +68,7 @@ export class UserService {
     }
     else if (user.role == "SUPER_ADMIN") {
       result = await this.db.admin.findUniqueOrThrow({
-        where: { email: user.email },
+        where: { email: user.email, isDeleted: false },
         include: {
           user: {
             select: {
@@ -85,7 +85,7 @@ export class UserService {
     }
     else {
       result = await this.db.instructor.findUniqueOrThrow({
-        where: { email: user.email },
+        where: { email: user.email,isDeleted: false },
         include: {
           user: {
             select: {
@@ -189,8 +189,9 @@ export class UserService {
   public async changeProfileStatus(id: string, status: Status): Promise<ApiResponse<User>> {
     await this.db.user.findUniqueOrThrow({
       where: {
-        id,
-      },
+        id, 
+        status: Status.ACTIVE
+    }
     });
 
     const updatedUser = await this.db.user.update({

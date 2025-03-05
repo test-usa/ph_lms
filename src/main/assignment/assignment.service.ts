@@ -54,12 +54,12 @@ export class AssignmentService {
     if (userId) {
       // Find student by userId
       student = await this.db.student.findUnique({
-        where: { userId },
+        where: { userId, isDeleted: false },
       });
     } else if (studentId) {
       // Find student by studentId
       student = await this.db.student.findUnique({
-        where: { id: studentId },
+        where: { id: studentId, isDeleted: false },
       });
     }
 
@@ -103,7 +103,7 @@ export class AssignmentService {
   ): Promise<ApiResponse<Assignment | AssignmentSubmission>> {
     // Find the student ID associated with the user
     const student = await this.db.student.findUnique({
-      where: { userId },
+      where: { userId, isDeleted: false },
       select: { id: true }, // Only get the student ID
     });
   
