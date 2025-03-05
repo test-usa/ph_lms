@@ -12,7 +12,6 @@ import {
   CreateAssignmentDto,
   SubmitAssignmentDto,
 } from './assignment.dto';
-import { ApiBearerAuth } from '@nestjs/swagger';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
@@ -25,7 +24,6 @@ export class AssignmentController {
 
   // Create Assignment
   @Post()
-  @ApiBearerAuth()
   @UseGuards(
     AuthGuard,
     RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
@@ -36,7 +34,6 @@ export class AssignmentController {
 
   // Start Assignment
   @Get('start-assignment/:id')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
   async startAssignment(@Param() id: IdDto) {
     return this.assignmentService.startAssignment(id.id);
@@ -44,7 +41,6 @@ export class AssignmentController {
 
   // Submit assignment
   @Post('submit-assignment')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
   async submitAssignment(@Body() submitAssignmentDto: SubmitAssignmentDto, @Req() req: Request) {
     const studentId = req.user.id;
