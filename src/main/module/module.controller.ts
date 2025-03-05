@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ModuleService } from './module.service';
 import { AuthGuard } from 'src/guard/auth.guard';
@@ -14,6 +15,7 @@ import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { UserRole } from '@prisma/client';
 import { IdDto } from 'src/common/id.dto';
 import { CreateModuleDto } from './module.dto';
+import { Request } from 'express';
 
 @Controller('module')
 @UseGuards(AuthGuard)
@@ -21,31 +23,31 @@ export class ModuleController {
   constructor(private readonly moduleService: ModuleService) {}
 
   @Post()
-  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR]))
-  async createModule(@Body() dto: CreateModuleDto) {
-    return this.moduleService.createModule(dto);
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  async createModule(@Body() dto: CreateModuleDto, @Req() req: Request,) {
+    return this.moduleService.createModule(dto, req.user.id);
   }
 
   @Get(':courseId')
-  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
+  @UseGuards(AuthGuard)
   async findAll(@Param() params: any) {
     return this.moduleService.findAll(params);
   }
 
   @Get('single/:id')
-  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
+  @UseGuards(AuthGuard)
   async findOne(@Param() params: IdDto) {
     return this.moduleService.findOne(params);
   }
 
   @Patch(':id')
-  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN]))
-  async updateModuleTitle(@Param() params: IdDto, @Body('title') title: string) {
-    return this.moduleService.updateModuleTitle(params, title);
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  async updateModuleTitle(@Param() params: IdDto, @Req() req: Request, @Body('title') title: string) {
+    return this.moduleService.updateModuleTitle(params, title, req.user.id);
   }
 
   @Delete(':id')
-  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN]))
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN]))
   async remove(@Param() params: IdDto) {
     return this.moduleService.remove(params);
   }

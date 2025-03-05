@@ -313,16 +313,18 @@ export class CourseService {
   public async addInstructorToCourse(id: IdDto, payload: AddInstructorToCourseDto) {
     const course = await this.db.course.findUnique({
       where: id,
+      include: { instructor: true }
     });
     if (!course) throw new HttpException('Course Not Found', 404);
-  
+    if (course?.instructor) throw new HttpException('An Instructor already assigned to this course', 404);
+
     const instructor = await this.db.instructor.update({
       where: { id: payload.instructorId },
       data: {
         courseId: id.id,
       },
     });
-  
+
     return {
       success: true,
       message: 'Instructor added to course successfully',
@@ -330,6 +332,8 @@ export class CourseService {
       data: instructor,
     };
   }
-  
+
+  public async removeInstructorFromCourse(id: IdDto) { }
+
 
 }
