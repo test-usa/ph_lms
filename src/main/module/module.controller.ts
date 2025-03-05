@@ -9,12 +9,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ModuleService } from './module.service';
-import { CreateModuleDto } from './create-module.dto';
-import { UpdateModuleDto } from './update-module.dto';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { UserRole } from '@prisma/client';
 import { IdDto } from 'src/common/id.dto';
+import { CreateModuleDto } from './module.dto';
 
 @Controller('module')
 @UseGuards(AuthGuard)

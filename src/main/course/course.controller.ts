@@ -19,8 +19,6 @@ import {
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
-import { ApiBearerAuth } from '@nestjs/swagger';
-import { PaginationDto } from 'src/common/pagination.dto';
 import { IdDto } from 'src/common/id.dto';
 import { Request } from 'express';
 import pick from 'src/utils/pick';
