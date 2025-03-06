@@ -65,26 +65,35 @@ export class QuizService {
 
   // ------------------------------Start Quiz-------------------------------------
   public async startQuiz({ id }: IdDto): Promise<ApiResponse<Partial<Quiz>[]>> {
-    const quizzes = await this.db.quiz.findMany({
-      where: { quizInstanceId: id },
-      select: {
-        id: true,
-        question: true,
-        options: true,
+    const quizContent = await this.db.content.findUnique({
+      where: { id },
+      include: {
+        quiz: {
+          include: {
+            quiz: {
+              select: {
+                id: true,
+                question: true,
+                options: true,
+              },
+            }
+          },
+        },
       },
     });
 
-    if (!quizzes.length) {
-      throw new HttpException('No quizzes found for this instance', HttpStatus.NOT_FOUND);
+    if (!quizContent?.quiz || !quizContent?.quiz.quiz.length) {
+      throw new HttpException('No quizzes found!', HttpStatus.NOT_FOUND);
     }
 
     return {
-      data: quizzes,
+      data: quizContent.quiz.quiz,
       success: true,
       message: 'Quizzes retrieved successfully',
       statusCode: HttpStatus.OK,
     };
   }
+
 
   //----------------------------------Submit Quiz-------------------------------------------
   public async submitQuiz(

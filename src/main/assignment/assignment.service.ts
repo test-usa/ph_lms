@@ -6,7 +6,7 @@ import { Assignment, AssignmentSubmission, SubmissionStatus } from '@prisma/clie
 
 @Injectable()
 export class AssignmentService {
-  constructor(private readonly db: DbService) {}
+  constructor(private readonly db: DbService) { }
 
   //----------------------------------------Is Content Exists--------------------------------------------
   private async isContentExist(id: string) {
@@ -99,7 +99,7 @@ export class AssignmentService {
 
   //----------------------------------------Start Assignment--------------------------------------------
   public async startAssignment(
-    assignmentId: string,
+    contentId: string,
     userId: string
   ): Promise<ApiResponse<Assignment | AssignmentSubmission>> {
     // Find the student ID associated with the user
@@ -107,31 +107,33 @@ export class AssignmentService {
       where: { userId, isDeleted: false },
       select: { id: true }, // Only get the student ID
     });
-  
+
     if (!student) {
       throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
     }
-  
+
     // Find the assignment
-    const assignment = await this.db.assignment.findUnique({
-      where: { id: assignmentId },
-      include: { content: true }, // Include related content
+    const assignmentContent = await this.db.content.findUnique({
+      where: { id: contentId },
+      include: {
+        assignment: true
+      },
     });
-  
-    if (!assignment) {
+
+    if (!assignmentContent || !assignmentContent.assignment) {
       throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
     }
-  
+
     // Find the student's submission (if any)
     const submission = await this.db.assignmentSubmission.findFirst({
-      where: { assignmentId, studentId: student.id },
+      where: { assignmentId: assignmentContent?.assignment?.id, studentId: student.id },
       include: {
         assignment: true,
         student: true, // Include student details if needed
       },
     });
 
-  
+
     if (submission) {
       return {
         data: submission,
@@ -140,9 +142,9 @@ export class AssignmentService {
         statusCode: HttpStatus.OK,
       };
     }
-  
+
     return {
-      data: assignment,
+      data: assignmentContent.assignment,
       success: true,
       message: 'Assignment details retrieved successfully',
       statusCode: HttpStatus.OK,
@@ -156,22 +158,22 @@ export class AssignmentService {
   ): Promise<ApiResponse<AssignmentSubmission>> {
     // Check if the assignment exists
     const assignment = await this.isAssignmentExist(assignmentId);
-  
+
     // Check if the student exists
     const student = await this.isStudentExist({ userId: studentId });
-  
+
     // Check if the student has already submitted this assignment
     const existingSubmission = await this.db.assignmentSubmission.findFirst({
       where: { assignmentId, studentId: student.id },
     });
-  
+
     if (existingSubmission) {
       throw new HttpException(
         'Assignment already submitted by this student',
         HttpStatus.BAD_REQUEST,
       );
     }
-  
+
     const submissionTime = new Date();
     const submissionStatus =
       submissionTime > assignment.deadline ? SubmissionStatus.LATE : SubmissionStatus.ONTIME;
@@ -187,7 +189,7 @@ export class AssignmentService {
         studentId: student.id,
       },
     });
-  
+
     return {
       data: newSubmission,
       success: true,
@@ -195,7 +197,7 @@ export class AssignmentService {
       statusCode: HttpStatus.CREATED,
     };
   }
-  
+
 
   //----------------------------------------Mark Assignment--------------------------------------------
   public async markAssignment({

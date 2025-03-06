@@ -37,7 +37,7 @@ export class AssignmentController {
   // Start Assignment
   @Get('start-assignment/:id')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  async startAssignment(@Param() id: IdDto, @Req() req) {
+  async startAssignment(@Param() id: IdDto, @Req() req: Request) {
     const studentId = req.user.id; // Extract student ID from the authenticated user
     return this.assignmentService.startAssignment(id.id, studentId);
   }

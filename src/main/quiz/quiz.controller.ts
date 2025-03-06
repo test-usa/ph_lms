@@ -27,51 +27,23 @@ export class QuizController {
     RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
   )
   async createQuiz(@Body() createQuizDto: CreateQuizDto) {
-    try {
       return await this.quizService.createQuiz(createQuizDto);
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to create quizzes',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
   }
 
   @Get('start-quiz/:id')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
   async startQuiz(@Param() id: IdDto) {
-    try {
       return await this.quizService.startQuiz(id);
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to retrieve quizzes',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
   }
 
   @Post('submit-quiz')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
   async submitQuiz(@Body() answer: SubmitAnswerDto, @Req() req) {
-    try {
       return await this.quizService.submitQuiz(answer, req.user.id);
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to submit quiz',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
   }
 
   @Delete('delete-quiz/:id')
   async deleteQuiz(@Param() id: IdDto) {
-    try {
       return await this.quizService.deleteQuiz(id);
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to delete quiz',
-        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
   }
 }
