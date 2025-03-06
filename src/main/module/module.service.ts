@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Module } from '@prisma/client';
+import { Module, QuizInstance } from '@prisma/client';
 import { IdDto } from 'src/common/id.dto';
 import { CreateModuleDto } from './module.dto';
 
@@ -45,6 +45,12 @@ export class ModuleService {
             id: true,
             video: true,
             description: true,
+            contentType:true,
+            quiz:{
+              select:{
+                quiz:true
+              }
+            }
           },
         },
       },

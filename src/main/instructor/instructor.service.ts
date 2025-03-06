@@ -112,7 +112,6 @@ export class InstructorService {
             where: id,
             data: {
                 profilePhoto: payload.profilePhoto,
-                phone: payload.phone,
                 contact: payload.contact,
                 address: payload.address,
                 gender: payload.gender,

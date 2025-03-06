@@ -5,10 +5,8 @@ export class UpdateStudentDto {
   @IsOptional() @IsString()
   profilePhoto?: string;
 
-  @IsOptional() @IsString()
-  phone?: string;
-
-  @IsOptional() @IsString()
+  @IsOptional()
+  @IsString()
   contact?: string;
 
   @IsOptional() @IsString()
