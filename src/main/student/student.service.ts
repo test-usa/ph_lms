@@ -112,12 +112,20 @@ export class StudentService {
         const updatedStudent = await this.db.student.update({
             where: id,
             data: {
+                name: payload.name,
                 profilePhoto: payload.profilePhoto,
                 contact: payload.contact,
                 address: payload.address,
                 gender: payload.gender,
             },
         });
+
+        if(payload.name){
+            await this.db.user.update({
+                where: { id: existingStudent.userId },
+                data: { name: payload.name },
+            });
+        }
 
         return {
             statusCode: 200,

@@ -169,6 +169,7 @@ model QuizSubmission {
 model Assignment {
   id        String   @id @default(uuid())
   title     String
+  deadline  DateTime
   totalMark Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -181,6 +182,8 @@ model Assignment {
 
 model AssignmentSubmission {
   id           String   @id @default(uuid())
+  submissionTime DateTime
+  submissionStatus SubmissionStatus
   submission   String
   acquiredMark Int      @default(0)
   isSubmitted  Boolean  @default(false)
@@ -265,4 +268,9 @@ enum ContentType {
   DESCRIPTION
   QUIZ
   ASSIGNMENT
+}
+
+enum SubmissionStatus {
+  LATE
+  ONTIME
 }

@@ -35,8 +35,22 @@ export class CourseService {
   }
 
   // ------------------------------------Get Single Course-------------------------------------
-  public async getSingleCourse(id: IdDto): Promise<ApiResponse<Course>> {
-    const courses = await this.db.course.findUnique({
+  public async getSingleCourse(id: IdDto, user: TUser): Promise<ApiResponse<Course>> {
+    if (user.role === 'INSTRUCTOR') {
+      const instructor = await this.db.instructor.findUnique({
+        where: { courseId: id.id }
+      })
+      if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
+    }
+    if (user.role === 'STUDENT') {
+      const student = await this.db.student.findFirst({
+        where: { courseId: id.id }
+      })
+      if (!student) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
+    }
+    const course = await this.db.course.findUnique({
       where: id,
       include: {
         module: {
@@ -62,7 +76,7 @@ export class CourseService {
       success: true,
       message: 'Courses retrieved successfully',
       statusCode: HttpStatus.OK,
-      data: courses,
+      data: course,
     };
   }
 
@@ -325,7 +339,7 @@ export class CourseService {
       }
     });
     if (!requestedInstructor) throw new HttpException('Instructor not found', HttpStatus.NOT_FOUND);
-    
+
     const instructor = await this.db.instructor.update({
       where: { id: payload.instructorId },
       data: {
@@ -341,7 +355,28 @@ export class CourseService {
     };
   }
 
-  public async removeInstructorFromCourse(id: IdDto) { }
+  public async removeInstructorFromCourse(id: IdDto) {
+    const course = await this.db.course.findUnique({
+      where: id,
+      include: { instructor: true }
+    });
+    if (!course) throw new HttpException('Course Not Found', 404);
+    if (!course?.instructor) throw new HttpException('No Instructor assigned to this course', 404);
+
+    const instructor = await this.db.instructor.update({
+      where: { id: course.instructor.id },
+      data: {
+        courseId: null,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Instructor removed from course successfully',
+      statusCode: HttpStatus.OK,
+      data: instructor,
+    };
+   }
 
 
 }

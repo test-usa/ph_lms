@@ -24,7 +24,7 @@ export class ModuleController {
 
   @Post()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
-  async createModule(@Body() dto: CreateModuleDto, @Req() req: Request,) {
+  async createModule(@Body() dto: CreateModuleDto, @Req() req: Request) {
     return this.moduleService.createModule(dto, req.user.id);
   }
 
@@ -48,7 +48,7 @@ export class ModuleController {
 
   @Delete(':id')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-  async remove(@Param() params: IdDto) {
-    return this.moduleService.remove(params);
+  async remove(@Param() params: IdDto, @Req() req: Request) {
+    return this.moduleService.remove(params, req.user);
   }
 }

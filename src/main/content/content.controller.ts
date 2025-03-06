@@ -9,8 +9,9 @@ import {
   Delete,
   Res,
   UseGuards,
+  Req,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ContentService } from './content.service';
 import { CreateContentDto, UpdateContentDto } from './create-content.dto';
 import { IdDto } from 'src/common/id.dto';
@@ -25,8 +26,8 @@ export class ContentController {
 
   @Post('create-content')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
-  async create(@Body() createContentDto: CreateContentDto, @Res() res: Response) {
-    const result = await this.contentService.createContent(createContentDto);
+  async create(@Body() createContentDto: CreateContentDto, @Res() res: Response, @Req() req: Request) {
+    const result = await this.contentService.createContent(createContentDto, req.user.id);
     sendResponse(res, {
       statusCode: 201,
       success: true,
@@ -36,7 +37,7 @@ export class ContentController {
   }
 
   @Get('moduleId/:id')
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  @UseGuards(AuthGuard)
   async findAll(@Param() id: IdDto, @Res() res: Response) {
     const result = await this.contentService.findAll(id);
     sendResponse(res, {

@@ -2,7 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { CreateAssignmentDto, MarkAssignmentDto, SubmitAssignmentDto } from './assignment.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Assignment, AssignmentSubmission } from '@prisma/client';
+import { Assignment, AssignmentSubmission, SubmissionStatus } from '@prisma/client';
 
 @Injectable()
 export class AssignmentService {
@@ -83,6 +83,7 @@ export class AssignmentService {
     const newAssignment = await this.db.assignment.create({
       data: {
         title,
+        deadline: new Date(), // Default value (to be updated by instructor)
         totalMark,
         contentId,
       },
@@ -154,36 +155,39 @@ export class AssignmentService {
     studentId: string,
   ): Promise<ApiResponse<AssignmentSubmission>> {
     // Check if the assignment exists
-    await this.isAssignmentExist(assignmentId);
-
+    const assignment = await this.isAssignmentExist(assignmentId);
+  
     // Check if the student exists
-    const student = await this.isStudentExist({ userId: studentId }); // Pass an object
-
-
+    const student = await this.isStudentExist({ userId: studentId });
+  
     // Check if the student has already submitted this assignment
     const existingSubmission = await this.db.assignmentSubmission.findFirst({
       where: { assignmentId, studentId: student.id },
     });
-
+  
     if (existingSubmission) {
       throw new HttpException(
         'Assignment already submitted by this student',
         HttpStatus.BAD_REQUEST,
       );
     }
+  
+    const submissionTime = new Date();
+    const submissionStatus =
+      submissionTime > assignment.deadline ? SubmissionStatus.LATE : SubmissionStatus.ONTIME;
 
-    // Create the assignment submission
     const newSubmission = await this.db.assignmentSubmission.create({
       data: {
         submission,
-        acquiredMark: 0, // Default value (to be updated by instructor)
+        submissionTime,
+        submissionStatus,
+        acquiredMark: 0,
         isSubmitted: true,
-        isReviewed: false, // Default value
         assignmentId,
         studentId: student.id,
       },
     });
-
+  
     return {
       data: newSubmission,
       success: true,
@@ -191,6 +195,7 @@ export class AssignmentService {
       statusCode: HttpStatus.CREATED,
     };
   }
+  
 
   //----------------------------------------Mark Assignment--------------------------------------------
   public async markAssignment({
@@ -230,7 +235,7 @@ export class AssignmentService {
       where: { id: submission.id },
       data: {
         acquiredMark,
-        isReviewed: true, // Mark as reviewed
+        isReviewed: true,
       },
     });
 

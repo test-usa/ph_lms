@@ -11,7 +11,7 @@ export class ContentService {
   constructor(private prisma: DbService) {}
 
   // Create Content
-  async createContent(dto: CreateContentDto): Promise<Content> {
+  async createContent(dto: CreateContentDto, userId: string): Promise<Content> {
     try {
       const moduleExists = await this.prisma.module.findUnique({
         where: { id: dto.moduleId },

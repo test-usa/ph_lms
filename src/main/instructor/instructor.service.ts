@@ -118,6 +118,14 @@ export class InstructorService {
             },
         });
 
+        
+        if(payload.name){
+            await this.db.user.update({
+                where: { id: existingInstructor.userId },
+                data: { name: payload.name },
+            });
+        }
+
         return {
             statusCode: 200,
             success: true,

@@ -1,4 +1,5 @@
-import { IsString, IsInt, IsNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsString, IsInt, IsNotEmpty, IsDate } from 'class-validator';
 
 export class CreateAssignmentDto {
   @IsString({ message: 'Title must be a string.' })
@@ -8,6 +9,11 @@ export class CreateAssignmentDto {
   @IsInt({ message: 'Total mark must be an integer.' })
   @IsNotEmpty({ message: 'Total mark is required.' })
   totalMark: number;
+
+  @IsDate({ message: 'Deadline must be a valid date.' })
+  @Type(() => Date)
+  @IsNotEmpty({ message: 'Deadline is required.' })
+  deadline: Date;
 
   @IsString({ message: 'Content ID must be a string.' })
   @IsNotEmpty({ message: 'Content ID is required.' })

@@ -1,9 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Module, QuizInstance } from '@prisma/client';
+import { Module, QuizInstance, UserRole } from '@prisma/client';
 import { IdDto } from 'src/common/id.dto';
 import { CreateModuleDto } from './module.dto';
+import { TUser } from 'src/interface/token.type';
 
 @Injectable()
 export class ModuleService {
@@ -13,11 +14,18 @@ export class ModuleService {
   async createModule(dto: CreateModuleDto, id: string): Promise<ApiResponse<Module>> {
     const existingCourse = await this.prisma.course.findUnique({
       where: { id: dto.courseId },
-      include: { instructor: true },
+      include: {
+        instructor: {
+          include: {
+            user: true
+          }
+        }
+      },
     });
 
     if (!existingCourse) throw new HttpException('Course not found', 404);
-    if (!existingCourse?.instructor || existingCourse?.instructor.id !== id) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
+    if (!existingCourse?.instructor) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
+    if (existingCourse?.instructor?.user?.id !== id) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
 
     const data = await this.prisma.module.create({
       data: {
@@ -45,10 +53,10 @@ export class ModuleService {
             id: true,
             video: true,
             description: true,
-            contentType:true,
-            quiz:{
-              select:{
-                quiz:true
+            contentType: true,
+            quiz: {
+              select: {
+                quiz: true
               }
             }
           },
@@ -90,14 +98,20 @@ export class ModuleService {
       include: {
         course: {
           include: {
-            instructor: true
+            instructor: {
+              include: {
+                user: true,
+              },
+            }
           }
         }
       },
     });
 
-    if (!existingModule) throw new HttpException('Course not found', 404);
-    if (!existingModule?.course?.instructor || existingModule?.course?.instructor.id !== id) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
+    if (!existingModule) throw new HttpException('Module not found', 404);
+    if (!existingModule?.course?.instructor) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
+    if (existingModule?.course?.instructor?.user?.id !== id) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
+
     const module = await this.prisma.module.update({
       where: { id: params.id },
       data: { title }, // Only update the title field
@@ -112,11 +126,20 @@ export class ModuleService {
   }
 
   //----------------------------------------Delete Module with Rollback---------------------------------
-  async remove(params: IdDto): Promise<ApiResponse<null>> {
+  async remove(params: IdDto, user: TUser): Promise<ApiResponse<null>> {
     return this.prisma.$transaction(async (tx) => {
       const module = await tx.module.findUnique({
         where: { id: params.id },
         include: {
+          course: {
+            include: {
+              instructor: {
+                include: {
+                  user: true,
+                },
+              }
+            }
+          },
           content: {
             include: {
               quiz: {
@@ -135,9 +158,12 @@ export class ModuleService {
         },
       });
 
-      if (!module) {
-        throw new HttpException('Module not found', 404);
+      if (!module) throw new HttpException('Module not found', 404);
+      if (user?.role == UserRole.INSTRUCTOR) {
+        if (!module?.course?.instructor) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
+        if (module?.course?.instructor?.user?.id !== user.id) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
       }
+
 
       for (const content of module.content) {
         if (content.quiz) {
