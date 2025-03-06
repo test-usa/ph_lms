@@ -8,11 +8,6 @@ export class UpdateInstructorDto {
   @IsString()
   profilePhoto?: string;
 
-  @ApiProperty({ description: 'Phone number', example: '+1234567890', required: false })
-  @IsOptional()
-  @IsString()
-  phone?: string;
-
   @ApiProperty({ description: 'Contact information', example: 'email@example.com', required: false })
   @IsOptional()
   @IsString()
