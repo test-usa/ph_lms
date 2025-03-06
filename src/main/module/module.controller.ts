@@ -47,7 +47,7 @@ export class ModuleController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN]))
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   async remove(@Param() params: IdDto) {
     return this.moduleService.remove(params);
   }

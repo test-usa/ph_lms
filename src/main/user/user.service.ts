@@ -274,7 +274,7 @@ export class UserService {
     });
     const newUser = await this.db.user.create({
       data: {
-        name: name,
+        name,
         email: email,
         password: hashedPassword,
         role: UserRole.ADMIN,
