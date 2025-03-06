@@ -28,7 +28,7 @@ export class ModuleController {
   }
 
   @Get(':courseId')
-  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.STUDENT]))
+  @UseGuards(RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STUDENT]))
   async findAll(@Param() params: any) {
     return this.moduleService.findAll(params);
   }

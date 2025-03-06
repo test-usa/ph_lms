@@ -87,7 +87,6 @@ model Admin {
 model Course {
   id          String   @id @default(uuid())
   title       String
-  thumbnail   String
   price       Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
