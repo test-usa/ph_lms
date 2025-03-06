@@ -49,7 +49,7 @@ export class ContentController {
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT, UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  @UseGuards(AuthGuard)
   async findOne(@Param() id: IdDto, @Res() res: Response) {
     const result = await this.contentService.findOne(id);
     sendResponse(res, {
@@ -61,7 +61,7 @@ export class ContentController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
   async update(
     @Param('id') id: string,
     @Body() updateContentDto: UpdateContentDto,
@@ -77,9 +77,9 @@ export class ContentController {
   }
 
   @Delete('delete-content/:id')
-  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
-  async remove(@Param('id') id: string, @Res() res: Response) {
-    const result = await this.contentService.remove(id);
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  async remove(@Param('id') id: string, @Res() res: Response, @Req() req: Request) {
+    const result = await this.contentService.remove(id, req.user);
     sendResponse(res, {
       statusCode: 200,
       success: true,

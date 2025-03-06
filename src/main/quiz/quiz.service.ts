@@ -103,10 +103,7 @@ export class QuizService {
     const studentExists = await this.db.student.findUnique({
       where: { userId: uid },
     });
-
-    if (!studentExists) {
-      throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
-    }
+    if (!studentExists) throw new HttpException('Student not found!', HttpStatus.NOT_FOUND);
 
     const quizInstance = await this.db.quizInstance.findUnique({
       where: { id: quizInstanceId },

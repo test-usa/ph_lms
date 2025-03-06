@@ -43,6 +43,7 @@ export class QuizController {
   }
 
   @Delete('delete-quiz/:id')
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   async deleteQuiz(@Param() id: IdDto) {
       return await this.quizService.deleteQuiz(id);
   }

@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Module, QuizInstance, UserRole } from '@prisma/client';
+import { Module, UserRole } from '@prisma/client';
 import { IdDto } from 'src/common/id.dto';
 import { CreateModuleDto } from './module.dto';
 import { TUser } from 'src/interface/token.type';
@@ -24,8 +24,8 @@ export class ModuleService {
     });
 
     if (!existingCourse) throw new HttpException('Course not found', 404);
-    if (!existingCourse?.instructor) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
-    if (existingCourse?.instructor?.user?.id !== id) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
+    if (!existingCourse?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
+    if (existingCourse?.instructor?.user?.id !== id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
 
     const data = await this.prisma.module.create({
       data: {
@@ -109,8 +109,8 @@ export class ModuleService {
     });
 
     if (!existingModule) throw new HttpException('Module not found', 404);
-    if (!existingModule?.course?.instructor) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
-    if (existingModule?.course?.instructor?.user?.id !== id) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
+    if (!existingModule?.course?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
+    if (existingModule?.course?.instructor?.user?.id !== id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
 
     const module = await this.prisma.module.update({
       where: { id: params.id },
@@ -160,8 +160,8 @@ export class ModuleService {
 
       if (!module) throw new HttpException('Module not found', 404);
       if (user?.role == UserRole.INSTRUCTOR) {
-        if (!module?.course?.instructor) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
-        if (module?.course?.instructor?.user?.id !== user.id) throw new HttpException('You are not authorized for this course!', HttpStatus.BAD_GATEWAY);
+        if (!module?.course?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
+        if (module?.course?.instructor?.user?.id !== user.id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
       }
 
 
