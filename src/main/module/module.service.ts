@@ -51,9 +51,11 @@ export class ModuleService {
             contentType:true,
             quiz:{
               select:{
-                quiz:true
-              }
-            }
+                quiz:true,
+              },
+              quizIn
+            },
+            assignment: true
           },
         },
       },
