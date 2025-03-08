@@ -76,9 +76,9 @@ export class QuizService {
                 id: true,
                 question: true,
                 options: true,
-                quizInstance:true
+                quizInstance: true,
               },
-            }
+            },
           },
         },
       },
