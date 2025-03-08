@@ -105,7 +105,7 @@ export class InstructorService {
 
         if (!existingInstructor) throw new HttpException('Instructor not found', HttpStatus.NOT_FOUND);
         if (existingInstructor.isDeleted) throw new HttpException('Instructor is deactivated', HttpStatus.FORBIDDEN);
-        if ((token.role === UserRole.STUDENT || token.role === UserRole.INSTRUCTOR) && existingInstructor.email !== token.email) throw new HttpException('Unauthorized Access!', HttpStatus.FORBIDDEN);
+        if (token.role === UserRole.INSTRUCTOR && existingInstructor.email !== token.email) throw new HttpException('Unauthorized Access!', HttpStatus.FORBIDDEN);
 
         // Perform update
         const updatedInstructor = await this.db.instructor.update({

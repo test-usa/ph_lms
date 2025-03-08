@@ -22,10 +22,13 @@ export class ModuleService {
         }
       },
     });
+    const instructor = await this.prisma.instructor.findUniqueOrThrow({
+      where: { userId: id }
+    })
 
     if (!existingCourse) throw new HttpException('Course not found', 404);
     if (!existingCourse?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
-    if (existingCourse?.instructor?.user?.id !== id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
+    if (existingCourse?.instructor?.id !== instructor?.id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
 
     const data = await this.prisma.module.create({
       data: {
@@ -43,7 +46,21 @@ export class ModuleService {
   }
 
   //----------------------------------------Get All Modules by Course ID---------------------------------
-  async findAll(params: any): Promise<ApiResponse<any>> {
+  async findAll(params: any, user:TUser): Promise<ApiResponse<any>> {
+    if (user.role === 'INSTRUCTOR') {
+      const instructor = await this.prisma.instructor.findUnique({
+        where: { courseId: params.courseId }
+      })
+      if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
+    }
+    if (user.role === 'STUDENT') {
+      const student = await this.prisma.student.findFirst({
+        where: { courseId: params.courseId }
+      })
+      if (!student) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
+    }
     const data = await this.prisma.module.findMany({
       where: { courseId: params.courseId },
       include: {
@@ -73,14 +90,28 @@ export class ModuleService {
   }
 
   //----------------------------------------Get Module by ID--------------------------------------------
-  async findOne(params: IdDto): Promise<ApiResponse<Module>> {
+  async findOne(params: IdDto, user: TUser): Promise<ApiResponse<Module>> {
     const module = await this.prisma.module.findUnique({
       where: { id: params.id },
       include: { content: true },
     });
-
     if (!module) {
       throw new HttpException('Module not found', 404);
+    }
+
+    if (user.role === 'INSTRUCTOR') {
+      const instructor = await this.prisma.instructor.findUnique({
+        where: { courseId: module.courseId }
+      })
+      if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
+    }
+    if (user.role === 'STUDENT') {
+      const student = await this.prisma.student.findFirst({
+        where: { courseId: module.courseId }
+      })
+      if (!student) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
     }
 
     return {
@@ -107,10 +138,13 @@ export class ModuleService {
         }
       },
     });
+    const instructor = await this.prisma.instructor.findUniqueOrThrow({
+      where: { userId: id }
+    })
 
     if (!existingModule) throw new HttpException('Module not found', 404);
     if (!existingModule?.course?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
-    if (existingModule?.course?.instructor?.user?.id !== id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
+    if (existingModule?.course?.instructor?.id !== instructor?.id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
 
     const module = await this.prisma.module.update({
       where: { id: params.id },
@@ -127,6 +161,29 @@ export class ModuleService {
 
   //----------------------------------------Delete Module with Rollback---------------------------------
   async remove(params: IdDto, user: TUser): Promise<ApiResponse<null>> {
+    const existingModule = await this.prisma.module.findUnique({
+      where: { id: params.id },
+      include: {
+        course: {
+          include: {
+            instructor: {
+              include: {
+                user: true,
+              },
+            }
+          }
+        }
+      },
+    });
+
+    const instructor = await this.prisma.instructor.findUniqueOrThrow({
+      where: { userId: user?.id }
+    })
+
+    if (!existingModule) throw new HttpException('Module not found', 404);
+    if (!existingModule?.course?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
+    if (existingModule?.course?.instructor?.id !== instructor?.id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
+
     return this.prisma.$transaction(async (tx) => {
       const module = await tx.module.findUnique({
         where: { id: params.id },
@@ -158,10 +215,14 @@ export class ModuleService {
         },
       });
 
+      const instructor = await this.prisma.instructor.findUniqueOrThrow({
+        where: { userId: user?.id }
+      })
+
       if (!module) throw new HttpException('Module not found', 404);
       if (user?.role == UserRole.INSTRUCTOR) {
         if (!module?.course?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
-        if (module?.course?.instructor?.user?.id !== user.id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
+        if (module?.course?.instructor?.id !== instructor.id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
       }
 
 

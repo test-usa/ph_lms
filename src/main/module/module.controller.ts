@@ -30,14 +30,14 @@ export class ModuleController {
 
   @Get(':courseId')
   @UseGuards(AuthGuard)
-  async findAll(@Param() params: any) {
-    return this.moduleService.findAll(params);
+  async findAll(@Param() params: any, @Req() req: Request) {
+    return this.moduleService.findAll(params, req.user);
   }
 
   @Get('single/:id')
   @UseGuards(AuthGuard)
-  async findOne(@Param() params: IdDto) {
-    return this.moduleService.findOne(params);
+  async findOne(@Param() params: IdDto, @Req() req: Request) {
+    return this.moduleService.findOne(params, req.user);
   }
 
   @Patch(':id')

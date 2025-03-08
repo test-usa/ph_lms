@@ -4,8 +4,8 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
-  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -36,7 +36,7 @@ export class StudentController {
     return this.studentService.getAllStudents(filters, options);
   }
 
-  @Put('update-student/:id')
+  @Patch('update-student/:id')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   async updateStudent(@Param() id: IdDto, @Body() data: UpdateStudentDto, @Req() req: Request) {
     return this.studentService.updateStudent(id, data, req.user);
@@ -49,7 +49,7 @@ export class StudentController {
   }
 
   @Post('progress/:courseId/:contentId')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
   async setProgress(@Param() param, @Req() req: Request) {
     const email = req.user.email;
     return this.studentService.setProgress(param.courseId, email, param.contentId);

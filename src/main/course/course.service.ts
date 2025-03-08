@@ -164,14 +164,6 @@ export class CourseService {
       data,
     });
 
-    if (!updated) {
-      return {
-        success: false,
-        message: 'Course could not be updated!',
-        statusCode: HttpStatus.NOT_FOUND,
-      };
-    }
-
     return {
       success: true,
       message: 'Course updated successfully',

@@ -105,7 +105,7 @@ export class AdminService {
 
         if (!existingAdmin) throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
         if (existingAdmin.isDeleted) throw new HttpException('Admin is deactivated', HttpStatus.FORBIDDEN);
-        if ((token.role==UserRole.STUDENT || token.role === UserRole.ADMIN) && existingAdmin.email !== token.email) throw new HttpException('Unauthorized Access!', HttpStatus.FORBIDDEN);
+        if (token.role === UserRole.ADMIN && existingAdmin.email !== token.email) throw new HttpException('Unauthorized Access!', HttpStatus.FORBIDDEN);
  
         
         console.log(payload)

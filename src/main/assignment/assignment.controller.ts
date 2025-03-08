@@ -28,7 +28,7 @@ export class AssignmentController {
   @Post()
   @UseGuards(
     AuthGuard,
-    RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
+    RoleGuardWith([UserRole.INSTRUCTOR]),
   )
   async createAssignment(@Body() createAssignmentDto: CreateAssignmentDto) {
     return this.assignmentService.createAssignment(createAssignmentDto);
