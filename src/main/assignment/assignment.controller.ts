@@ -26,12 +26,9 @@ export class AssignmentController {
 
   // Create Assignment
   @Post()
-  @UseGuards(
-    AuthGuard,
-    RoleGuardWith([UserRole.INSTRUCTOR]),
-  )
-  async createAssignment(@Body() createAssignmentDto: CreateAssignmentDto) {
-    return this.assignmentService.createAssignment(createAssignmentDto);
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  async createAssignment(@Body() createAssignmentDto: CreateAssignmentDto, @Req() req: Request) {
+    return this.assignmentService.createAssignment(createAssignmentDto, req.user);
   }
 
   // Start Assignment
@@ -52,8 +49,8 @@ export class AssignmentController {
   // Mark Assignment
   @Post('mark-assignment')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
-  async markAssignment(@Body() markAssignmentDto: MarkAssignmentDto) {
-    return this.assignmentService.markAssignment(markAssignmentDto);
+  async markAssignment(@Body() markAssignmentDto: MarkAssignmentDto, @Req() req: Request) {
+    return this.assignmentService.markAssignment(markAssignmentDto, req.user);
   }
     // Get All Assignment Submissions (for instructors)
     @Get('submissions')

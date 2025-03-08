@@ -117,12 +117,11 @@ export class AuthService {
     const user = await this.db.user.findUnique({
       where: { email, status: Status.ACTIVE },
     });
-
     if (!user) throw new HttpException('User not found', 401);
 
     const token = this.jwtService.sign(
       { email: user.email, role: user.role },
-      { secret: this.configService.get('JWT_SECRET') },
+      { secret: this.configService.get('JWT_SECRET')},
     );
     const resetPassLink = `${this.configService.get('RESET_PASS_LINK')}?userId=${user.id}&token=${token}`;
     await this.mailerService.sendMail(

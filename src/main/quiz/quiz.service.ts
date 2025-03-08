@@ -71,10 +71,11 @@ export class QuizService {
   }
 
   // ------------------------------Start Quiz-------------------------------------
-  public async startQuiz({ id }: IdDto): Promise<ApiResponse<Partial<Quiz>[]>> {
+  public async startQuiz({ id }: IdDto, user: TUser): Promise<ApiResponse<Partial<Quiz>[]>> {
     const quizContent = await this.db.content.findUnique({
       where: { id },
       include: {
+        module: true,
         quiz: {
           include: {
             quiz: {
@@ -84,15 +85,21 @@ export class QuizService {
                 options: true,
                 quizInstance: true
               },
+              
             }
           },
         },
       },
     });
-
+    
     if (!quizContent?.quiz || !quizContent?.quiz.quiz.length) {
       throw new HttpException('No quizzes found!', HttpStatus.NOT_FOUND);
     }
+    
+    const existingUser = await this.db.student.findUnique({
+      where: { userId: user.id, courseId: quizContent.module.courseId },
+    });
+    if (!existingUser)  throw new HttpException('You are not authorized to submit this quiz!', HttpStatus.FORBIDDEN);
 
     return {
       data: quizContent.quiz.quiz,
@@ -107,19 +114,18 @@ export class QuizService {
     { answerSheet, contentId }: SubmitAnswerDto,
     uid: string,
   ): Promise<ApiResponse<QuizSubmission>> {
+    
+    const content = await this.db.content.findUnique({
+      where: { id: contentId },
+      include: { quiz: true , module: true },
+    });
+    if (!content)  throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
+
     const studentExists = await this.db.student.findUnique({
-      where: { userId: uid },
+      where: { userId: uid, courseId: content.module.courseId },
     });
     if (!studentExists) throw new HttpException('Student not found!', HttpStatus.NOT_FOUND);
 
-    const content = await this.db.content.findUnique({
-      where: { id: contentId },
-      include: { quiz: true },
-    });
-
-    if (!content) {
-      throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
-    }
     const quizInstance = await this.db.quizInstance.findUnique({
       where: { id: content?.quiz?.id },
       include: { quiz: true },
@@ -170,15 +176,29 @@ export class QuizService {
   }
 
   // ------------------------------Delete Single Quiz-------------------------------------
-  public async deleteQuiz({ id }: IdDto): Promise<ApiResponse<null>> {
+  public async deleteQuiz({ id }: IdDto, user: TUser): Promise<ApiResponse<null>> {
     // Check if the quiz exists
     const quiz = await this.db.quiz.findUnique({
       where: { id },
+      include: {
+        quizInstance: {
+          include: {
+            content: {
+              include: {
+                module: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    if (!quiz) {
-      throw new HttpException('Quiz not found', HttpStatus.NOT_FOUND);
-    }
+    if (!quiz) throw new HttpException('Quiz not found', HttpStatus.NOT_FOUND);
+
+    const existingUser = await this.db.instructor.findUnique({
+      where: { userId: user.id, courseId: quiz.quizInstance.content.module.courseId },
+    });
+    if (!existingUser)  throw new HttpException('You are not authorized to delete this quiz!', HttpStatus.FORBIDDEN);
 
     // Delete the quiz
     await this.db.quiz.delete({

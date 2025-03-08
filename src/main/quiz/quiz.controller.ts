@@ -30,8 +30,8 @@ export class QuizController {
 
   @Get('start-quiz/:id')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  async startQuiz(@Param() id: IdDto) {
-      return await this.quizService.startQuiz(id);
+  async startQuiz(@Param() id: IdDto, @Req() req: Request) {
+      return await this.quizService.startQuiz(id, req.user);
   }
 
   @Post('submit-quiz')
@@ -42,7 +42,7 @@ export class QuizController {
 
   @Delete('delete-quiz/:id')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
-  async deleteQuiz(@Param() id: IdDto) {
-      return await this.quizService.deleteQuiz(id);
+  async deleteQuiz(@Param() id: IdDto, @Req() req: Request) {
+      return await this.quizService.deleteQuiz(id, req.user);
   }
 }

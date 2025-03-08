@@ -3,32 +3,51 @@ import { DbService } from 'src/db/db.service';
 import { CreateAssignmentDto, MarkAssignmentDto, SubmitAssignmentDto } from './assignment.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
 import { Assignment, AssignmentSubmission, SubmissionStatus } from '@prisma/client';
+import { TUser } from 'src/interface/token.type';
 
 @Injectable()
 export class AssignmentService {
   constructor(private readonly db: DbService) { }
 
   //----------------------------------------Is Content Exists--------------------------------------------
-  private async isContentExist(id: string) {
+  private async isContentExist(id: string, user: TUser) {
     const content = await this.db.content.findUnique({
       where: { id },
+      include: {
+        module: true
+      }
     });
 
     if (!content) {
       throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
     }
 
+    const instructor = await this.db.instructor.findUnique({
+      where: { userId: user.id, courseId: content.module.courseId },
+    });
+    if (!instructor) throw new HttpException('You are not authorized to create this assignment!', HttpStatus.FORBIDDEN);
+
     return content;
   }
 
   //----------------------------------------Is Assignment Exists--------------------------------------------
-  private async isAssignmentExist(id: string) {
+  private async isAssignmentExist(id: string, user?: TUser) {
     const assignment = await this.db.assignment.findUnique({
       where: { id },
+      include: {
+        content: {
+          include: {
+            module: true
+          }
+        }
+      }
     });
-
-    if (!assignment) {
-      throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
+    if (!assignment) throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
+    if (user) {
+      const instructor = await this.db.instructor.findUnique({
+        where: { userId: user.id, courseId: assignment.content.module.courseId, isDeleted: false },
+      });
+      if (!instructor) throw new HttpException('You are ', HttpStatus.NOT_FOUND);
     }
 
     return assignment;
@@ -75,9 +94,9 @@ export class AssignmentService {
     title,
     totalMark,
     contentId,
-  }: CreateAssignmentDto): Promise<ApiResponse<Assignment>> {
+  }: CreateAssignmentDto, user: TUser): Promise<ApiResponse<Assignment>> {
     // Check if the content exists
-    await this.isContentExist(contentId);
+    await this.isContentExist(contentId, user);
 
     // Create the assignment
     const newAssignment = await this.db.assignment.create({
@@ -105,7 +124,7 @@ export class AssignmentService {
     // Find the student ID associated with the user
     const student = await this.db.student.findUnique({
       where: { userId, isDeleted: false },
-      select: { id: true }, // Only get the student ID
+      select: { id: true },
     });
 
     if (!student) {
@@ -119,7 +138,6 @@ export class AssignmentService {
         assignment: true
       },
     });
-
     if (!assignmentContent || !assignmentContent.assignment) {
       throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
     }
@@ -132,7 +150,6 @@ export class AssignmentService {
         student: true, // Include student details if needed
       },
     });
-
 
     if (submission) {
       return {
@@ -154,7 +171,7 @@ export class AssignmentService {
   //----------------------------------------Submit Assignment--------------------------------------------
   public async submitAssignment(
     { assignmentId, submission }: SubmitAssignmentDto,
-    studentId: string,
+    studentId: string
   ): Promise<ApiResponse<AssignmentSubmission>> {
     // Check if the assignment exists
     const assignment = await this.isAssignmentExist(assignmentId);
@@ -198,19 +215,14 @@ export class AssignmentService {
     };
   }
 
-
   //----------------------------------------Mark Assignment--------------------------------------------
   public async markAssignment({
     assignmentId,
     studentId,
     acquiredMark,
-  }: MarkAssignmentDto): Promise<ApiResponse<AssignmentSubmission>> {
-    // Check if the assignment exists
-
-    const assignment = await this.isAssignmentExist(assignmentId);
-
-    // Check if the student exists
-    const student = await this.isStudentExist({ studentId }); // Pass an object
+  }: MarkAssignmentDto, user: TUser): Promise<ApiResponse<AssignmentSubmission>> {
+    const assignment = await this.isAssignmentExist(assignmentId, user);
+    const student = await this.isStudentExist({ studentId });
 
     // Check if the student has submitted the assignment
     const submission = await this.db.assignmentSubmission.findFirst({
