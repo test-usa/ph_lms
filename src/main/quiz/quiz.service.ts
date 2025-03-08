@@ -99,7 +99,7 @@ export class QuizService {
 
   //----------------------------------Submit Quiz-------------------------------------------
   public async submitQuiz(
-    { answerSheet, quizInstanceId }: SubmitAnswerDto,
+    { answerSheet, contentId }: SubmitAnswerDto,
     uid: string,
   ): Promise<ApiResponse<QuizSubmission>> {
     const studentExists = await this.db.student.findUnique({
@@ -107,8 +107,16 @@ export class QuizService {
     });
     if (!studentExists) throw new HttpException('Student not found!', HttpStatus.NOT_FOUND);
 
+    const content = await this.db.content.findUnique({
+      where: { id: contentId },
+      include: { quiz: true },
+    });
+
+    if (!content) {
+      throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
+    }
     const quizInstance = await this.db.quizInstance.findUnique({
-      where: { id: quizInstanceId },
+      where: { id: content?.quiz?.id },
       include: { quiz: true },
     });
 
@@ -117,7 +125,7 @@ export class QuizService {
     }
 
     const existingSubmission = await this.db.quizSubmission.findFirst({
-      where: { quizInstanceId, studentId: studentExists.id },
+      where: { quizInstanceId: quizInstance.id, studentId: studentExists.id },
     });
 
     if (existingSubmission) {
@@ -140,7 +148,7 @@ export class QuizService {
 
     const quizSubmission = await this.db.quizSubmission.create({
       data: {
-        quizInstanceId,
+        quizInstanceId: quizInstance.id,
         studentId: studentExists.id,
         correctAnswers,
         incorrectAnswers,
