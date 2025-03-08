@@ -5,20 +5,26 @@ import { DbService } from 'src/db/db.service';
 import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
 import { Quiz, QuizSubmission } from '@prisma/client';
+import { TUser } from 'src/interface/token.type';
 
 @Injectable()
 export class QuizService {
   constructor(private readonly db: DbService) { }
 
   //------------------------------Get Quiz instance or Create------------------------------
-  private async getQuizInstanceOrCreate(contentId: string, totalMark: number) {
+  private async getQuizInstanceOrCreate(contentId: string, totalMark: number, user: TUser) {
     let content = await this.db.content.findUnique({
-      where: { id: contentId }
+      where: { id: contentId },
+      include: {
+        module: true
+      }
     });
 
-    if (!content) {
-      throw new HttpException('Content not found', 404);
-    }
+    if (!content) throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
+    const instructor = await this.db.instructor.findUnique({
+      where: { courseId: content.module.courseId }
+    })
+    if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus.FORBIDDEN)
 
     let quizInstance = await this.db.quizInstance.findUnique({
       where: { contentId },
@@ -40,8 +46,8 @@ export class QuizService {
     contentId,
     totalMark,
     quizesData,
-  }: CreateQuizDto): Promise<ApiResponse<Quiz[]>> {
-    const quizInstance = await this.getQuizInstanceOrCreate(contentId, totalMark);
+  }: CreateQuizDto, user: TUser): Promise<ApiResponse<Quiz[]>> {
+    const quizInstance = await this.getQuizInstanceOrCreate(contentId, totalMark, user);
 
     const newQuizzes = await Promise.all(
       quizesData.map(async (quiz) =>
@@ -76,7 +82,7 @@ export class QuizService {
                 id: true,
                 question: true,
                 options: true,
-                quizInstance:true
+                quizInstance: true
               },
             }
           },
