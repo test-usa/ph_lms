@@ -16,18 +16,16 @@ import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
 import { IdDto } from 'src/common/id.dto';
+import { Request } from 'express';
 
 @Controller('quiz')
 export class QuizController {
   constructor(private readonly quizService: QuizService) {}
 
   @Post()
-  @UseGuards(
-    AuthGuard,
-    RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
-  )
-  async createQuiz(@Body() createQuizDto: CreateQuizDto) {
-      return await this.quizService.createQuiz(createQuizDto);
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  async createQuiz(@Body() createQuizDto: CreateQuizDto, @Req() req: Request) {
+      return await this.quizService.createQuiz(createQuizDto, req?.user);
   }
 
   @Get('start-quiz/:id')

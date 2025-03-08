@@ -96,7 +96,6 @@ export class QuizService {
     };
   }
 
-
   //----------------------------------Submit Quiz-------------------------------------------
   public async submitQuiz(
     { answerSheet, contentId }: SubmitAnswerDto,

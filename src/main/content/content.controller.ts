@@ -38,8 +38,8 @@ export class ContentController {
 
   @Get('moduleId/:id')
   @UseGuards(AuthGuard)
-  async findAll(@Param() id: IdDto, @Res() res: Response) {
-    const result = await this.contentService.findAll(id);
+  async findAll(@Param() id: IdDto, @Res() res: Response, @Req() req: Request) {
+    const result = await this.contentService.findAll(id, req.user);
     sendResponse(res, {
       statusCode: 200,
       success: true,
@@ -50,8 +50,8 @@ export class ContentController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  async findOne(@Param() id: IdDto, @Res() res: Response) {
-    const result = await this.contentService.findOne(id);
+  async findOne(@Param() id: IdDto, @Res() res: Response,  @Req() req: Request) {
+    const result = await this.contentService.findOne(id, req?.user);
     sendResponse(res, {
       statusCode: 200,
       success: true,
