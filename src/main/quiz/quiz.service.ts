@@ -1,9 +1,10 @@
+
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateQuizDto, SubmitAnswerDto } from './quiz.Dto';
 import { DbService } from 'src/db/db.service';
 import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Quiz, QuizInstance, QuizSubmission } from '@prisma/client';
+import { Quiz, QuizSubmission } from '@prisma/client';
 
 @Injectable()
 export class QuizService {
@@ -65,26 +66,36 @@ export class QuizService {
 
   // ------------------------------Start Quiz-------------------------------------
   public async startQuiz({ id }: IdDto): Promise<ApiResponse<Partial<Quiz>[]>> {
-    const quizzes = await this.db.quiz.findMany({
-      where: { quizInstanceId: id },
-      select: {
-        id: true,
-        question: true,
-        options: true,
+    const quizContent = await this.db.content.findUnique({
+      where: { id },
+      include: {
+        quiz: {
+          include: {
+            quiz: {
+              select: {
+                id: true,
+                question: true,
+                options: true,
+                quizInstance:true
+              },
+            }
+          },
+        },
       },
     });
 
-    if (!quizzes.length) {
-      throw new HttpException('No quizzes found for this instance', HttpStatus.NOT_FOUND);
+    if (!quizContent?.quiz || !quizContent?.quiz.quiz.length) {
+      throw new HttpException('No quizzes found!', HttpStatus.NOT_FOUND);
     }
 
     return {
-      data: quizzes,
+      data: quizContent.quiz.quiz,
       success: true,
       message: 'Quizzes retrieved successfully',
       statusCode: HttpStatus.OK,
     };
   }
+
 
   //----------------------------------Submit Quiz-------------------------------------------
   public async submitQuiz(
@@ -94,10 +105,7 @@ export class QuizService {
     const studentExists = await this.db.student.findUnique({
       where: { userId: uid },
     });
-
-    if (!studentExists) {
-      throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
-    }
+    if (!studentExists) throw new HttpException('Student not found!', HttpStatus.NOT_FOUND);
 
     const quizInstance = await this.db.quizInstance.findUnique({
       where: { id: quizInstanceId },

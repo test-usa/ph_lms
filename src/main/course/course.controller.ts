@@ -19,8 +19,6 @@ import {
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
-import { ApiBearerAuth } from '@nestjs/swagger';
-import { PaginationDto } from 'src/common/pagination.dto';
 import { IdDto } from 'src/common/id.dto';
 import { Request } from 'express';
 import pick from 'src/utils/pick';
@@ -42,8 +40,8 @@ export class CourseController {
   // Get single Course
   @Get(':id')
   @UseGuards(AuthGuard)
-  public async getSingleCourse(@Param() id: IdDto) {
-    return await this.courseService.getSingleCourse(id);
+  public async getSingleCourse(@Param() id: IdDto, @Req() req: Request) {
+    return await this.courseService.getSingleCourse(id, req.user);
   }
 
   // Get all Courses
@@ -56,7 +54,7 @@ export class CourseController {
 
    // Update Course
    @Patch(':id')
-   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.INSTRUCTOR, UserRole.SUPER_ADMIN]),)
+   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]),)
    public async updateCourse(@Param() id: IdDto, @Body() data: UpdateCourseDto) {
      return await this.courseService.updateCourse(id, data);
    }
@@ -73,6 +71,13 @@ export class CourseController {
    @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]),)
    public async addInstructorToCourse(@Param() param: IdDto, @Body() body: AddInstructorToCourseDto) {
      return await this.courseService.addInstructorToCourse(param, body);
+   }
+
+   // Remove Instructor from Course
+   @Patch('remove-instructor/:id')
+   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]),)
+   public async removeInstructorFromCourse(@Param() param: IdDto) {
+     return await this.courseService.removeInstructorFromCourse(param);
    }
 
 }

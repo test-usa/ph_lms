@@ -14,7 +14,10 @@ export class AdminService {
     // --------------------------------------------Get Single Admin---------------------------------------
     public async getSingleAdmin(id: IdDto): Promise<ApiResponse<Admin>> {
         const result = await this.db.admin.findUniqueOrThrow({
-            where: id
+            where: {
+                id: id.id, 
+                isDeleted: false
+            }
         });
         return {
             statusCode: 200,
@@ -52,6 +55,7 @@ export class AdminService {
         const result = await this.db.admin.findMany({
             where: {
                 AND: andConditions,
+                isDeleted: false
             },
             skip: skip,
             take: limit,
@@ -70,6 +74,7 @@ export class AdminService {
         const total = await this.db.admin.count({
             where: {
                 AND: andConditions,
+                isDeleted: false
             },
         });
         return {
@@ -92,7 +97,10 @@ export class AdminService {
         token: TUser
     ): Promise<ApiResponse<Admin>> {
         const existingAdmin = await this.db.admin.findUnique({
-            where: id,
+            where: {
+                id: id.id, 
+                isDeleted: false
+            }
         });
 
         if (!existingAdmin) throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
@@ -106,7 +114,6 @@ export class AdminService {
             where: id,
             data: {
                 profilePhoto: payload.profilePhoto,
-                phone: payload.phone,
                 contact: payload.contact,
                 address: payload.address,
                 gender: payload.gender,
@@ -124,17 +131,17 @@ export class AdminService {
     // --------------------------------------------Delete Admin-------------------------------------------------
     public async deleteAdmin(id: IdDto): Promise<ApiResponse<void>> {
         const existingAdmin = await this.db.admin.findUnique({
-            where: id,
+            where: {
+                id: id.id, 
+                isDeleted: false
+            },
             include: { user: true }, 
         });
     
         if (!existingAdmin) {
             throw new HttpException('Admin not found', HttpStatus.NOT_FOUND);
         }
-        if (existingAdmin.isDeleted) {
-            throw new HttpException('Admin is already deleted', HttpStatus.BAD_REQUEST);
-        }
-    
+
         await this.db.$transaction(async (tClient) => {
             // Transaction - 01: Update admin: isDeleted: true
             await tClient.admin.update({

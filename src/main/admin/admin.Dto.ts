@@ -8,10 +8,6 @@ export class UpdateAdminDto {
 
   @IsOptional()
   @IsString()
-  phone?: string;
-
-  @IsOptional()
-  @IsString()
   contact?: string;
 
   @IsOptional()

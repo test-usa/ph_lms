@@ -12,7 +12,7 @@ import { Response, Request } from 'express';
 import { Prisma } from '@prisma/client';
 
 @Catch()
-export class GlobalErrorHandlerFilter<T> implements ExceptionFilter {
+export class GlobalErrorHandlerFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -31,7 +31,7 @@ export class GlobalErrorHandlerFilter<T> implements ExceptionFilter {
     }
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message: string | string[] = 'Internal server error';
+    let message: string = 'Internal server error';
     let errorDetails: string | Record<string, unknown> | undefined = undefined;
 
     // ✅ Handle NestJS HTTP Exceptions
@@ -48,8 +48,8 @@ export class GlobalErrorHandlerFilter<T> implements ExceptionFilter {
         if (typeof res === 'string') {
           message = res;
         } else if (Array.isArray(res.message)) {
-          // Extract validation errors nicely
-          message = res.message.map((msg) => `⚠️ ${msg}`);
+          // Extract validation errors from class validator
+          message = res.message.map((msg) => `${msg}`)[0];
         } else {
           message = res.error || 'Bad Request';
         }

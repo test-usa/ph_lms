@@ -14,7 +14,6 @@ import {
   MarkAssignmentDto,
   SubmitAssignmentDto,
 } from './assignment.dto';
-import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
@@ -27,7 +26,6 @@ export class AssignmentController {
 
   // Create Assignment
   @Post()
-  @ApiBearerAuth()
   @UseGuards(
     AuthGuard,
     RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
@@ -38,16 +36,14 @@ export class AssignmentController {
 
   // Start Assignment
   @Get('start-assignment/:id')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  async startAssignment(@Param() id: IdDto, @Req() req) {
+  async startAssignment(@Param() id: IdDto, @Req() req: Request) {
     const studentId = req.user.id; // Extract student ID from the authenticated user
     return this.assignmentService.startAssignment(id.id, studentId);
   }
 
   // Submit assignment
   @Post('submit-assignment')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
   async submitAssignment(@Body() submitAssignmentDto: SubmitAssignmentDto, @Req() req: Request) {
     const studentId = req.user.id;
@@ -55,15 +51,12 @@ export class AssignmentController {
   }
   // Mark Assignment
   @Post('mark-assignment')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
   async markAssignment(@Body() markAssignmentDto: MarkAssignmentDto) {
     return this.assignmentService.markAssignment(markAssignmentDto);
   }
     // Get All Assignment Submissions (for instructors)
     @Get('submissions')
-    @ApiBearerAuth()
-    @ApiQuery({ name: 'assignmentId', required: false, type: String }) // Optional query parameter
     @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
     async getAllSubmissions(@Query('assignmentId') assignmentId?: string) {
       return this.assignmentService.getAllSubmissions(assignmentId);

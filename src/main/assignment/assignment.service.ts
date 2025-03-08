@@ -2,11 +2,11 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { CreateAssignmentDto, MarkAssignmentDto, SubmitAssignmentDto } from './assignment.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Assignment, AssignmentSubmission } from '@prisma/client';
+import { Assignment, AssignmentSubmission, SubmissionStatus } from '@prisma/client';
 
 @Injectable()
 export class AssignmentService {
-  constructor(private readonly db: DbService) {}
+  constructor(private readonly db: DbService) { }
 
   //----------------------------------------Is Content Exists--------------------------------------------
   private async isContentExist(id: string) {
@@ -54,12 +54,12 @@ export class AssignmentService {
     if (userId) {
       // Find student by userId
       student = await this.db.student.findUnique({
-        where: { userId },
+        where: { userId, isDeleted: false },
       });
     } else if (studentId) {
       // Find student by studentId
       student = await this.db.student.findUnique({
-        where: { id: studentId },
+        where: { id: studentId, isDeleted: false },
       });
     }
 
@@ -83,6 +83,7 @@ export class AssignmentService {
     const newAssignment = await this.db.assignment.create({
       data: {
         title,
+        deadline: new Date(), // Default value (to be updated by instructor)
         totalMark,
         contentId,
       },
@@ -98,39 +99,41 @@ export class AssignmentService {
 
   //----------------------------------------Start Assignment--------------------------------------------
   public async startAssignment(
-    assignmentId: string,
+    contentId: string,
     userId: string
   ): Promise<ApiResponse<Assignment | AssignmentSubmission>> {
     // Find the student ID associated with the user
     const student = await this.db.student.findUnique({
-      where: { userId },
+      where: { userId, isDeleted: false },
       select: { id: true }, // Only get the student ID
     });
-  
+
     if (!student) {
       throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
     }
-  
+
     // Find the assignment
-    const assignment = await this.db.assignment.findUnique({
-      where: { id: assignmentId },
-      include: { content: true }, // Include related content
+    const assignmentContent = await this.db.content.findUnique({
+      where: { id: contentId },
+      include: {
+        assignment: true
+      },
     });
-  
-    if (!assignment) {
+
+    if (!assignmentContent || !assignmentContent.assignment) {
       throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
     }
-  
+
     // Find the student's submission (if any)
     const submission = await this.db.assignmentSubmission.findFirst({
-      where: { assignmentId, studentId: student.id },
+      where: { assignmentId: assignmentContent?.assignment?.id, studentId: student.id },
       include: {
         assignment: true,
         student: true, // Include student details if needed
       },
     });
 
-  
+
     if (submission) {
       return {
         data: submission,
@@ -139,9 +142,9 @@ export class AssignmentService {
         statusCode: HttpStatus.OK,
       };
     }
-  
+
     return {
-      data: assignment,
+      data: assignmentContent.assignment,
       success: true,
       message: 'Assignment details retrieved successfully',
       statusCode: HttpStatus.OK,
@@ -154,11 +157,10 @@ export class AssignmentService {
     studentId: string,
   ): Promise<ApiResponse<AssignmentSubmission>> {
     // Check if the assignment exists
-    await this.isAssignmentExist(assignmentId);
+    const assignment = await this.isAssignmentExist(assignmentId);
 
     // Check if the student exists
-    const student = await this.isStudentExist({ userId: studentId }); // Pass an object
-
+    const student = await this.isStudentExist({ userId: studentId });
 
     // Check if the student has already submitted this assignment
     const existingSubmission = await this.db.assignmentSubmission.findFirst({
@@ -172,13 +174,17 @@ export class AssignmentService {
       );
     }
 
-    // Create the assignment submission
+    const submissionTime = new Date();
+    const submissionStatus =
+      submissionTime > assignment.deadline ? SubmissionStatus.LATE : SubmissionStatus.ONTIME;
+
     const newSubmission = await this.db.assignmentSubmission.create({
       data: {
         submission,
-        acquiredMark: 0, // Default value (to be updated by instructor)
+        submissionTime,
+        submissionStatus,
+        acquiredMark: 0,
         isSubmitted: true,
-        isReviewed: false, // Default value
         assignmentId,
         studentId: student.id,
       },
@@ -191,6 +197,7 @@ export class AssignmentService {
       statusCode: HttpStatus.CREATED,
     };
   }
+
 
   //----------------------------------------Mark Assignment--------------------------------------------
   public async markAssignment({
@@ -230,7 +237,7 @@ export class AssignmentService {
       where: { id: submission.id },
       data: {
         acquiredMark,
-        isReviewed: true, // Mark as reviewed
+        isReviewed: true,
       },
     });
 

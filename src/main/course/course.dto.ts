@@ -19,8 +19,7 @@ export class UpdateCourseDto {
   @IsOptional() @IsNumber()
   price?: number;
 
-  @IsString()
-  @IsOptional()
+  @IsString() @IsOptional()
   thumbnail?: string
 }
 

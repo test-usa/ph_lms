@@ -48,7 +48,6 @@ export class AuthService {
         email: user.email,
         role: user.role,
         id: user.id,
-        name: user.name,
       }
     };
   }
@@ -69,11 +68,11 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await this.db.user.create({
       data: {
+        name,
         email,
         password: hashedPassword,
         role: UserRole.STUDENT,
         status: Status.ACTIVE,
-        name
       },
     });
 
@@ -88,7 +87,7 @@ export class AuthService {
       statusCode: 201,
       success: true,
       message: 'User registered successfully',
-      data: { name: newUser.name, email: newUser.email, role: newUser.role },
+      data: { name: name, email: newUser.email, role: newUser.role },
     };
   }
 
