@@ -65,9 +65,10 @@ export class ContentController {
   async update(
     @Param('id') id: string,
     @Body() updateContentDto: UpdateContentDto,
+    @Req() req: Request,
     @Res() res: Response
   ) {
-    const result = await this.contentService.updateContent(id, updateContentDto);
+    const result = await this.contentService.updateContent(id,req.user, updateContentDto);
     sendResponse(res, {
       statusCode: 200,
       success: true,
