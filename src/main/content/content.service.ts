@@ -107,7 +107,7 @@ export class ContentService {
   }
 
   // Update Content
-  async updateContent(id: string, dto: UpdateContentDto): Promise<Content> {
+  async updateContent(id: string, user:any,dto: UpdateContentDto): Promise<Content> {
     const contentExists = await this.prisma.content.findUnique({
       where: { id },
       include: {
@@ -127,7 +127,7 @@ export class ContentService {
       },
     });
     const instructor = await this.prisma.instructor.findUniqueOrThrow({
-      where: { userId: id }
+      where: { userId:user.id }
     })
 
     if (!contentExists) throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
@@ -178,7 +178,7 @@ export class ContentService {
     });
 
     const instructor = await this.prisma.instructor.findUniqueOrThrow({
-      where: { userId: id }
+      where: { userId: user.id }
     })
 
     if (!content) throw new HttpException('Content not found', HttpStatus.NOT_FOUND);

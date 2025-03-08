@@ -85,7 +85,6 @@ export class QuizService {
                 options: true,
                 quizInstance: true
               },
-              
             }
           },
         },
