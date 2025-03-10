@@ -75,6 +75,14 @@ export class ModuleService {
               select: {
                 quiz: true
               }
+            },
+            assignment:{
+              select:{
+                contentId:true,
+                  deadline:true,
+                  title:true,
+                  totalMark:true
+              }
             }
           },
         },
