@@ -24,7 +24,7 @@ export class ModuleService {
     });
     const instructor = await this.prisma.instructor.findUniqueOrThrow({
       where: { userId: id }
-    })
+    });
 
     if (!existingCourse) throw new HttpException('Course not found', 404);
     if (!existingCourse?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
@@ -46,21 +46,20 @@ export class ModuleService {
   }
 
   //----------------------------------------Get All Modules by Course ID---------------------------------
-  async findAll(params: any, user:TUser): Promise<ApiResponse<any>> {
+  async findAll(params: any, user: TUser): Promise<ApiResponse<any>> {
     if (user.role === 'INSTRUCTOR') {
       const instructor = await this.prisma.instructor.findUnique({
         where: { courseId: params.courseId }
-      })
-      if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus
-        .FORBIDDEN)
+      });
+      if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus.FORBIDDEN);
     }
     if (user.role === 'STUDENT') {
       const student = await this.prisma.student.findFirst({
-        where: { courseId: params.courseId }
-      })
-      if (!student) throw new HttpException('You are not authorized to view this course', HttpStatus
-        .FORBIDDEN)
+        where: { userId: user.id }
+      });
+      if (!student) throw new HttpException('You are not authorized to view this course', HttpStatus.FORBIDDEN);
     }
+  
     const data = await this.prisma.module.findMany({
       where: { courseId: params.courseId },
       include: {
@@ -73,22 +72,55 @@ export class ModuleService {
             contentType: true,
             quiz: {
               select: {
-                quiz: true
+                quiz: true,
+                quizSubmission: true
               }
             },
-            assignment:{
-              select:{
-                contentId:true,
-                  deadline:true,
-                  title:true,
-                  totalMark:true
+            assignment: {
+              select: {
+                contentId: true,
+                deadline: true,
+                title: true,
+                totalMark: true,
+                assignmentSubmission: true
               }
             }
           },
         },
       },
     });
-
+  
+    // Filter assignment and quiz submissions if the user is a student
+    if (user.role === 'STUDENT') {
+      const student = await this.prisma.student.findFirst({
+        where: { userId: user.id }
+      });
+  
+      if (student) {
+        data.forEach(module => {
+          module.content.forEach(content => {
+            // Filter assignment submissions
+            if (content.assignment) {
+              const assignmentSubmission = content.assignment.assignmentSubmission.find(
+                submission => submission.studentId === student.id
+              );
+              (content.assignment as any).studentAssignmentSubmission = assignmentSubmission || null;
+              delete (content.assignment as any).assignmentSubmission;
+            }
+  
+            // Filter quiz submissions
+            if (content.quiz) {
+              const quizSubmission = content.quiz.quizSubmission.find(
+                submission => submission.studentId === student.id
+              );
+              (content.quiz as any).studentQuizSubmission = quizSubmission || null;
+              delete (content.quiz as any).quizSubmission;
+            }
+          });
+        });
+      }
+    }
+  
     return {
       statusCode: 200,
       success: true,
@@ -96,7 +128,6 @@ export class ModuleService {
       data,
     };
   }
-
   //----------------------------------------Get Module by ID--------------------------------------------
   async findOne(params: IdDto, user: TUser): Promise<ApiResponse<Module>> {
     const module = await this.prisma.module.findUnique({
@@ -110,16 +141,14 @@ export class ModuleService {
     if (user.role === 'INSTRUCTOR') {
       const instructor = await this.prisma.instructor.findUnique({
         where: { courseId: module.courseId }
-      })
-      if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus
-        .FORBIDDEN)
+      });
+      if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus.FORBIDDEN);
     }
     if (user.role === 'STUDENT') {
       const student = await this.prisma.student.findFirst({
         where: { courseId: module.courseId }
-      })
-      if (!student) throw new HttpException('You are not authorized to view this course', HttpStatus
-        .FORBIDDEN)
+      });
+      if (!student) throw new HttpException('You are not authorized to view this course', HttpStatus.FORBIDDEN);
     }
 
     return {
@@ -148,7 +177,7 @@ export class ModuleService {
     });
     const instructor = await this.prisma.instructor.findUniqueOrThrow({
       where: { userId: id }
-    })
+    });
 
     if (!existingModule) throw new HttpException('Module not found', 404);
     if (!existingModule?.course?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
@@ -186,7 +215,7 @@ export class ModuleService {
 
     const instructor = await this.prisma.instructor.findUniqueOrThrow({
       where: { userId: user?.id }
-    })
+    });
 
     if (!existingModule) throw new HttpException('Module not found', 404);
     if (!existingModule?.course?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
@@ -225,14 +254,13 @@ export class ModuleService {
 
       const instructor = await this.prisma.instructor.findUniqueOrThrow({
         where: { userId: user?.id }
-      })
+      });
 
       if (!module) throw new HttpException('Module not found', 404);
       if (user?.role == UserRole.INSTRUCTOR) {
         if (!module?.course?.instructor) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
         if (module?.course?.instructor?.id !== instructor.id) throw new HttpException('You are not authorized for this module!', HttpStatus.BAD_GATEWAY);
       }
-
 
       for (const content of module.content) {
         if (content.quiz) {

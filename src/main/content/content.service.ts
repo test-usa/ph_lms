@@ -78,6 +78,33 @@ export class ContentService {
     };
   }
 
+  async searchContent(courseId: string, contentName?: string): Promise<Content[]> {
+    const contents = await this.prisma.content.findMany({
+      where: {
+        module: {
+          courseId: courseId, // Filter by courseId in the related module
+        },
+        title: {
+          contains: contentName || '', // Case-insensitive search for contentName
+          mode: 'insensitive',
+        },
+      },
+      include: {
+        module: {
+          include: {
+            course: {
+              select: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  
+    return contents;
+  }
   // Find one Content
   async findOne({ id }: IdDto, user: TUser): Promise<Content> {
     const content = await this.prisma.content.findUnique({

@@ -10,6 +10,7 @@ import {
   Res,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ContentService } from './content.service';
@@ -48,7 +49,7 @@ export class ContentController {
     });
   }
 
-  @Get(':id')
+  @Get('/find-one/:id')
   @UseGuards(AuthGuard)
   async findOne(@Param() id: IdDto, @Res() res: Response,  @Req() req: Request) {
     const result = await this.contentService.findOne(id, req?.user);
@@ -59,6 +60,27 @@ export class ContentController {
       data: result,
     });
   }
+  @Get('search')
+  @UseGuards(AuthGuard)
+  async searchMany(
+    @Query('courseId') courseId: string, // Get courseId from query parameters
+    @Query('contentName') contentName: string, // Get contentName from query parameters
+    @Res() res: Response,
+    @Req() req: Request
+  ) {
+
+      const result = await this.contentService.searchContent(courseId, contentName);
+      
+      sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: 'Content retrieved successfully',
+        data: result,
+      });
+
+ 
+  }
+  
 
   @Patch(':id')
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))

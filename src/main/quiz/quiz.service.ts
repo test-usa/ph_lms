@@ -96,7 +96,8 @@ export class QuizService {
     }
     
     const existingUser = await this.db.student.findUnique({
-      where: { userId: user.id, courseId: quizContent.module.courseId },
+      // courseId: quizContent.module.courseId 
+      where: { userId: user.id, },
     });
     if (!existingUser)  throw new HttpException('You are not authorized to submit this quiz!', HttpStatus.FORBIDDEN);
 
@@ -113,49 +114,68 @@ export class QuizService {
     { answerSheet, contentId }: SubmitAnswerDto,
     uid: string,
   ): Promise<ApiResponse<QuizSubmission>> {
-    
+    // Fetch the content and its associated quiz instance
     const content = await this.db.content.findUnique({
       where: { id: contentId },
-      include: { quiz: true , module: true },
+      include: { 
+        quiz: true, 
+        module: true 
+      },
     });
-    if (!content)  throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
-
+  
+    if (!content) {
+      throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
+    }
+  
+    // Check if the student is enrolled in the course
     const studentExists = await this.db.student.findUnique({
-      where: { userId: uid, courseId: content.module.courseId },
-    });
-    if (!studentExists) throw new HttpException('Student not found!', HttpStatus.NOT_FOUND);
+      where: { 
+        userId: uid, 
 
+      },
+      //         courseId: content.module.courseId 
+    });
+  
+    if (!studentExists) {
+      throw new HttpException('Student not found or not enrolled in the course!', HttpStatus.NOT_FOUND);
+    }
+  
+    // Fetch the quiz instance using contentId
     const quizInstance = await this.db.quizInstance.findUnique({
-      where: { id: content?.quiz?.id },
+      where: { contentId },
       include: { quiz: true },
     });
-
+  
     if (!quizInstance) {
       throw new HttpException('Quiz instance not found', HttpStatus.NOT_FOUND);
     }
-
+  
+    // Check if the student has already submitted the quiz
     const existingSubmission = await this.db.quizSubmission.findFirst({
-      where: { quizInstanceId: quizInstance.id, studentId: studentExists.id },
+      where: { 
+        quizInstanceId: quizInstance.id, 
+        studentId: studentExists.id 
+      },
     });
-
+  
     if (existingSubmission) {
       throw new HttpException('Quiz already submitted', HttpStatus.BAD_REQUEST);
     }
-
+  
+    // Calculate correct and incorrect answers
     let correctAnswers = 0;
     let incorrectAnswers = 0;
-
+  
     for (const quiz of quizInstance.quiz) {
       const userAnswer = answerSheet.find((ans) => ans.quizId === quiz.id);
-      if (userAnswer) {
-        if (userAnswer.answer === quiz.correctAnswer) {
-          correctAnswers++;
-        } else {
-          incorrectAnswers++;
-        }
+      if (userAnswer && userAnswer.answer === quiz.correctAnswer) {
+        correctAnswers++;
+      } else {
+        incorrectAnswers++;
       }
     }
-
+  
+    // Create the quiz submission
     const quizSubmission = await this.db.quizSubmission.create({
       data: {
         quizInstanceId: quizInstance.id,
@@ -165,7 +185,7 @@ export class QuizService {
         isCompleted: true,
       },
     });
-
+  
     return {
       data: quizSubmission,
       success: true,
