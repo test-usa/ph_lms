@@ -175,7 +175,7 @@ export class StudentService {
 
 
     //----------------------------------------Set Progress--------------------------------------------------
-    public async setProgress(courseId: string, email: string, contentId: string): Promise<ApiResponse<{ watchedCourses: string[]; percentage: number; }>> {
+    public async setProgress(courseId: string, email: string, contentId: string): Promise<ApiResponse<{ watchedContents: string[]; percentage: number; }>> {
         // Check if student exists and currently enrolled in the requested course or not
         const user = await this.db.user.findUnique({
             where: { email, status: Status.ACTIVE }
@@ -208,29 +208,25 @@ export class StudentService {
         const existingProgress = await this.db.progress.findUnique({
             where: { studentId_courseId: { studentId: student.id, courseId } },
         });
-        if (!existingProgress && contentIds[0] !== contentId) {
-            throw new HttpException('This content is locked. Start from the first content.', 403);
-        }
+        if (!existingProgress && contentIds[0] !== contentId)  throw new HttpException('This content is locked. Start from the first content.', 403);
+
         const prevIndex = contentIds.findIndex(content => content === existingProgress?.contentId);
-        if (existingProgress && index - 1 > prevIndex) {
-            throw new HttpException('This content is locked. Please complete previous contents first.', 403);
-        }
-
+        if (existingProgress && index - 1 > prevIndex) throw new HttpException('This content is locked. Please complete previous contents first.', 403);
+        if (existingProgress && index - 1 !== prevIndex) throw new HttpException('Already watched!', 403);
+        
         const percentage = Math.round(((index + 1) / contentIds.length) * 100);
-
         await this.db.progress.upsert({
             where: { studentId_courseId: { studentId: student.id, courseId } },
             update: { percentage, contentId },
             create: { studentId: student.id, courseId, percentage, contentId },
         });
-        const watchedCourses = contentIds.slice(0, index + 1);
-
+        const watchedContents = contentIds.slice(0, index + 1);
         return {
             success: true,
             message: 'Progress calculated successfully.',
             statusCode: HttpStatus.OK,
             data: {
-                watchedCourses,
+                watchedContents,
                 percentage
             },
         };
@@ -272,14 +268,32 @@ export class StudentService {
             },
             select: {
                 percentage: true,
+                contentId: true,
             },
         });
+
+        // Extract watched contents
+        const modules = await this.db.module.findMany({
+            where: { courseId },
+            include: {
+                content: {
+                    orderBy: { createdAt: 'asc' },
+                    select: { id: true },
+                },
+            },
+        });
+        const contentIds = modules.flatMap(module => module.content.map(content => content.id));
+        const index = contentIds.findIndex(content => content === courseProgress?.contentId);
+        const watchedContents = contentIds.slice(0, index + 1);
 
         return {
             statusCode: 200,
             success: true,
             message: 'Progress retrieved successfully',
-            data:  courseProgress?.percentage || 0
+            data:  {
+                watchedContents,
+                percentage: courseProgress?.percentage || 0,
+            }
         };
     }
 
