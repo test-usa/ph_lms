@@ -7,6 +7,23 @@ import { ApiResponse } from 'src/utils/sendResponse';
 import { Content, UserRole } from '@prisma/client';
 import { TUser } from 'src/interface/token.type';
 
+
+interface TContent {
+  id: string;
+  type: string; // VIDEO, QUIZ, DESCRIPTION, ASSIGNMENT
+  name: string;
+  url: string | null;
+  description: string | null;
+  quiz?: any; // Adjust this based on your quiz structure
+  assignment?: {
+    id: string;
+    title: string;
+    totalMark: number;
+    deadline: Date;
+    submissions?: any; // Adjust this based on your submission structure
+  } | null;
+}
+
 @Injectable()
 export class ContentService {
   constructor(private prisma: DbService) { }
@@ -89,15 +106,28 @@ export class ContentService {
           mode: 'insensitive',
         },
       },
-      include: {
-        module: {
-          include: {
-            course: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
+      select: {
+        id: true,
+        title: true,
+        video: true,
+        description: true,
+        contentType: true,
+        createdAt: true,
+        updatedAt: true,
+        moduleId: true,
+        quiz: {
+          select: {
+            quiz: true,
+            quizSubmission: true,
+          },
+        },
+        assignment: {
+          select: {
+            id: true,
+            title: true,
+            totalMark: true,
+            deadline: true,
+            assignmentSubmission: true,
           },
         },
       },
