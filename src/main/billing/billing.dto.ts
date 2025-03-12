@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ArrayNotEmpty, ArrayUnique, IsArray, IsNotEmpty, IsNumber, IsString, IsUUID, Min } from 'class-validator';
+import { ArrayNotEmpty, ArrayUnique, IsArray, IsEmail, IsNotEmpty, IsString, IsUUID, Min } from 'class-validator';
 
 export class CreatePaymentIntentDto {
   @ApiProperty({
@@ -19,7 +19,16 @@ export class CreatePaymentIntentDto {
   @ArrayUnique({ message: 'Course IDs must be unique.' })
   @IsUUID('4', { each: true, message: 'Each course ID must be a valid UUID (version 4).' })
   courseIds: string[];
+
+  @ApiProperty({
+    example: 'user@example.com',
+    description: 'Customer email address for the payment',
+  })
+  @IsString()
+  @IsEmail({}, { message: 'Invalid email format.' })
+  email: string;
 }
+
 
 
 export class UpdatePaymentStatusDto {

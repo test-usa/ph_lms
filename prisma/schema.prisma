@@ -177,9 +177,9 @@ model Blog {
 model Payment {
   id        String        @id @default(uuid())
   amount    Float
-  studentId String
+  studentId String @unique
   status    PaymentStatus @default(PENDING)
-  intendKey String        @unique
+  intendKey String?        @unique
   student   Student       @relation(fields: [studentId], references: [id])
   course    Course[]      @relation("CourseToPayment")
 }
