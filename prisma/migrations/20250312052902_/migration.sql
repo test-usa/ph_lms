@@ -10,11 +10,17 @@ CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE');
 -- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'CANCELLED');
 
+-- CreateEnum
+CREATE TYPE "ContentType" AS ENUM ('VIDEO', 'DESCRIPTION', 'QUIZ', 'ASSIGNMENT');
+
+-- CreateEnum
+CREATE TYPE "SubmissionStatus" AS ENUM ('LATE', 'ONTIME');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" "UserRole" NOT NULL DEFAULT 'STUDENT',
     "status" "Status" NOT NULL DEFAULT 'ACTIVE',
@@ -30,7 +36,6 @@ CREATE TABLE "Student" (
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "profilePhoto" TEXT,
-    "phone" TEXT,
     "contact" TEXT,
     "address" TEXT,
     "gender" "Gender",
@@ -49,7 +54,6 @@ CREATE TABLE "Instructor" (
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "profilePhoto" TEXT,
-    "phone" TEXT,
     "contact" TEXT,
     "address" TEXT,
     "gender" "Gender",
@@ -68,7 +72,6 @@ CREATE TABLE "Admin" (
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "profilePhoto" TEXT,
-    "phone" TEXT,
     "contact" TEXT,
     "address" TEXT,
     "gender" "Gender",
@@ -84,8 +87,10 @@ CREATE TABLE "Admin" (
 CREATE TABLE "Course" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "thumbnail" TEXT NOT NULL,
     "price" DOUBLE PRECISION NOT NULL,
-    "isPublished" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Course_pkey" PRIMARY KEY ("id")
 );
@@ -94,6 +99,8 @@ CREATE TABLE "Course" (
 CREATE TABLE "Module" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "courseId" TEXT NOT NULL,
 
     CONSTRAINT "Module_pkey" PRIMARY KEY ("id")
@@ -103,8 +110,11 @@ CREATE TABLE "Module" (
 CREATE TABLE "Content" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "contentType" "ContentType" NOT NULL,
     "video" TEXT,
     "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "moduleId" TEXT NOT NULL,
 
     CONSTRAINT "Content_pkey" PRIMARY KEY ("id")
@@ -116,6 +126,8 @@ CREATE TABLE "Quiz" (
     "question" TEXT NOT NULL,
     "options" TEXT[],
     "correctAnswer" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "quizInstanceId" TEXT NOT NULL,
 
     CONSTRAINT "Quiz_pkey" PRIMARY KEY ("id")
@@ -125,6 +137,8 @@ CREATE TABLE "Quiz" (
 CREATE TABLE "QuizInstance" (
     "id" TEXT NOT NULL,
     "totalMark" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "contentId" TEXT NOT NULL,
 
     CONSTRAINT "QuizInstance_pkey" PRIMARY KEY ("id")
@@ -148,7 +162,10 @@ CREATE TABLE "QuizSubmission" (
 CREATE TABLE "Assignment" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
+    "deadline" TIMESTAMP(3) NOT NULL,
     "totalMark" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "contentId" TEXT NOT NULL,
 
     CONSTRAINT "Assignment_pkey" PRIMARY KEY ("id")
@@ -157,6 +174,8 @@ CREATE TABLE "Assignment" (
 -- CreateTable
 CREATE TABLE "AssignmentSubmission" (
     "id" TEXT NOT NULL,
+    "submissionTime" TIMESTAMP(3) NOT NULL,
+    "submissionStatus" "SubmissionStatus" NOT NULL,
     "submission" TEXT NOT NULL,
     "acquiredMark" INTEGER NOT NULL DEFAULT 0,
     "isSubmitted" BOOLEAN NOT NULL DEFAULT false,
@@ -175,8 +194,7 @@ CREATE TABLE "Progress" (
     "percentage" INTEGER NOT NULL DEFAULT 0,
     "studentId" TEXT NOT NULL,
     "courseId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "contentId" TEXT NOT NULL,
 
     CONSTRAINT "Progress_pkey" PRIMARY KEY ("id")
 );
@@ -260,6 +278,9 @@ CREATE UNIQUE INDEX "Assignment_contentId_key" ON "Assignment"("contentId");
 CREATE UNIQUE INDEX "AssignmentSubmission_assignmentId_studentId_key" ON "AssignmentSubmission"("assignmentId", "studentId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Progress_contentId_key" ON "Progress"("contentId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Progress_studentId_courseId_key" ON "Progress"("studentId", "courseId");
 
 -- CreateIndex
@@ -318,6 +339,9 @@ ALTER TABLE "Progress" ADD CONSTRAINT "Progress_studentId_fkey" FOREIGN KEY ("st
 
 -- AddForeignKey
 ALTER TABLE "Progress" ADD CONSTRAINT "Progress_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Progress" ADD CONSTRAINT "Progress_contentId_fkey" FOREIGN KEY ("contentId") REFERENCES "Content"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Blog" ADD CONSTRAINT "Blog_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "Instructor"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

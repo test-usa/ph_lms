@@ -11,7 +11,6 @@ import {
 import { Request, Response } from 'express';
 import sendResponse from 'src/utils/sendResponse';
 import { UserService } from './user.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { UserRole } from '@prisma/client';
@@ -27,7 +26,6 @@ export class UserController {
 
   // Get me
   @Get('me')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard)
   async getUser(@Req() req: Request) {
     return this.userService.getMe(req.user);
@@ -35,7 +33,6 @@ export class UserController {
 
   // Get All users
   @Get()
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   async getAllUser(@Req() req: Request, @Res() res: Response) {
     const filters = pick(req.query, ['email', 'searchTerm', 'role', 'status']);
@@ -51,7 +48,6 @@ export class UserController {
 
   // Change Profile status
   @Patch(':id/status')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   async changeProfileStatus(
     @Body() changeProfileStatusDto: ChangeProfileStatusDto,
@@ -63,7 +59,6 @@ export class UserController {
 
   // Create Instructor
   @Post('instructor/create')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
   async createInstructor(@Body() createAnUserDto: CreateAnUserDto) {
     return this.userService.createInstructor(createAnUserDto);
@@ -71,7 +66,6 @@ export class UserController {
 
   // Create Admin
   @Post('admin/create')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN]))
   async createAdmin(@Body() createAnUserDto: CreateAnUserDto) {
     return this.userService.createAdmin(createAnUserDto);

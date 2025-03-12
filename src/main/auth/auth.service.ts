@@ -1,7 +1,7 @@
 import {
   Injectable,
   HttpException,
-  ConflictException,
+  HttpStatus,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -48,7 +48,6 @@ export class AuthService {
         email: user.email,
         role: user.role,
         id: user.id,
-        name: user.name,
       }
     };
   }
@@ -64,16 +63,16 @@ export class AuthService {
       where: { email },
     });
     if (existingUser) {
-      throw new ConflictException('Email already in use');
+      throw new HttpException('Email already in use', HttpStatus.BAD_REQUEST);
     }
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = await this.db.user.create({
       data: {
+        name,
         email,
         password: hashedPassword,
         role: UserRole.STUDENT,
         status: Status.ACTIVE,
-        name
       },
     });
 
@@ -88,7 +87,7 @@ export class AuthService {
       statusCode: 201,
       success: true,
       message: 'User registered successfully',
-      data: { name: newUser.name, email: newUser.email, role: newUser.role },
+      data: { name: name, email: newUser.email, role: newUser.role },
     };
   }
 
@@ -118,12 +117,11 @@ export class AuthService {
     const user = await this.db.user.findUnique({
       where: { email, status: Status.ACTIVE },
     });
-
     if (!user) throw new HttpException('User not found', 401);
 
     const token = this.jwtService.sign(
       { email: user.email, role: user.role },
-      { secret: this.configService.get('JWT_SECRET') },
+      { secret: this.configService.get('JWT_SECRET')},
     );
     const resetPassLink = `${this.configService.get('RESET_PASS_LINK')}?userId=${user.id}&token=${token}`;
     await this.mailerService.sendMail(

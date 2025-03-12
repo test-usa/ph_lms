@@ -1,28 +1,34 @@
+// content.controller.ts
 import {
   Controller,
   Get,
   Post,
-  Body,
   Patch,
   Param,
+  Body,
   Delete,
   Res,
+  UseGuards,
+  Req,
+  Query,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ContentService } from './content.service';
-import { CreateContentDto } from './create-content.dto';
-import { UpdateContentDto } from './update-content.dto';
+import { CreateContentDto, UpdateContentDto } from './create-content.dto';
 import { IdDto } from 'src/common/id.dto';
 import sendResponse from 'src/utils/sendResponse';
+import { AuthGuard } from 'src/guard/auth.guard';
+import { RoleGuardWith } from 'src/utils/RoleGuardWith';
+import { UserRole } from '@prisma/client';
 
 @Controller('content')
 export class ContentController {
-  constructor(private readonly contentService: ContentService) { }
+  constructor(private readonly contentService: ContentService) {}
 
-  @Post()
-  async createContent(@Body() createContentDto: CreateContentDto, @Res() res: Response) {
-    console.log(createContentDto)
-    const result = await this.contentService.createContent(createContentDto);
+  @Post('create-content')
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  async create(@Body() createContentDto: CreateContentDto, @Res() res: Response, @Req() req: Request) {
+    const result = await this.contentService.createContent(createContentDto, req.user.id);
     sendResponse(res, {
       statusCode: 201,
       success: true,
@@ -31,51 +37,77 @@ export class ContentController {
     });
   }
 
-  // @Get('moduleId/:id')
-  // async findAll(@Param() id: IdDto, @Res() res:Response) {
-  //   const result = await this.contentService.findAll(id);
-  //   sendResponse(res, {
-  //     statusCode: 200,
-  //     success: true,
-  //     message: 'Content retrieved successfully',
-  //     data: result,
-  //   });
-  // }
+  @Get('moduleId/:id')
+  @UseGuards(AuthGuard)
+  async findAll(@Param() id: IdDto, @Res() res: Response, @Req() req: Request) {
+    const result = await this.contentService.findAll(id, req.user);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Content retrieved successfully',
+      data: result,
+    });
+  }
 
-  // @Get(':id')
-  // @ApiOperation({ summary: 'Get content by ID' })
-  // @ApiResponse({ status: 200, description: 'Content retrieved successfully' })
-  // async findOne(@Param() id: IdDto, @Res() res: Response) {
-  //   const result = await this.contentService.findOne(id);
-  //   sendResponse(res, {
-  //     statusCode: 200,
-  //     success: true,
-  //     message: 'Content retrieved successfully',
-  //     data: result,
-  //   });
-  // }
+  @Get('/find-one/:id')
+  @UseGuards(AuthGuard)
+  async findOne(@Param() id: IdDto, @Res() res: Response,  @Req() req: Request) {
+    const result = await this.contentService.findOne(id, req?.user);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Content retrieved successfully',
+      data: result,
+    });
+  }
+  @Get('search')
+  @UseGuards(AuthGuard)
+  async searchMany(
+    @Query('courseId') courseId: string, // Get courseId from query parameters
+    @Query('contentName') contentName: string, // Get contentName from query parameters
+    @Res() res: Response,
+    @Req() req: Request
+  ) {
 
-  // @Patch(':id')
-  // @ApiOperation({ summary: 'Update content by ID' })
-  // async update(@Param('id') id: string, @Body() updateContentDto: UpdateContentDto, @Res() res: Response) {
-  //   const result = await this.contentService.update(id, updateContentDto);
-  //   sendResponse(res, {
-  //     statusCode: 200,
-  //     success: true,
-  //     message: 'Content updated successfully',
-  //     data: result,
-  //   });
-  // }
+      const result = await this.contentService.searchContent(courseId, contentName);
+      
+      sendResponse(res, {
+        statusCode: 200,
+        success: true,
+        message: 'Content retrieved successfully',
+        data: result,
+      });
 
-  // @Delete(':id')
-  // @ApiOperation({ summary: 'Delete content by ID' })
-  // async remove(@Param('id') id: string, @Res() res: Response) {
-  //   await this.contentService.remove(id);
-  //   sendResponse(res, {
-  //     statusCode: 200,
-  //     success: true,
-  //     message: 'Content deleted successfully',
-  //     data: null,
-  //   });
-  // }
+ 
+  }
+  
+
+  @Patch(':id')
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  async update(
+    @Param('id') id: string,
+    @Body() updateContentDto: UpdateContentDto,
+    @Req() req: Request,
+    @Res() res: Response
+  ) {
+    const result = await this.contentService.updateContent(id,req.user, updateContentDto);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Content updated successfully',
+      data: result,
+    });
+  }
+
+  @Delete('delete-content/:id')
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  async remove(@Param('id') id: string, @Res() res: Response, @Req() req: Request) {
+    const result = await this.contentService.remove(id, req.user);
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: 'Content and associated data deleted successfully',
+      data: result,
+    });
+  }
 }

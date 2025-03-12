@@ -1,69 +1,48 @@
 import {
   Controller,
   Post,
-  Patch,
   Delete,
   Param,
   Body,
   UseGuards,
   Get,
-  Request,
   Req,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { QuizService } from './quiz.service';
-import { CreateQuizDto, SubmitAnswerDto, UpdateQuizDto } from './quiz.Dto';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { CreateQuizDto, SubmitAnswerDto } from './quiz.Dto';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
 import { IdDto } from 'src/common/id.dto';
+import { Request } from 'express';
 
 @Controller('quiz')
 export class QuizController {
-  constructor(private readonly quizService: QuizService) { }
-
+  constructor(private readonly quizService: QuizService) {}
 
   @Post()
-  @ApiBearerAuth()
-  @UseGuards(
-    AuthGuard,
-    RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
-  )
-  async createQuiz(@Body() createQuizDto: CreateQuizDto) {
-    return this.quizService.createQuiz(createQuizDto);
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR]))
+  async createQuiz(@Body() createQuizDto: CreateQuizDto, @Req() req: Request) {
+      return await this.quizService.createQuiz(createQuizDto, req?.user);
   }
 
   @Get('start-quiz/:id')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
-  async startQuiz(@Param() id: IdDto) {
-    return this.quizService.startQuiz(id);
+  async startQuiz(@Param() id: IdDto, @Req() req: Request) {
+      return await this.quizService.startQuiz(id, req.user);
   }
 
   @Post('submit-quiz')
-  @ApiBearerAuth()
   @UseGuards(AuthGuard, RoleGuardWith([UserRole.STUDENT]))
   async submitQuiz(@Body() answer: SubmitAnswerDto, @Req() req) {
-    return this.quizService.submitQuiz(answer, req.user.id);
+      return await this.quizService.submitQuiz(answer, req.user.id);
   }
 
-  // @Patch('update')
-  // @UseGuards(
-  //   AuthGuard,
-  //   RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
-  // )
-  // async updateQuiz(@Body() updateQuizDto: UpdateQuizDto) {
-  //   return this.quizService.updateQuiz(updateQuizDto);
-  // }
-
-
-  // @Delete('delete/:id')
-  // @ApiBearerAuth()
-  // @UseGuards(
-  //   AuthGuard,
-  //   RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]),
-  // )
-  // async deleteQuiz(@Param() id: IdDto) {
-  //   return this.quizService.deleteQuiz(id);
-  // }
+  @Delete('delete-quiz/:id')
+  @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
+  async deleteQuiz(@Param() id: IdDto, @Req() req: Request) {
+      return await this.quizService.deleteQuiz(id, req.user);
+  }
 }

@@ -15,7 +15,10 @@ export class StudentService {
     // --------------------------------------------Get Single Student---------------------------------------
     public async getSingleStudent(id: IdDto): Promise<ApiResponse<Student>> {
         const result = await this.db.student.findUniqueOrThrow({
-            where: id
+            where: {
+                id: id.id, 
+                isDeleted: false
+            }
         });
         return {
             statusCode: 200,
@@ -53,6 +56,7 @@ export class StudentService {
         const result = await this.db.student.findMany({
             where: {
                 AND: andConditions,
+                isDeleted: false,
             },
             skip: skip,
             take: limit,
@@ -71,6 +75,7 @@ export class StudentService {
         const total = await this.db.student.count({
             where: {
                 AND: andConditions,
+                isDeleted: false
             },
         });
         return {
@@ -93,7 +98,10 @@ export class StudentService {
         token: TUser
     ): Promise<ApiResponse<Student>> {
         const existingStudent = await this.db.student.findUnique({
-            where: id,
+            where: {
+                id: id.id, 
+                isDeleted: false
+            }
         });
 
         if (!existingStudent) throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
@@ -104,13 +112,20 @@ export class StudentService {
         const updatedStudent = await this.db.student.update({
             where: id,
             data: {
+                name: payload.name,
                 profilePhoto: payload.profilePhoto,
-                phone: payload.phone,
                 contact: payload.contact,
                 address: payload.address,
                 gender: payload.gender,
             },
         });
+
+        if(payload.name){
+            await this.db.user.update({
+                where: { id: existingStudent.userId },
+                data: { name: payload.name },
+            });
+        }
 
         return {
             statusCode: 200,
@@ -123,15 +138,15 @@ export class StudentService {
     // --------------------------------------------Delete Student-------------------------------------------------
     public async deleteStudent(id: IdDto): Promise<ApiResponse<void>> {
         const existingStudent = await this.db.student.findUnique({
-            where: id,
+            where: {
+                id: id.id, 
+                isDeleted: false
+            },
             include: { user: true },
         });
 
         if (!existingStudent) {
             throw new HttpException('Student not found', HttpStatus.NOT_FOUND);
-        }
-        if (existingStudent.isDeleted) {
-            throw new HttpException('Student is already deleted', HttpStatus.BAD_REQUEST);
         }
 
         await this.db.$transaction(async (tClient) => {
@@ -159,60 +174,128 @@ export class StudentService {
     }
 
 
-    //----------------------------------------Calculate Progress--------------------------------------------------
-    public async calculateProgress(email: string, courseId: string): Promise<ApiResponse<number>> {
+    //----------------------------------------Set Progress--------------------------------------------------
+    public async setProgress(courseId: string, email: string, contentId: string): Promise<ApiResponse<{ watchedContents: string[]; percentage: number; }>> {
+        // Check if student exists and currently enrolled in the requested course or not
         const user = await this.db.user.findUnique({
-            where: { email }
+            where: { email, status: Status.ACTIVE }
         });
-
+        if (!user) throw new HttpException('User not found', 401)
         const userId = user?.id
-
         const student = await this.db.student.findUnique({
-            where: { userId },
+            where: { userId, isDeleted: false },
             include: { course: true },
         });
+        if (!student || !student.course) throw new HttpException('No enrolled courses found for this student', 401)
 
-        if (!student || !student.course) {
-            return {
-                success: false,
-                message: 'No enrolled courses found for this student.',
-                statusCode: HttpStatus.NOT_FOUND,
-                data: null,
-            };
-        }
-
+        // Arrange an array of content for the course
         const modules = await this.db.module.findMany({
             where: { courseId },
-            select: {
+            include: {
                 content: {
+                    orderBy: { createdAt: 'asc' },
                     select: { id: true },
                 },
             },
         });
         const contentIds = modules.flatMap(module => module.content.map(content => content.id));
-        const index = contentIds.findIndex(course => course === courseId);
-        if (index === -1) {
-            return {
-                success: false,
-                message: 'Course not found in enrolled courses.',
-                statusCode: HttpStatus.NOT_FOUND,
-                data: null,
-            };
-        }
-        const percentage = Math.round((index / contentIds.length) * 100);
 
+        // If requested content does not exist in the course, throe error
+        const index = contentIds.findIndex(content => content === contentId);
+        if (index === -1) throw new HttpException('Course not found in enrolled courses.', 401)
+
+        // If user tries to jump 
+        const existingProgress = await this.db.progress.findUnique({
+            where: { studentId_courseId: { studentId: student.id, courseId } },
+        });
+        if (!existingProgress && contentIds[0] !== contentId)  throw new HttpException('This content is locked. Start from the first content.', 403);
+
+        const prevIndex = contentIds.findIndex(content => content === existingProgress?.contentId);
+        if (existingProgress && index - 1 > prevIndex) throw new HttpException('This content is locked. Please complete previous contents first.', 403);
+        if (existingProgress && index - 1 !== prevIndex) throw new HttpException('Already watched!', 403);
+        
+        const percentage = Math.round(((index + 1) / contentIds.length) * 100);
         await this.db.progress.upsert({
             where: { studentId_courseId: { studentId: student.id, courseId } },
-            update: { percentage },
-            create: { studentId: student.id, courseId, percentage },
+            update: { percentage, contentId },
+            create: { studentId: student.id, courseId, percentage, contentId },
         });
-
+        const watchedContents = contentIds.slice(0, index + 1);
         return {
             success: true,
             message: 'Progress calculated successfully.',
             statusCode: HttpStatus.OK,
-            data: percentage,
+            data: {
+                watchedContents,
+                percentage
+            },
         };
     }
+
+
+    //----------------------------------------Get Progress-------------------------------------------------
+    public async getProgress( courseId: string, email: string ): Promise<ApiResponse<any>> {
+        const student = await this.db.student.findUnique({
+            where: { email, isDeleted: false },
+            select: { id: true },
+        });
+        if (!student) {
+            throw new HttpException('Student not found', 404);
+        }
+
+        // Check if the student is enrolled in the course
+        const isEnrolled = await this.db.course.findFirst({
+            where: {
+                id: courseId,
+                student: {
+                    some: {
+                        id: student.id,
+                    },
+                },
+            },
+        });
+        if (!isEnrolled) {
+            throw new HttpException('You are not enrolled in this course', HttpStatus.FORBIDDEN);
+        }
+
+        // Get the progress of the course for the student
+        const courseProgress = await this.db.progress.findUnique({
+            where: {
+                studentId_courseId: {
+                    studentId: student.id,
+                    courseId: courseId,
+                },
+            },
+            select: {
+                percentage: true,
+                contentId: true,
+            },
+        });
+
+        // Extract watched contents
+        const modules = await this.db.module.findMany({
+            where: { courseId },
+            include: {
+                content: {
+                    orderBy: { createdAt: 'asc' },
+                    select: { id: true },
+                },
+            },
+        });
+        const contentIds = modules.flatMap(module => module.content.map(content => content.id));
+        const index = contentIds.findIndex(content => content === courseProgress?.contentId);
+        const watchedContents = contentIds.slice(0, index + 1);
+
+        return {
+            statusCode: 200,
+            success: true,
+            message: 'Progress retrieved successfully',
+            data:  {
+                watchedContents,
+                percentage: courseProgress?.percentage || 0,
+            }
+        };
+    }
+
 
 }
