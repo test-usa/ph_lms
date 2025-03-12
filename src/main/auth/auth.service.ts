@@ -58,7 +58,7 @@ export class AuthService {
       email: string;
       role: UserRole;
     }>> {
-    const { email, password, name } = registerDto;
+    const { email, password, name, phone } = registerDto;
     const existingUser = await this.db.user.findUnique({
       where: { email },
     });
@@ -70,6 +70,7 @@ export class AuthService {
       data: {
         name,
         email,
+        phone,
         password: hashedPassword,
         role: UserRole.STUDENT,
         status: Status.ACTIVE,

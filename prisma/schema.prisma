@@ -11,6 +11,7 @@ model User {
   id        String   @id @default(uuid())
   name      String
   email     String   @unique
+  phone     String?
   password  String
   role      UserRole @default(STUDENT)
   status    Status   @default(ACTIVE)
@@ -181,15 +182,15 @@ model Assignment {
 }
 
 model AssignmentSubmission {
-  id           String   @id @default(uuid())
-  submissionTime DateTime
+  id               String           @id @default(uuid())
+  submissionTime   DateTime
   submissionStatus SubmissionStatus
-  submission   String
-  acquiredMark Int      @default(0)
-  isSubmitted  Boolean  @default(false)
-  isReviewed   Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  submission       String
+  acquiredMark     Int              @default(0)
+  isSubmitted      Boolean          @default(false)
+  isReviewed       Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   assignmentId String
   assignment   Assignment @relation(fields: [assignmentId], references: [id])
@@ -229,9 +230,9 @@ model Blog {
 model Payment {
   id        String        @id @default(uuid())
   amount    Float
-  studentId String @unique
+  studentId String        @unique
   status    PaymentStatus @default(PENDING)
-  intendKey String?        @unique
+  intendKey String?       @unique
   student   Student       @relation(fields: [studentId], references: [id])
   course    Course[]      @relation("CourseToPayment")
 }
