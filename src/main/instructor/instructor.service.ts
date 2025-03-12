@@ -14,7 +14,10 @@ export class InstructorService {
     // --------------------------------------------Get Single Instructor---------------------------------------
     public async getSingleInstructor(id: IdDto): Promise<ApiResponse<Instructor>> {
         const result = await this.db.instructor.findUniqueOrThrow({
-            where: id
+            where: {
+                id: id.id,
+                isDeleted: false
+            }
         });
         return {
             statusCode: 200,
@@ -52,6 +55,7 @@ export class InstructorService {
         const result = await this.db.instructor.findMany({
             where: {
                 AND: andConditions,
+                isDeleted: false
             },
             skip: skip,
             take: limit,
@@ -70,6 +74,7 @@ export class InstructorService {
         const total = await this.db.instructor.count({
             where: {
                 AND: andConditions,
+                isDeleted: false
             },
         });
         return {
@@ -92,24 +97,34 @@ export class InstructorService {
         token: TUser
     ): Promise<ApiResponse<Instructor>> {
         const existingInstructor = await this.db.instructor.findUnique({
-            where: id,
+            where: {
+                id: id.id, 
+                isDeleted: false
+            }
         });
 
         if (!existingInstructor) throw new HttpException('Instructor not found', HttpStatus.NOT_FOUND);
         if (existingInstructor.isDeleted) throw new HttpException('Instructor is deactivated', HttpStatus.FORBIDDEN);
-        if ((token.role === UserRole.STUDENT || token.role === UserRole.INSTRUCTOR) && existingInstructor.email !== token.email) throw new HttpException('Unauthorized Access!', HttpStatus.FORBIDDEN);
+        if (token.role === UserRole.INSTRUCTOR && existingInstructor.email !== token.email) throw new HttpException('Unauthorized Access!', HttpStatus.FORBIDDEN);
 
         // Perform update
         const updatedInstructor = await this.db.instructor.update({
             where: id,
             data: {
                 profilePhoto: payload.profilePhoto,
-                phone: payload.phone,
                 contact: payload.contact,
                 address: payload.address,
                 gender: payload.gender,
             },
         });
+
+        
+        if(payload.name){
+            await this.db.user.update({
+                where: { id: existingInstructor.userId },
+                data: { name: payload.name },
+            });
+        }
 
         return {
             statusCode: 200,
@@ -122,17 +137,17 @@ export class InstructorService {
     // --------------------------------------------Delete Instructor-------------------------------------------------
     public async deleteInstructor(id: IdDto): Promise<ApiResponse<void>> {
         const existingInstructor = await this.db.instructor.findUnique({
-            where: id,
-            include: { user: true }, 
+            where: {
+                id: id.id, 
+                isDeleted: false
+            },
+            include: { user: true },
         });
-    
+
         if (!existingInstructor) {
             throw new HttpException('Instructor not found', HttpStatus.NOT_FOUND);
         }
-        if (existingInstructor.isDeleted) {
-            throw new HttpException('Instructor is already deleted', HttpStatus.BAD_REQUEST);
-        }
-    
+
         await this.db.$transaction(async (tClient) => {
             // Transaction - 01: Update instructor: isDeleted: true
             await tClient.instructor.update({
@@ -140,7 +155,7 @@ export class InstructorService {
                 data: { isDeleted: true },
             });
 
-             // Transaction - 02: Update user: status: DELETED
+            // Transaction - 02: Update user: status: DELETED
             if (existingInstructor.user) {
                 await tClient.user.update({
                     where: { id: existingInstructor.userId },
@@ -148,7 +163,7 @@ export class InstructorService {
                 });
             }
         });
-    
+
         return {
             data: null,
             statusCode: 200,

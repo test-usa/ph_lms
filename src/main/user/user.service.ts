@@ -21,12 +21,37 @@ export class UserService {
 
     if (user.role == "STUDENT") {
       result = await this.db.student.findUniqueOrThrow({
-        where: { email: user.email }
+        where: { email: user.email, isDeleted: false },
+        include: {
+          user: {
+            select: {
+              email: true,
+              id: true,
+              role: true,
+              status: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          },
+          Payment: true, // Include all related payments
+          assignmentSubmission: true, // Include all assignment submissions
+          quizSubmission: true, // Include all quiz submissions
+          Progress: true, // Include all progress records
+          course: { // Include the related course, if any
+            select: {
+              id: true,
+              title: true,
+              price: true,
+              createdAt: true,
+              updatedAt: true,
+            },
+          },
+        }
       });
     }
     else if (user.role == "ADMIN") {
       result = await this.db.admin.findUniqueOrThrow({
-        where: { email: user.email },
+        where: { email: user.email, isDeleted: false },
         include: {
           user: {
             select: {
@@ -38,13 +63,12 @@ export class UserService {
               updatedAt: true
             }
           }
-
         }
       });
     }
     else if (user.role == "SUPER_ADMIN") {
       result = await this.db.admin.findUniqueOrThrow({
-        where: { email: user.email },
+        where: { email: user.email, isDeleted: false },
         include: {
           user: {
             select: {
@@ -56,13 +80,12 @@ export class UserService {
               updatedAt: true
             }
           }
-
         }
       });
     }
     else {
       result = await this.db.instructor.findUniqueOrThrow({
-        where: { email: user.email },
+        where: { email: user.email,isDeleted: false },
         include: {
           user: {
             select: {
@@ -74,7 +97,6 @@ export class UserService {
               updatedAt: true
             }
           }
-
         }
       });
     }
@@ -167,8 +189,9 @@ export class UserService {
   public async changeProfileStatus(id: string, status: Status): Promise<ApiResponse<User>> {
     await this.db.user.findUniqueOrThrow({
       where: {
-        id,
-      },
+        id, 
+        status: Status.ACTIVE
+    }
     });
 
     const updatedUser = await this.db.user.update({
@@ -251,7 +274,7 @@ export class UserService {
     });
     const newUser = await this.db.user.create({
       data: {
-        name: name,
+        name,
         email: email,
         password: hashedPassword,
         role: UserRole.ADMIN,

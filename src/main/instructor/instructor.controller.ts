@@ -1,6 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Put, Req, UseGuards } from '@nestjs/common';
 import { InstructorService } from './instructor.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
 import { RoleGuardWith } from 'src/utils/RoleGuardWith';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UserRole } from '@prisma/client';
@@ -14,14 +13,12 @@ export class InstructorController {
     constructor(private readonly instructorService: InstructorService) { }
 
     @Get(':id')
-    @ApiBearerAuth()
     @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
     async getSingleInstructor(@Param() id: IdDto) {
         return this.instructorService.getSingleInstructor(id);
     }
 
     @Get()
-    @ApiBearerAuth()
     @UseGuards(AuthGuard, RoleGuardWith([UserRole.SUPER_ADMIN, UserRole.ADMIN]))
     async getAllInstructors(@Req() req: Request) {
         const filters = pick(req.query, ["email", "searchTerm", "gender", "contact"]);
@@ -30,14 +27,12 @@ export class InstructorController {
     }
 
     @Put('update-instructor/:id')
-    @ApiBearerAuth()
     @UseGuards(AuthGuard, RoleGuardWith([UserRole.INSTRUCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN]))
     async updateInstructor(@Param() id: IdDto, @Body() data: UpdateInstructorDto, @Req() req: Request) {
         return this.instructorService.updateInstructor(id, data, req.user);
     }
 
     @Delete('delete-instructor/:id')
-    @ApiBearerAuth()
     @UseGuards(AuthGuard, RoleGuardWith([UserRole.ADMIN, UserRole.SUPER_ADMIN]))
     async deleteInstructor(@Param() id: IdDto) {
         return this.instructorService.deleteInstructor(id);

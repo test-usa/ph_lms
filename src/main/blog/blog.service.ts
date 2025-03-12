@@ -1,6 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
-import { CreateBlogDto } from './create-blog.dto';
 import { UpdateBlogDto } from './update-blog.dto';
 import { IdDto } from 'src/common/id.dto';
 
@@ -27,7 +26,7 @@ export class BlogService {
     });
 
     if (!blog) {
-      throw new NotFoundException(`Blog with ID ${id} not found`);
+      throw new HttpException(`Blog with ID ${id} not found`, HttpStatus.NOT_FOUND);
     }
 
     return blog;

@@ -87,16 +87,23 @@ export class BillingService {
     }
   }
 
-  async createCheckoutSession({ payment,user }: {payment:CreatePaymentIntentDto, user:TUser}) {
+  async createCheckoutSession({
+    payment,
+    user,
+  }: {
+    payment: CreatePaymentIntentDto;
+    user: TUser;
+  }) {
     const course = await this.allCourse(payment.courseIds);
     const userExists = await this.IsUserExist(user.id);
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       billing_address_collection: 'auto',
+      customer_email: payment.email,
       line_items: [
         {
           price_data: {
-            currency:payment.currency,
+            currency: payment.currency,
             product_data: { name: 'Sample Product' },
             unit_amount: course.totalPrice * 100, // Convert to cents
           },
@@ -107,30 +114,28 @@ export class BillingService {
       success_url: 'http://localhost:3000/billing/success',
       cancel_url: 'http://localhost:3000/billing/cancel',
     });
-    console.log(session);
-    
+
     await this.db.payment.create({
-        data: {
-          amount: course.totalPrice,
-          intendKey: session.id as string,
-          course: {
-            connect: payment.courseIds.map((id) => ({ id })),
-          },
-          status: 'PENDING',
-          student: {
-            connectOrCreate:{
-                where:{
-                    email: userExists.email,
-                },
-                create:{
-                    email: userExists.email,
-                    name: userExists.name,
-                    userId: userExists.id
-                },
-            }
+      data: {
+        amount: course.totalPrice,
+        course: {
+          connect: payment.courseIds.map((id) => ({ id })),
+        },
+        status: 'PENDING',
+        student: {
+          connectOrCreate: {
+            where: {
+              email: userExists.email,
+            },
+            create: {
+              email: userExists.email,
+              name: userExists.name,
+              userId: userExists.id,
+            },
           },
         },
-      });
+      },
+    });
 
     return { url: session.url };
   }
@@ -164,32 +169,91 @@ export class BillingService {
     switch (event.type) {
       case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        // console.log(paymentIntent);
-        
-        await this.db.payment.updateMany({
-          where: { intendKey: paymentIntent.id },
-          data: { status: 'SUCCESS' },
-        });
+        const customerEmail =
+          paymentIntent.receipt_email || paymentIntent.metadata?.email;
+        const intentKey = paymentIntent.id; // Use paymentIntent.id as the intentKey
+
+        // Update payment status and save both email and intentKey
+        if (customerEmail) {
+          await this.db.$transaction(async (ctx) => {
+            const student = await ctx.student.findUnique({
+              where:{
+                email: customerEmail,
+              }
+            })
+
+            await ctx.payment.update({
+              where:{
+                studentId: student?.id
+              },
+              data:{
+                status: 'SUCCESS',
+                intendKey: intentKey, // Save the intentKey
+              }
+            })
+          })
+        }
+
         break;
       }
 
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        await this.db.payment.updateMany({
-          where: { intendKey: paymentIntent.id },
-          data: { status: 'FAILED' },
-        });
+        const customerEmail =
+          paymentIntent.receipt_email || paymentIntent.metadata?.email;
+        const intentKey = paymentIntent.id; // Use paymentIntent.id as the intentKey
+
+        // Update payment status and save both email and intentKey
+        if (customerEmail) {
+          await this.db.$transaction(async (ctx) => {
+            const student = await ctx.student.findUnique({
+              where:{
+                email: customerEmail,
+              }
+            })
+
+            await ctx.payment.update({
+              where:{
+                studentId: student?.id
+              },
+              data:{
+                status: 'FAILED',
+                intendKey: intentKey, // Save the intentKey
+              }
+            })
+          })
+        }
+
         break;
       }
 
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        if (session.payment_intent) {
-          await this.db.payment.updateMany({
-            where: { intendKey: session.payment_intent.toString() },
-            data: { status: 'SUCCESS' },
-          });
+        const customerEmail =
+          session.customer_email || session.customer_details?.email;
+        const intentKey = session.payment_intent?.toString(); // Use payment_intent as the intentKey
+
+        // Update payment status and save both email and intentKey
+        if (session.payment_intent && customerEmail) {
+          await this.db.$transaction(async (ctx) => {
+            const student = await ctx.student.findUnique({
+              where:{
+                email: customerEmail,
+              }
+            })
+
+            await ctx.payment.update({
+              where:{
+                studentId: student?.id
+              },
+              data:{
+                status: 'SUCCESS',
+                intendKey: intentKey, // Save the intentKey
+              }
+            })
+          })
         }
+
         break;
       }
 

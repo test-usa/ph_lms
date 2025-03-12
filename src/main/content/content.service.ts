@@ -1,88 +1,281 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+// content.service.ts
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
-import { CreateContentDto } from './create-content.dto';
-import { UpdateContentDto } from './update-content.dto';
+import { CreateContentDto, UpdateContentDto } from './create-content.dto';
 import { IdDto } from 'src/common/id.dto';
 import { ApiResponse } from 'src/utils/sendResponse';
-import { Content, QuizInstance } from '@prisma/client';
+import { Content, UserRole } from '@prisma/client';
+import { TUser } from 'src/interface/token.type';
+
+
+interface TContent {
+  id: string;
+  type: string; // VIDEO, QUIZ, DESCRIPTION, ASSIGNMENT
+  name: string;
+  url: string | null;
+  description: string | null;
+  quiz?: any; // Adjust this based on your quiz structure
+  assignment?: {
+    id: string;
+    title: string;
+    totalMark: number;
+    deadline: Date;
+    submissions?: any; // Adjust this based on your submission structure
+  } | null;
+}
 
 @Injectable()
 export class ContentService {
-  constructor(private prisma: DbService) {}
+  constructor(private prisma: DbService) { }
 
-  //----------------------------------------Create Content--------------------------------------------
-  async createContent(dto: CreateContentDto) {
-    // Check if module exists
-    const moduleExists = await this.prisma.module.findUnique({
+  // Create Content
+  async createContent(dto: CreateContentDto, userId: string): Promise<Content> {
+    const existingModule = await this.prisma.module.findUnique({
       where: { id: dto.moduleId },
+      include: {
+        course: {
+          include: {
+            instructor: {
+              include: {
+                user: true,
+              },
+            }
+          }
+        }
+      },
     });
+    const instructor = await this.prisma.instructor.findUniqueOrThrow({
+      where: { userId }
+    })
+    if (!existingModule) throw new HttpException('Module not found', HttpStatus.NOT_FOUND);
+    if (!existingModule?.course?.instructor) throw new HttpException('You are not authorized for this content!', HttpStatus.BAD_GATEWAY);
+    if (existingModule?.course?.instructor?.id !== instructor.id) throw new HttpException('You are not authorized for this content!', HttpStatus.BAD_GATEWAY);
 
-    if (!moduleExists) {
-      throw new NotFoundException('Module not found');
-    }
-
-    return this.prisma.content.create({
+    return await this.prisma.content.create({
       data: {
         title: dto.title,
         video: dto.video,
         description: dto.description,
         moduleId: dto.moduleId,
+        contentType: dto.contentType,
       },
     });
   }
 
-  // async findAll({ id }: IdDto): Promise<ApiResponse<Content[]>> {
-  //   const data = await this.prisma.content.findMany({
-  //     where: {
-  //       moduleId: id,
-  //     },
-  //   });
-  //   return {
-  //     success: true,
-  //     message: 'Contents retrieved successfully',
-  //     statusCode: HttpStatus.OK,
-  //     data,
-  //   };
-  // }
+  // Find all Content
+  async findAll({ id }: IdDto, user: TUser): Promise<ApiResponse<Content[]>> {
+    const content = await this.prisma.content.findMany({
+      where: { moduleId: id },
+      include: {
+        module: true
+      }
+    });
 
-  // async findOne({ id }: IdDto) {
-  //   const content = await this.prisma.content.findUnique({
-  //     where: { id },
-  //   });
+    if (content.length === 0) throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
+    if (user.role === 'INSTRUCTOR') {
+      const instructor = await this.prisma.instructor.findUnique({
+        where: { courseId: content[0].module.courseId }
+      })
+      if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
+    }
+    if (user.role === 'STUDENT') {
+      const student = await this.prisma.student.findFirst({
+        where: { courseId: content[0].module.courseId }
+      })
+      if (!student) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
+    }
 
-  //   if (!content) {
-  //     throw new NotFoundException('Content not found');
-  //   }
+    return {
+      success: true,
+      message: 'Contents retrieved successfully',
+      statusCode: HttpStatus.OK,
+      data: content,
+    };
+  }
 
-  //   return content;
-  // }
+  async searchContent(courseId: string, contentName?: string): Promise<Content[]> {
+    const contents = await this.prisma.content.findMany({
+      where: {
+        module: {
+          courseId: courseId, // Filter by courseId in the related module
+        },
+        title: {
+          contains: contentName || '', // Case-insensitive search for contentName
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        video: true,
+        description: true,
+        contentType: true,
+        createdAt: true,
+        updatedAt: true,
+        moduleId: true,
+        quiz: {
+          select: {
+            quiz: true,
+            quizSubmission: true,
+          },
+        },
+        assignment: {
+          select: {
+            id: true,
+            title: true,
+            totalMark: true,
+            deadline: true,
+            assignmentSubmission: true,
+          },
+        },
+      },
+    });
+  
+    return contents;
+  }
+  // Find one Content
+  async findOne({ id }: IdDto, user: TUser): Promise<Content> {
+    const content = await this.prisma.content.findUnique({
+      where: { id },
+      include: {
+        module: true
+      }
+    });
 
-  // async update(id: string, dto: UpdateContentDto) {
-  //   // Check if content exists
-  //   const contentExists = await this.prisma.content.findUnique({
-  //     where: { id },
-  //   });
+    if (!content) throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
+    if (user.role === 'INSTRUCTOR') {
+      const instructor = await this.prisma.instructor.findUnique({
+        where: { courseId: content.module.courseId }
+      })
+      if (!instructor) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
+    }
+    if (user.role === 'STUDENT') {
+      const student = await this.prisma.student.findFirst({
+        where: { courseId: content.module.courseId }
+      })
+      if (!student) throw new HttpException('You are not authorized to view this course', HttpStatus
+        .FORBIDDEN)
+    }
 
-  //   if (!contentExists) {
-  //     throw new NotFoundException('Content not found');
-  //   }
+    return content;
+  }
 
-  //   // return this.prisma.content.update({
-  //   //   where: { id },
-  //   //   data: { ...dto },
-  //   // });
-  // }
+  // Update Content
+  async updateContent(id: string, user:any,dto: UpdateContentDto): Promise<Content> {
+    const contentExists = await this.prisma.content.findUnique({
+      where: { id },
+      include: {
+        module: {
+          include: {
+            course: {
+              include: {
+                instructor: {
+                  include: {
+                    user: true,
+                  },
+                }
+              }
+            }
+          }
+        }
+      },
+    });
+    const instructor = await this.prisma.instructor.findUniqueOrThrow({
+      where: { userId:user.id }
+    })
 
-  // async remove(id: string) {
-  //   // Check if content exists
-  //   const contentExists = await this.prisma.content.findUnique({
-  //     where: { id },
-  //   });
+    if (!contentExists) throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
+    if (!contentExists?.module?.course?.instructor) throw new HttpException('You are not authorized for this content!', HttpStatus.BAD_GATEWAY);
+    if (contentExists?.module?.course?.instructor?.id !== instructor?.id) throw new HttpException('You are not authorized for this content!', HttpStatus.BAD_GATEWAY);
 
-  //   if (!contentExists) {
-  //     throw new NotFoundException('Content not found');
-  //   }
+    return await this.prisma.content.update({
+      where: { id },
+      data: {
+        title: dto.title,
+        video: dto.video,
+        description: dto.description,
+      },
+    });
+  }
 
-  //   return this.prisma.content.delete({ where: { id } });
-  // }
+  // Remove Content
+  async remove(id: string, user: TUser): Promise<ApiResponse<null>> {
+
+    const content = await this.prisma.content.findUnique({
+      where: { id },
+      include: {
+        module: {
+          include: {
+            course: {
+              include: {
+                instructor: {
+                  include: {
+                    user: true,
+                  },
+                }
+              }
+            }
+          }
+        },
+        quiz: {
+          include: {
+            quiz: true,
+            quizSubmission: true,
+          },
+        },
+        assignment: {
+          include: {
+            assignmentSubmission: true,
+          },
+        },
+      },
+    });
+
+    const instructor = await this.prisma.instructor.findUniqueOrThrow({
+      where: { userId: user.id }
+    })
+
+    if (!content) throw new HttpException('Content not found', HttpStatus.NOT_FOUND);
+    if (user?.role == UserRole.INSTRUCTOR) {
+      if (!content?.module?.course?.instructor) throw new HttpException('You are not authorized for this content!', HttpStatus.BAD_GATEWAY);
+      if (content?.module?.course?.instructor?.id !== instructor.id) throw new HttpException('You are not authorized for this content!', HttpStatus.BAD_GATEWAY);
+    }
+    if (content.quiz) {
+      await this.prisma.quizSubmission.deleteMany({
+        where: { quizInstanceId: content.quiz.id },
+      });
+
+      await this.prisma.quiz.deleteMany({
+        where: { quizInstanceId: content.quiz.id },
+      });
+
+      await this.prisma.quizInstance.delete({
+        where: { id: content.quiz.id },
+      });
+    }
+
+    if (content.assignment) {
+      await this.prisma.assignmentSubmission.deleteMany({
+        where: { assignmentId: content.assignment.id },
+      });
+
+      await this.prisma.assignment.delete({
+        where: { id: content.assignment.id },
+      });
+    }
+
+    await this.prisma.content.delete({
+      where: { id },
+    });
+
+    return {
+      success: true,
+      message: 'Content and associated data deleted successfully',
+      statusCode: HttpStatus.OK,
+      data: null,
+    };
+  }
 }

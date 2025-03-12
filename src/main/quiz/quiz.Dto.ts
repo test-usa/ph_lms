@@ -56,6 +56,6 @@ export class SubmitAnswerDto {
   @Type(() => AnswerSheetItem)
   answerSheet: AnswerSheetItem[];
 
-  @IsUUID('4', { message: 'Quiz Instance ID must be a valid UUID (version 4).' })
-  quizInstanceId: string;
+  @IsUUID('4', { message: 'Content ID must be a valid UUID (version 4).' })
+  contentId: string;
 }
