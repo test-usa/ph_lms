@@ -176,22 +176,39 @@ export class BillingService {
         // Update payment status and save both email and intentKey
         if (customerEmail) {
           await this.db.$transaction(async (ctx) => {
+            // Find the student based on the provided email
             const student = await ctx.student.findUnique({
-              where:{
+              where: {
                 email: customerEmail,
               }
-            })
-
-            await ctx.payment.update({
-              where:{
-                studentId: student?.id
+            });
+          
+            if (!student) {
+              throw new Error('Student not found');
+            }
+          
+            // Find the payment associated with the student
+            const payment = await ctx.payment.findFirst({
+              where: {
+                studentId: student.id, // This can be used since the relation exists
               },
-              data:{
+            });
+          
+            if (!payment) {
+              throw new Error('Payment not found');
+            }
+          
+            // Update the payment with the new status and intentKey
+            await ctx.payment.update({
+              where: {
+                id: payment.id, // Use the `id` of the payment to update
+              },
+              data: {
                 status: 'SUCCESS',
                 intendKey: intentKey, // Save the intentKey
-              }
-            })
-          })
+              },
+            });
+          });
         }
 
         break;
@@ -206,22 +223,39 @@ export class BillingService {
         // Update payment status and save both email and intentKey
         if (customerEmail) {
           await this.db.$transaction(async (ctx) => {
+            // Find the student based on the provided email
             const student = await ctx.student.findUnique({
-              where:{
+              where: {
                 email: customerEmail,
               }
-            })
-
-            await ctx.payment.update({
-              where:{
-                studentId: student?.id
+            });
+          
+            if (!student) {
+              throw new Error('Student not found');
+            }
+          
+            // Find the payment associated with the student
+            const payment = await ctx.payment.findFirst({
+              where: {
+                studentId: student.id, // This can be used since the relation exists
               },
-              data:{
+            });
+          
+            if (!payment) {
+              throw new Error('Payment not found');
+            }
+          
+            // Update the payment with the new status and intentKey
+            await ctx.payment.update({
+              where: {
+                id: payment.id, // Use the `id` of the payment to update
+              },
+              data: {
                 status: 'FAILED',
                 intendKey: intentKey, // Save the intentKey
-              }
-            })
-          })
+              },
+            });
+          });
         }
 
         break;
@@ -236,22 +270,39 @@ export class BillingService {
         // Update payment status and save both email and intentKey
         if (session.payment_intent && customerEmail) {
           await this.db.$transaction(async (ctx) => {
+            // Find the student based on the provided email
             const student = await ctx.student.findUnique({
-              where:{
+              where: {
                 email: customerEmail,
               }
-            })
-
-            await ctx.payment.update({
-              where:{
-                studentId: student?.id
+            });
+          
+            if (!student) {
+              throw new Error('Student not found');
+            }
+          
+            // Find the payment associated with the student
+            const payment = await ctx.payment.findFirst({
+              where: {
+                studentId: student.id, // This can be used since the relation exists
               },
-              data:{
+            });
+          
+            if (!payment) {
+              throw new Error('Payment not found');
+            }
+          
+            // Update the payment with the new status and intentKey
+            await ctx.payment.update({
+              where: {
+                id: payment.id, // Use the `id` of the payment to update
+              },
+              data: {
                 status: 'SUCCESS',
                 intendKey: intentKey, // Save the intentKey
-              }
-            })
-          })
+              },
+            });
+          });
         }
 
         break;
