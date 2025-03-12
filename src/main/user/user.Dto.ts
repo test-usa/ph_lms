@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Status } from '@prisma/client';
 import {
   IsEmail,
@@ -7,17 +8,37 @@ import {
 } from 'class-validator';
 
 export class ChangeProfileStatusDto {
-  @IsString() @IsEnum(Status)
+  @ApiProperty({
+    description: 'The status of the user profile',
+    example: 'ACTIVE', // Adjust based on your actual enum values
+    enum: Status,
+  })
+  @IsString()
+  @IsEnum(Status)
   status: Status;
 }
 
 export class CreateAnUserDto {
-  @IsString() @Length(2, 50)
+  @ApiProperty({
+    description: 'The name of the user',
+    example: 'John Doe',
+  })
+  @IsString()
+  @Length(2, 50)
   name: string;
 
+  @ApiProperty({
+    description: 'The email address of the user',
+    example: 'user@example.com',
+  })
   @IsEmail()
   email: string;
 
-  @IsString() @Length(6)
+  @ApiProperty({
+    description: 'The password for the user account',
+    example: 'password123',
+  })
+  @IsString()
+  @Length(6)
   password: string;
 }
