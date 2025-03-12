@@ -201,7 +201,7 @@ CREATE TABLE "Payment" (
     "amount" DOUBLE PRECISION NOT NULL,
     "studentId" TEXT NOT NULL,
     "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
-    "intendKey" TEXT NOT NULL,
+    "intendKey" TEXT,
 
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );
@@ -261,6 +261,9 @@ CREATE UNIQUE INDEX "AssignmentSubmission_assignmentId_studentId_key" ON "Assign
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Progress_studentId_courseId_key" ON "Progress"("studentId", "courseId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Payment_studentId_key" ON "Payment"("studentId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_intendKey_key" ON "Payment"("intendKey");
